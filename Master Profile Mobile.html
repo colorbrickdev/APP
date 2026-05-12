@@ -1,0 +1,966 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Master Profile — Mobile Variations</title>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" onerror="this.remove()">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800;900&family=Noto+Sans:wght@300;400;500;600;700;800;900&display=swap">
+<style>
+  html, body { margin: 0; padding: 0; background: #ECE7DC; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Pretendard', 'Noto Sans KR', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  /* iPhone 17만 Noto Sans 적용 */
+  .iphone-noto, .iphone-noto * {
+    font-family: 'Noto Sans KR', 'Noto Sans', system-ui, sans-serif !important;
+  }
+  /* hide scrollbars inside device */
+  .phone-scroll::-webkit-scrollbar { width: 0; height: 0; }
+  .drag-scroll-x { scrollbar-width: none; -ms-overflow-style: none; cursor: grab; scroll-behavior: auto; }
+  .drag-scroll-x::-webkit-scrollbar { width: 0; height: 0; display: none; }
+  .drag-scroll-x.is-dragging { cursor: grabbing; scroll-snap-type: none !important; }
+  .drag-scroll-x.is-dragging * { pointer-events: none; }
+
+  /* 영상 재생 중 — 우측 하단 애터미 어시스턴트(채팅 플로팅) 숨김 */
+  body.in-video-playback .chat-floating-host { display: none !important; }
+
+  /* 숏폼 썸네일 호버 — 이미지 살짝 확대 */
+  .shorts-cell .shorts-img {
+    transform: scale(1);
+  }
+  .shorts-cell:hover .shorts-img {
+    transform: scale(1.08);
+  }
+  .shorts-cell:active .shorts-img {
+    transform: scale(1.04);
+    transition-duration: 0.18s;
+  }
+
+  /* PC 카드 호버 미리보기 영상 페이드 인 */
+  @keyframes previewFadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+  /* PREVIEW 라이브 도트 펄스 */
+  @keyframes pulseDot {
+    0%, 100% { opacity: 1;   transform: scale(1); }
+    50%      { opacity: 0.5; transform: scale(0.7); }
+  }
+
+  /* 챗 플로팅 — 메시지 펑 등장 (스케일 + 페이드) */
+  @keyframes chatPopIn {
+    0%   { opacity: 0; transform: translateY(14px) scale(0.85); }
+    60%  { opacity: 1; transform: translateY(-3px) scale(1.04); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  /* 백조 idle — 3초 주기 가벼운 부유감 */
+  @keyframes swanIdle {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50%      { transform: translateY(-6px) rotate(-1.5deg); }
+  }
+
+  /* 알림 도트 펄스 링 */
+  @keyframes notifPulse {
+    0%   { transform: scale(1);   opacity: 0.6; }
+    100% { transform: scale(2.2); opacity: 0; }
+  }
+
+  /* 챗 패널 슬라이드 인 (우측에서) */
+  @keyframes chatPanelIn {
+    from { opacity: 0; transform: translateX(20px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+
+  /* 알림 드롭다운 슬라이드 다운 */
+  @keyframes notifSlideDown {
+    from { opacity: 0; transform: translateY(-8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* 애터미소개 페이지 슬라이드 인 */
+  @keyframes aboutSlideIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  /* 인생시나리오 항목 패널 — 우측에서 슬라이드 인 */
+  @keyframes goalSlideLeft {
+    from { transform: translateX(100%); }
+    to   { transform: translateX(0); }
+  }
+  /* 음성 챗 — 파형 막대 들썩임 */
+  @keyframes voiceBar {
+    0%, 100% { transform: scaleY(0.4); }
+    50%      { transform: scaleY(1); }
+  }
+  /* 제품 히어로 — 보틀 부유 */
+  @keyframes heroFloat {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50%      { transform: translateY(-8px) rotate(-1deg); }
+  }
+  @keyframes heroSlideIn {
+    from { opacity: 0; transform: translateX(20px) scale(0.96); }
+    to   { opacity: 1; transform: translateX(0) scale(1); }
+  }
+
+  /* 숏폼 카드 stagger fade-in */
+  @keyframes cardFadeUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  /* 좋아요 하트 폭발 파티클 */
+  @keyframes heartBurst {
+    0%   { opacity: 0; transform: translate(0, 0) scale(0.4) rotate(var(--rot, 0deg)); }
+    20%  { opacity: 1; }
+    100% { opacity: 0; transform: translate(var(--dx, 0px), var(--dy, -60px)) scale(1.3) rotate(var(--rot, 0deg)); }
+  }
+  @keyframes heartPulse {
+    0%, 100% { transform: scale(1); }
+    40%      { transform: scale(1.45); }
+    70%      { transform: scale(0.95); }
+  }
+
+
+  /* 영상 위 떠다니는 제품 광고 — 부드러운 부유 (좌우 + 상하 + 살짝 회전) */
+  @keyframes adFloat {
+    0%   { transform: translateY(0)   translateX(0)  rotate(-3deg); }
+    25%  { transform: translateY(-10px) translateX(-4px) rotate(2deg); }
+    50%  { transform: translateY(-4px)  translateX(2px)  rotate(-2deg); }
+    75%  { transform: translateY(-12px) translateX(-2px) rotate(3deg); }
+    100% { transform: translateY(0)   translateX(0)  rotate(-3deg); }
+  }
+  /* 광고 등장 — 우측에서 살짝 미끄러져 들어오며 페이드 인 */
+  @keyframes adSlideIn {
+    from { opacity: 0; transform: translateX(40px) scale(0.9); }
+    to   { opacity: 1; transform: translateX(0) scale(1); }
+  }
+  /* 라벨 칩 펄스 — '이 제품이 궁금하시다면?' 미세 글로우 */
+  @keyframes adLabelPulse {
+    0%, 100% { box-shadow: 0 4px 16px rgba(0,182,240,0.35); }
+    50%      { box-shadow: 0 4px 22px rgba(0,182,240,0.6); }
+  }
+
+  /* 챗 플로팅 — 백조 캐릭터의 흰 배경을 화면에 자연스럽게 녹이기 위한 부모 클래스 */
+  .chat-swan-host {
+    isolation: isolate;
+  }
+
+  /* 상품 상세페이지 진입 시 어시스턴트 플로팅 숨김 */
+  body.in-product-detail .chat-floating-host,
+  body.in-video-playback .chat-floating-host {
+    display: none !important;
+  }
+
+  /* CTA 펄스 링 — 버튼 외곽에 시안/레드 링이 천천히 퍼짐 */
+  @keyframes ctaPulseRing {
+    0%   { transform: scale(1);    opacity: 0.55; }
+    70%  { transform: scale(1.18); opacity: 0; }
+    100% { transform: scale(1.18); opacity: 0; }
+  }
+  .cta-pulse {
+    position: relative;
+    isolation: isolate;
+  }
+  .cta-pulse::before,
+  .cta-pulse::after {
+    content: '';
+    position: absolute; inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    z-index: -1;
+    box-shadow: 0 0 0 2px var(--cta-pulse-color, rgba(0,182,240,0.55));
+    animation: ctaPulseRing 2s ease-out infinite;
+  }
+  .cta-pulse::after {
+    animation-delay: 1s;
+  }
+
+  /* fly-to-cart — 클론 이미지가 우상단 장바구니로 포물선 이동
+     CSS로는 easing만 정의, 좌표는 JS에서 인라인으로 set. */
+  @keyframes cartBounce {
+    0%, 100% { transform: scale(1); }
+    35%      { transform: scale(1.35); }
+    65%      { transform: scale(0.92); }
+  }
+  .cart-bounce {
+    animation: cartBounce 0.55s cubic-bezier(.2,.7,.3,1.4);
+  }
+  /* 우상단 장바구니 카운트 ping — fly 도착 직후 시안 링이 펑 */
+  @keyframes cartPing {
+    0%   { transform: scale(0.6); opacity: 0.7; }
+    100% { transform: scale(2.4); opacity: 0; }
+  }
+
+  /* ========== #1 CHAIRMAN 뱃지 골드 샤인 ==========
+     1초 주기로 스윕(diagonal) 라이트 한 번. */
+  @keyframes badgeShine {
+    0%   { transform: translateX(-120%) skewX(-20deg); }
+    60%  { transform: translateX(220%)  skewX(-20deg); }
+    100% { transform: translateX(220%)  skewX(-20deg); }
+  }
+  .chairman-badge {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+  }
+  .chairman-badge::after {
+    content: '';
+    position: absolute;
+    top: -2px; bottom: -2px; left: 0;
+    width: 35%;
+    background: linear-gradient(90deg,
+      rgba(255,255,255,0) 0%,
+      rgba(255,235,170,0.55) 35%,
+      rgba(255,255,255,0.95) 50%,
+      rgba(255,235,170,0.55) 65%,
+      rgba(255,255,255,0) 100%);
+    transform: translateX(-120%) skewX(-20deg);
+    animation: badgeShine 2.6s ease-in-out infinite;
+    animation-delay: 1.2s;
+    pointer-events: none;
+    mix-blend-mode: overlay;
+  }
+
+  /* ========== #10 알림 종 흔들림 ==========
+     8초마다 한 번씩 종이 wobble — 새 알림이 왔다는 시각 신호. */
+  @keyframes bellWobble {
+    0%, 60%, 100% { transform: rotate(0deg); }
+    62%  { transform: rotate(14deg); }
+    65%  { transform: rotate(-12deg); }
+    68%  { transform: rotate(10deg); }
+    71%  { transform: rotate(-8deg); }
+    74%  { transform: rotate(5deg); }
+    77%  { transform: rotate(-3deg); }
+    80%  { transform: rotate(0deg); }
+  }
+  .bell-wobble {
+    transform-origin: 50% 18%;
+    animation: bellWobble 6s ease-in-out infinite;
+  }
+
+  /* ========== #3 풀스크린 숏폼 — 더블탭 큰 하트 ========== */
+  @keyframes bigHeartPop {
+    0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.3) rotate(-12deg); }
+    25%  { opacity: 1; transform: translate(-50%, -50%) scale(1.25) rotate(-12deg); }
+    60%  { opacity: 1; transform: translate(-50%, -50%) scale(1.05) rotate(-12deg); }
+    100% { opacity: 0; transform: translate(-50%, -50%) scale(1.4)  rotate(-12deg); }
+  }
+
+  /* ========== #5 콘페티 — 인생 수레바퀴 100% 항목 ========== */
+  @keyframes confettiFall {
+    0%   { opacity: 0; transform: translate(0,0) rotate(0deg); }
+    8%   { opacity: 1; }
+    100% { opacity: 0;
+           transform: translate(var(--cdx, 0px), var(--cdy, 200px)) rotate(var(--crot, 720deg)); }
+  }
+
+  /* ========== #2 사회적 증명 토스트 — 하단 좌측에서 슬라이드 인 ========== */
+  @keyframes proofIn {
+    from { opacity: 0; transform: translateX(-20px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes proofOut {
+    from { opacity: 1; transform: translateX(0); }
+    to   { opacity: 0; transform: translateX(-20px); }
+  }
+</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" src="android_frame.jsx"></script>
+<script type="text/babel" src="ios-frame.jsx"></script>
+<script type="text/babel" src="browser_window.jsx"></script>
+<script type="text/babel" src="components/Icons.jsx"></script>
+<script type="text/babel" src="components/AtomyLogo.jsx"></script>
+<script type="text/babel" src="components/i18n.jsx"></script>
+<script type="text/babel" src="components/Data.jsx"></script>
+<script type="text/babel" src="components/ShortsThumbnail.jsx"></script>
+<script type="text/babel" src="components/ChatFloating.jsx"></script>
+<script type="text/babel" src="components/NotificationPopup.jsx"></script>
+<script type="text/babel" src="components/LanguageSwitcher.jsx"></script>
+<script type="text/babel">
+// =====================================================================
+// 글로벌 토스트 — window.showToast(message, opts?)
+// 우상단(또는 중앙 하단)에 슬라이드 인 알림. 자동 사라짐.
+// =====================================================================
+(function() {
+  let host = null;
+  function ensureHost() {
+    if (host && document.body.contains(host)) return host;
+    host = document.createElement('div');
+    Object.assign(host.style, {
+      position: 'fixed', top: '20px', left: '50%',
+      transform: 'translateX(-50%)',
+      zIndex: 99999, pointerEvents: 'none',
+      display: 'flex', flexDirection: 'column', gap: '8px',
+      alignItems: 'center',
+    });
+    document.body.appendChild(host);
+    return host;
+  }
+
+  if (!document.getElementById('__toast_kf')) {
+    const st = document.createElement('style');
+    st.id = '__toast_kf';
+    st.textContent = `
+      @keyframes toastIn {
+        from { opacity: 0; transform: translateY(-12px) scale(0.96); }
+        to   { opacity: 1; transform: translateY(0) scale(1); }
+      }
+      @keyframes toastOut {
+        from { opacity: 1; transform: translateY(0) scale(1); }
+        to   { opacity: 0; transform: translateY(-8px) scale(0.96); }
+      }
+    `;
+    document.head.appendChild(st);
+  }
+
+  window.showToast = function(message, opts = {}) {
+    const h = ensureHost();
+    const el = document.createElement('div');
+    Object.assign(el.style, {
+      pointerEvents: 'auto',
+      display: 'inline-flex', alignItems: 'center', gap: '10px',
+      padding: '12px 18px',
+      borderRadius: '999px',
+      background: '#0B1F3A',
+      color: '#fff',
+      fontSize: '13px', fontWeight: '700',
+      letterSpacing: '-0.01em',
+      fontFamily: 'inherit',
+      boxShadow: '0 12px 30px rgba(11,31,58,0.25), 0 0 0 1px rgba(0,182,240,0.25)',
+      animation: 'toastIn 0.32s cubic-bezier(.2,.7,.3,1.2) forwards',
+    });
+    // 시안 도트
+    const dot = document.createElement('span');
+    Object.assign(dot.style, {
+      width: '8px', height: '8px', borderRadius: '999px',
+      background: '#00B6F0', boxShadow: '0 0 0 3px rgba(0,182,240,0.25)',
+    });
+    el.appendChild(dot);
+    const txt = document.createElement('span');
+    txt.textContent = message;
+    el.appendChild(txt);
+    h.appendChild(el);
+
+    const dur = opts.duration ?? 2200;
+    setTimeout(() => {
+      el.style.animation = 'toastOut 0.28s ease forwards';
+      setTimeout(() => el.remove(), 300);
+    }, dur);
+  };
+})();
+</script>
+
+<script type="text/babel" src="components/AtomyShopVariants.jsx"></script>
+<script type="text/babel" src="components/VariationClassic.jsx"></script>
+<script type="text/babel" src="components/VariationDesktop.jsx"></script>
+<script type="text/babel" src="components/AtomyAbout.jsx"></script>
+<script type="text/babel" src="components/AtomyLife.jsx"></script>
+<script type="text/babel" src="components/AtomyShop.jsx"></script>
+<script type="text/babel" src="components/AtomyProductDetail.jsx"></script>
+<script type="text/babel" src="components/AtomyProductDetailVariants.jsx"></script>
+
+<script type="text/babel">
+// =====================================================================
+// 글로벌 fly-to-cart — 제품 이미지 클론을 우상단 장바구니로 포물선 이동
+// 사용: window.flyToCart(imgSrc, sourceRect)
+// 가장 가까운 [data-cart-icon] 요소를 타겟으로 잡고 상대 좌표로 이동
+// =====================================================================
+window.flyToCart = function(imgSrc, sourceRect) {
+  // 가시 상태인 cart-icon 모두 찾기 (모바일/PC 동시 노출 시 가까운 것 선택)
+  const carts = Array.from(document.querySelectorAll('[data-cart-icon]'))
+    .filter(el => {
+      const r = el.getBoundingClientRect();
+      return r.width > 0 && r.height > 0;
+    });
+  if (carts.length === 0 || !sourceRect) return;
+
+  // sourceRect와 가장 가까운 카트 선택
+  const cx = sourceRect.left + sourceRect.width / 2;
+  const cy = sourceRect.top + sourceRect.height / 2;
+  let nearest = carts[0], minD = Infinity;
+  carts.forEach(el => {
+    const r = el.getBoundingClientRect();
+    const d = Math.hypot((r.left + r.width/2) - cx, (r.top + r.height/2) - cy);
+    if (d < minD) { minD = d; nearest = el; }
+  });
+  const targetRect = nearest.getBoundingClientRect();
+
+  // 클론 이미지 생성
+  const clone = document.createElement('img');
+  clone.src = imgSrc;
+  const startSize = Math.min(sourceRect.width, sourceRect.height, 120);
+  Object.assign(clone.style, {
+    position: 'fixed',
+    left: (sourceRect.left + sourceRect.width/2 - startSize/2) + 'px',
+    top: (sourceRect.top + sourceRect.height/2 - startSize/2) + 'px',
+    width: startSize + 'px', height: startSize + 'px',
+    borderRadius: '14px', objectFit: 'cover',
+    zIndex: 9999, pointerEvents: 'none',
+    boxShadow: '0 12px 30px rgba(0,182,240,0.35)',
+    transition: 'transform 0.75s cubic-bezier(.55,-0.2,.4,1.4), opacity 0.75s, width 0.75s, height 0.75s',
+    transform: 'translate(0, 0) rotate(0deg) scale(1)',
+    opacity: '1',
+  });
+  document.body.appendChild(clone);
+
+  // 강제 reflow 후 트랜지션
+  void clone.offsetWidth;
+  const dx = (targetRect.left + targetRect.width/2) - (sourceRect.left + sourceRect.width/2);
+  const dy = (targetRect.top + targetRect.height/2) - (sourceRect.top + sourceRect.height/2);
+  clone.style.width = '24px';
+  clone.style.height = '24px';
+  // 시작점/도착점 기준 보정
+  const adjDx = dx + (startSize - 24) / 2;
+  const adjDy = dy + (startSize - 24) / 2;
+  clone.style.transform = `translate(${adjDx}px, ${adjDy}px) rotate(180deg) scale(0.5)`;
+  clone.style.opacity = '0.4';
+
+  // 도착 시 카트 bounce + ping + 카운트 증가
+  setTimeout(() => {
+    clone.remove();
+    nearest.classList.remove('cart-bounce');
+    void nearest.offsetWidth;
+    nearest.classList.add('cart-bounce');
+
+    // 카운트 배지 증가
+    const badge = nearest.querySelector('[data-cart-count]');
+    if (badge) {
+      const cur = parseInt(badge.textContent, 10) || 0;
+      badge.textContent = String(cur + 1);
+    }
+    // ping 링
+    const ping = document.createElement('span');
+    Object.assign(ping.style, {
+      position: 'absolute', inset: '0',
+      borderRadius: '999px',
+      boxShadow: '0 0 0 2px rgba(0,182,240,0.7)',
+      animation: 'cartPing 0.7s ease-out forwards',
+      pointerEvents: 'none',
+    });
+    nearest.style.position = 'relative';
+    nearest.appendChild(ping);
+    setTimeout(() => ping.remove(), 750);
+
+    setTimeout(() => nearest.classList.remove('cart-bounce'), 600);
+  }, 760);
+};
+</script>
+
+<script type="text/babel">
+const canvasBg = '#ECE7DC';
+
+function TabButton({ active, onClick, children }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        appearance: 'none', border: 'none', cursor: 'pointer',
+        padding: '10px 22px', borderRadius: 999,
+        fontFamily: 'inherit', fontSize: 13, fontWeight: 800,
+        letterSpacing: '-0.01em',
+        background: active ? '#0B1F3A' : 'rgba(11,31,58,0.06)',
+        color: active ? '#5CD3F7' : '#4A5568',
+        boxShadow: active ? '0 8px 22px rgba(11,31,58,0.18)' : 'none',
+        transition: 'all 0.18s ease',
+      }}
+    >
+      {children}
+    </button>
+  );
+}
+
+function App() {
+  const [tab, setTab] = React.useState('s26');
+
+  return (
+    <div style={{
+      height: '100vh', maxHeight: '100vh', background: canvasBg,
+      display: 'flex', flexDirection: 'column', overflow: 'hidden',
+    }}>
+      {/* Tab bar */}
+      <div style={{
+        position: 'sticky', top: 0, zIndex: 10,
+        display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8,
+        padding: '14px 16px',
+        background: 'rgba(236,231,220,0.92)',
+        backdropFilter: 'blur(8px)',
+        borderBottom: '1px solid rgba(11,31,58,0.06)',
+      }}>
+        <div style={{
+          fontSize: 10, letterSpacing: '0.22em', fontWeight: 800,
+          color: '#2A8AB0', marginRight: 12,
+        }}>
+          ATOMY · MASTER PROFILE
+        </div>
+        <TabButton active={tab === 's26'} onClick={() => setTab('s26')}>
+          📱 S26 Ultra + iPhone 17
+        </TabButton>
+        <TabButton active={tab === 'fold7'} onClick={() => setTab('fold7')}>
+          📲 Fold7
+        </TabButton>
+        <TabButton active={tab === 'desktop'} onClick={() => setTab('desktop')}>
+          🖥 데스크톱
+        </TabButton>
+      </div>
+
+      {/* Stage — center the framed device, fill remaining viewport */}
+      <div style={{
+        flex: 1, minHeight: 0, display: 'flex',
+        alignItems: 'stretch', justifyContent: 'center',
+        padding: tab === 'desktop' ? '20px 20px 28px' : '20px 24px 28px',
+      }}>
+        {tab === 's26' ? (
+          <div data-screen-label="01 S26 Ultra + iPhone 17" style={{
+            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10,
+            height: '100%', width: '100%',
+          }}>
+            <div style={{
+              fontSize: 10, letterSpacing: '0.22em', fontWeight: 800, color: '#2A8AB0',
+            }}>GALAXY S26 ULTRA · 412×916  ·  iPHONE 17 · 402×874</div>
+            <div style={{
+              flex: 1, minHeight: 0, display: 'flex',
+              flexDirection: 'row', gap: 24, justifyContent: 'center',
+            }}>
+              {/* S26 Ultra */}
+              <div style={{
+                height: '100%', display: 'flex',
+                aspectRatio: '412 / 916',
+                minWidth: 0, flexShrink: 0,
+              }}>
+                <AndroidDevice dark={false} width="100%" height="100%">
+                  <div style={{
+                    flex: 1, position: 'relative', overflow: 'hidden',
+                    display: 'flex', flexDirection: 'column',
+                    minWidth: 0,
+                  }}>
+                    <div className="phone-scroll" style={{
+                      flex: 1, overflowY: 'auto', overflowX: 'hidden',
+                      minWidth: 0,
+                    }}>
+                      <VariationClassic shopVariant="default" />
+                    </div>
+                    <ChatFloating size="mobile" />
+                  </div>
+                </AndroidDevice>
+              </div>
+              {/* iPhone 17 */}
+              <div className="iphone-noto" style={{
+                height: '100%', display: 'flex',
+                aspectRatio: '402 / 874',
+                minWidth: 0, flexShrink: 0,
+              }}>
+                <IOSDevice dark={false} width="100%" height="100%">
+                  <div style={{
+                    flex: 1, position: 'relative', overflow: 'hidden',
+                    display: 'flex', flexDirection: 'column',
+                  }}>
+                    <div className="phone-scroll" style={{
+                      flex: 1, overflowY: 'auto', overflowX: 'hidden',
+                    }}>
+                      <VariationClassic shopVariant="default" />
+                    </div>
+                    <ChatFloating size="mobile" />
+                  </div>
+                </IOSDevice>
+              </div>
+            </div>
+          </div>
+        ) : tab === 'fold7' ? (
+          <div data-screen-label="02 Fold7" style={{
+            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10,
+            height: '100%', width: '100%',
+          }}>
+            <div style={{
+              fontSize: 10, letterSpacing: '0.22em', fontWeight: 800, color: '#2A8AB0',
+            }}>GALAXY FOLD7 (UNFOLDED) · 884×940</div>
+            <div style={{
+              flex: 1, minHeight: 0, display: 'flex',
+              aspectRatio: '884 / 940',
+            }}>
+              <AndroidDevice dark={false} width="100%" height="100%">
+                <div style={{
+                  flex: 1, position: 'relative', overflow: 'hidden',
+                  display: 'flex', flexDirection: 'column',
+                }}>
+                  <div className="phone-scroll" style={{
+                    flex: 1, overflowY: 'auto', overflowX: 'hidden',
+                  }}>
+                    <VariationClassic shopVariant="default" />
+                  </div>
+                  {/* Subtle fold crease down the middle */}
+                  <div style={{
+                    position: 'absolute', top: 0, bottom: 0, left: '50%',
+                    width: 1, transform: 'translateX(-0.5px)',
+                    background: 'linear-gradient(to right, rgba(0,0,0,0.10), rgba(0,0,0,0.04), rgba(0,0,0,0.10))',
+                    pointerEvents: 'none', zIndex: 5,
+                  }} />
+                  <ChatFloating size="mobile" />
+                </div>
+              </AndroidDevice>
+            </div>
+          </div>
+        ) : (
+          <div data-screen-label="02 Desktop" style={{
+            display: 'flex', flexDirection: 'column', alignItems: 'stretch', gap: 0,
+            width: '100%', height: '100%',
+          }}>
+            <BrowserWindow
+              url="https://atomy.com/master/mongsang"
+              title="몽상 박한길 · 대한민국 가장 존경받는 CEO — ATOMY"
+              width="100%"
+              height="100%"
+            >
+              <div style={{
+                width: '100%', height: '100%',
+                position: 'relative', overflow: 'hidden',
+              }}>
+                <div className="phone-scroll" style={{
+                  width: '100%', height: '100%',
+                  overflowY: 'auto', overflowX: 'hidden',
+                }}>
+                  <VariationDesktop />
+                </div>
+                <ChatFloating size="desktop" />
+              </div>
+            </BrowserWindow>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+<script type="text/babel">
+// =====================================================================
+// 글로벌 헬퍼 — 사회적 증명 토스트 / 콘페티 / useCountUp 훅
+// =====================================================================
+(function() {
+  // ---------- 사회적 증명 토스트 (좌하단) ----------
+  // id: NotificationPopup의 NOTIFICATIONS와 매칭 — 읽음 상태 동기화
+  const PROOFS = [
+    { id: 1, eyebrow: '구매 10회 달성', title: '구매 10회 달성! 🎉', body: '만약 애터미 사업자로 가입한다면?', accent: '#00B6F0', icon: 'trophy' },
+    { id: 2, eyebrow: '배송 출고',       title: '주문하신 헤모힘이 출고됐어요', body: '내일 오후 도착 예정 · 운송장 12345-67890', accent: '#22C28C', icon: 'package' },
+    { id: 3, eyebrow: '신규 회원 혜택',   title: '신규 회원 한정 — 첫 구매 5% 적립', body: '오늘 가입하면 헤모힘 · 앱솔루트 라인 5% 추가 적립', accent: '#FF8A3D', icon: 'gift' },
+    { id: 4, eyebrow: '새 콘텐츠',        title: '박한길 회장 인터뷰 영상 업로드', body: '"몽상의 균형 잡힌 삶" 강연 풀버전이 공개됐어요.', accent: '#8A97AD', icon: 'megaphone' },
+    { id: 5, eyebrow: '리뷰 적립',        title: '리뷰 작성 시 1,000원 적립',     body: '최근 구매하신 제품 4건의 리뷰가 비어있어요.', accent: '#8A97AD', icon: 'heart' },
+  ];
+  const PROOF_ICONS = {
+    trophy:    '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4h8v4a4 4 0 11-8 0V4z"/><path d="M8 6H5a3 3 0 003 3M16 6h3a3 3 0 01-3 3"/><path d="M10 14h4l1 6H9l1-6z"/></svg>',
+    package:   '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9-4 9 4-9 4-9-4z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/></svg>',
+    gift:      '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M5 12v9h14v-9M12 8v13"/><path d="M12 8C9 8 7.5 5 9 4s4 1 3 4M12 8c3 0 4.5-3 3-4s-4 1-3 4"/></svg>',
+    megaphone: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11v2a1 1 0 001 1h3l5 4V6L7 10H4a1 1 0 00-1 1z"/><path d="M16 8a5 5 0 010 8"/></svg>',
+    heart:     '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-4.5-9.5-9A5.5 5.5 0 0112 5a5.5 5.5 0 019.5 7c-2.5 4.5-9.5 9-9.5 9z"/></svg>',
+  };
+  function ensureProofHostsForDevices() {
+    // 각 기기(.phone-scroll) 부모 안에 토스트 호스트를 배치 → 기기 화면 안에서 노출
+    // 중첩된 .phone-scroll은 무시 (가장 바깥쪽만 사용)
+    const all = Array.from(document.querySelectorAll('.phone-scroll'));
+    const scrolls = all.filter(sc => !sc.parentElement.closest('.phone-scroll'));
+    const hosts = [];
+    scrolls.forEach(sc => {
+      const parent = sc.parentElement;
+      if (!parent) return;
+      let host = parent.querySelector(':scope > .__proof_host');
+      if (!host) {
+        host = document.createElement('div');
+        host.className = '__proof_host';
+        Object.assign(host.style, {
+          position: 'absolute', left: '12px', bottom: '80px',
+          zIndex: 60, pointerEvents: 'none',
+          display: 'flex', flexDirection: 'column', gap: '8px',
+          maxWidth: 'calc(100% - 24px)',
+        });
+        // 부모가 absolute 자식을 받을 수 있도록 보장
+        const cs = getComputedStyle(parent);
+        if (cs.position === 'static') parent.style.position = 'relative';
+        parent.appendChild(host);
+      }
+      hosts.push(host);
+    });
+    return hosts;
+  }
+  // 사용자가 X로 닫으면 세션 동안 토스트 비활성화 (새로고침 시 초기화)
+  let proofDismissed = false;
+  function dismissAllProofs() {
+    proofDismissed = true;
+    document.querySelectorAll('.__proof_host > .__proof_toast').forEach(el => {
+      el.style.animation = 'proofOut 0.3s ease forwards';
+      setTimeout(() => el.remove(), 320);
+    });
+  }
+  function showProof(p) {
+    if (proofDismissed) return;
+    const hosts = ensureProofHostsForDevices();
+    if (!hosts.length) return;
+    hosts.forEach(h => mountProofInto(h, p));
+  }
+  function mountProofInto(h, p) {
+    const el = document.createElement('div');
+    el.className = '__proof_toast';
+    Object.assign(el.style, {
+      position: 'relative',
+      pointerEvents: 'auto',
+      display: 'flex', alignItems: 'flex-start', gap: '10px',
+      padding: '12px 28px 12px 12px',
+      borderRadius: '14px',
+      background: '#fff',
+      color: '#0B1F3A',
+      fontSize: '12px', fontWeight: '600',
+      letterSpacing: '-0.01em', fontFamily: 'inherit',
+      boxShadow: '0 12px 30px rgba(11,31,58,0.15), 0 0 0 1px rgba(11,31,58,0.06)',
+      animation: 'proofIn 0.36s cubic-bezier(.2,.7,.3,1.1) forwards',
+      maxWidth: '320px',
+      borderLeft: `3px solid ${p.accent}`,
+    });
+    const ic = document.createElement('div');
+    Object.assign(ic.style, {
+      width: '34px', height: '34px', borderRadius: '10px',
+      background: p.accent,
+      flex: '0 0 auto',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      color: '#fff',
+    });
+    ic.innerHTML = PROOF_ICONS[p.icon] || '';
+    el.appendChild(ic);
+    const txt = document.createElement('div');
+    txt.style.minWidth = '0';
+    txt.innerHTML = `
+      <div style="font-weight:800;font-size:10.5px;letter-spacing:0.08em;color:${p.accent};margin-bottom:3px;text-transform:uppercase;">${p.eyebrow}</div>
+      <div style="font-weight:800;font-size:13px;line-height:1.3;color:#0B1F3A;margin-bottom:3px;">${p.title}</div>
+      <div style="font-weight:600;font-size:11.5px;line-height:1.4;color:#6B7A90;">${p.body}</div>
+    `;
+    el.appendChild(txt);
+
+    // X 닫기 버튼 — 클릭 시 세션 동안 모든 토스트 비활성화 (새로고침 전까지)
+    const closeBtn = document.createElement('button');
+    closeBtn.setAttribute('aria-label', '토스트 닫기');
+    Object.assign(closeBtn.style, {
+      position: 'absolute', top: '6px', right: '6px',
+      width: '20px', height: '20px',
+      border: '0', background: 'transparent', padding: '0',
+      cursor: 'pointer',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      color: '#9AA7BD', borderRadius: '6px',
+    });
+    closeBtn.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg>';
+    closeBtn.addEventListener('mouseenter', () => { closeBtn.style.background = '#F1F4F9'; closeBtn.style.color = '#0B1F3A'; });
+    closeBtn.addEventListener('mouseleave', () => { closeBtn.style.background = 'transparent'; closeBtn.style.color = '#9AA7BD'; });
+    closeBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      dismissAllProofs();
+    });
+    el.appendChild(closeBtn);
+
+    h.appendChild(el);
+    setTimeout(() => {
+      el.style.animation = 'proofOut 0.3s ease forwards';
+      setTimeout(() => el.remove(), 320);
+    }, 4500);
+  }
+  // 페이지 로드 6초 후 시작, 그 후 안 읽은 알림만 순서대로 9~13초 간격
+  // 모두 읽음 처리되면 토스트 중단 (notifStore에서 미읽음 건이 다시 생기면 재개)
+  let proofIdx = 0;
+  setTimeout(function loop() {
+    if (proofDismissed) { setTimeout(loop, 9000); return; }
+    const store = window.notifStore;
+    // 미읽음 건만 필터 (스토어 미사용 시에는 전체 노출 — 폴백)
+    const queue = store
+      ? PROOFS.filter(p => store.isUnread(p.id))
+      : PROOFS;
+    if (queue.length > 0) {
+      const p = queue[proofIdx % queue.length];
+      showProof(p);
+      proofIdx++;
+    }
+    setTimeout(loop, 9000 + Math.random()*4000);
+  }, 6000);
+
+  // ---------- 콘페티 ----------
+  window.fireConfetti = function(originEl) {
+    const rect = originEl ? originEl.getBoundingClientRect() : null;
+    const cx = rect ? rect.left + rect.width/2 : window.innerWidth/2;
+    const cy = rect ? rect.top + rect.height/2 : window.innerHeight/2;
+    const colors = ['#00B6F0', '#5CD3F7', '#FFE45A', '#FFB800', '#FF3B6A', '#0B2D58'];
+    const N = 60;
+    for (let i = 0; i < N; i++) {
+      const piece = document.createElement('div');
+      const sz = 6 + Math.random()*6;
+      const dx = (Math.random() - 0.5) * 360;
+      const dy = -120 - Math.random() * 180;
+      const rot = (Math.random() - 0.5) * 1440;
+      const col = colors[i % colors.length];
+      const round = Math.random() > 0.6;
+      Object.assign(piece.style, {
+        position: 'fixed',
+        left: cx + 'px', top: cy + 'px',
+        width: sz + 'px', height: (round ? sz : sz*0.5) + 'px',
+        background: col,
+        borderRadius: round ? '999px' : '2px',
+        zIndex: 99997, pointerEvents: 'none',
+        animation: `confettiFall ${1.2 + Math.random()*0.8}s cubic-bezier(.2,.7,.3,1) forwards`,
+      });
+      piece.style.setProperty('--cdx', dx + 'px');
+      piece.style.setProperty('--cdy', (dy + 320) + 'px');
+      piece.style.setProperty('--crot', rot + 'deg');
+      document.body.appendChild(piece);
+      setTimeout(() => piece.remove(), 2200);
+    }
+  };
+
+  // ---------- useCountUp 훅 (이미 통계용으로 있을 수 있음 — 별점 전용 버전) ----------
+  window.useStarCountUp = function(target, duration) {
+    target = Number(target) || 0;
+    duration = duration || 1200;
+    const [v, setV] = React.useState(0);
+    const [done, setDone] = React.useState(false);
+    const ref = React.useRef(null);
+    React.useEffect(() => {
+      if (!ref.current) return;
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach(e => {
+          if (e.isIntersecting && !done) {
+            setDone(true);
+            const start = performance.now();
+            function tick(t) {
+              const p = Math.min(1, (t - start) / duration);
+              const eased = 1 - Math.pow(1 - p, 3);
+              setV(target * eased);
+              if (p < 1) requestAnimationFrame(tick);
+            }
+            requestAnimationFrame(tick);
+            io.disconnect();
+          }
+        });
+      }, { threshold: 0.4 });
+      io.observe(ref.current);
+      return () => io.disconnect();
+    }, [target, duration, done]);
+    return [ref, v, done];
+  };
+})();
+</script>
+<script>
+/* drag-scroll-x — enable mouse click+drag to scroll horizontally on .drag-scroll-x containers */
+(function() {
+  let dragging = null;
+  let rafId = 0;
+  let pendingScroll = null;
+  // 관성(velocity) — 마우스 업 후 부드럽게 감속
+  let velocity = 0;
+  let lastX = 0;
+  let lastT = 0;
+  let inertiaId = 0;
+
+  function findTrack(t) {
+    return t && (t.closest ? t.closest('.drag-scroll-x') : null);
+  }
+  function applyScroll() {
+    rafId = 0;
+    if (!dragging || pendingScroll == null) return;
+    dragging.el.scrollLeft = pendingScroll;
+  }
+  function stopInertia() {
+    if (inertiaId) cancelAnimationFrame(inertiaId);
+    inertiaId = 0;
+    velocity = 0;
+  }
+  function startInertia(el) {
+    if (Math.abs(velocity) < 0.05) return;
+    const step = () => {
+      el.scrollLeft -= velocity;
+      // 감속 계수 (0.92 ≒ 약 60프레임에 자연 정지)
+      velocity *= 0.92;
+      if (Math.abs(velocity) > 0.1) {
+        inertiaId = requestAnimationFrame(step);
+      } else {
+        inertiaId = 0;
+      }
+    };
+    inertiaId = requestAnimationFrame(step);
+  }
+
+  document.addEventListener('mousedown', (e) => {
+    if (e.button !== 0) return;
+    const tr = findTrack(e.target);
+    if (!tr) return;
+    // 인터랙티브 타겟(버튼/링크/입력) 위에서는 클릭을 막지 않도록 preventDefault 생략 — 드래그 시작 시 mousemove에서 처리
+    const interactive = e.target && e.target.closest && e.target.closest('button, a, input, textarea, select, [role="button"], [data-no-drag]');
+    stopInertia();
+    dragging = {
+      el: tr,
+      startX: e.clientX,
+      startScroll: tr.scrollLeft,
+      moved: false,
+      interactive: !!interactive,
+    };
+    lastX = e.clientX;
+    lastT = performance.now();
+    velocity = 0;
+    // userSelect / preventDefault 는 실제 드래그가 시작된 뒤에만 적용 (클릭을 죽이지 않도록)
+  });
+  document.addEventListener('mousemove', (e) => {
+    if (!dragging) return;
+    const dx = e.clientX - dragging.startX;
+    if (Math.abs(dx) > 6 && !dragging.moved) {
+      dragging.moved = true;
+      dragging.el.classList.add('is-dragging');
+      dragging.el.style.userSelect = 'none';
+    }
+    if (!dragging.moved) return;
+    // 실제 드래그가 진행 중일 때만 기본동작 차단 (텍스트 선택 방지)
+    if (e.cancelable) e.preventDefault();
+    // 속도 계산 (px/ms) — 음수: 우→좌
+    const now = performance.now();
+    const dt = Math.max(1, now - lastT);
+    const instDx = e.clientX - lastX;
+    // 가중 평균으로 부드럽게
+    velocity = velocity * 0.6 + (instDx / dt) * 16 * 0.4;
+    lastX = e.clientX;
+    lastT = now;
+    pendingScroll = dragging.startScroll - dx;
+    if (!rafId) rafId = requestAnimationFrame(applyScroll);
+  });
+  document.addEventListener('mouseup', () => {
+    if (!dragging) return;
+    const el = dragging.el;
+    const moved = dragging.moved;
+    el.classList.remove('is-dragging');
+    el.style.userSelect = '';
+    if (rafId) { cancelAnimationFrame(rafId); rafId = 0; applyScroll(); }
+    pendingScroll = null;
+    // 드래그 종료 후 관성 스크롤
+    if (moved && Math.abs(velocity) > 0.5) {
+      startInertia(el);
+    }
+    dragging = null;
+    // suppress click after a real drag
+    if (moved) {
+      const blocker = (ev) => { ev.stopPropagation(); ev.preventDefault(); };
+      window.addEventListener('click', blocker, { capture: true, once: true });
+    }
+  });
+  document.addEventListener('mouseleave', () => {
+    if (!dragging) return;
+    dragging.el.classList.remove('is-dragging');
+    dragging.el.style.userSelect = '';
+    if (rafId) { cancelAnimationFrame(rafId); rafId = 0; }
+    pendingScroll = null;
+    dragging = null;
+  });
+})();
+</script>
+</body>
+</html>
