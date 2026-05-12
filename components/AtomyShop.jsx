@@ -777,7 +777,7 @@ function ShopAICurationDesktop({ isMobile = false, allProducts, bestProducts, pr
       kind: 'similar',
       kicker: '비슷한 회원이 좋아한',
       title: '지금 가장 많이 담고 있는 조합',
-      reason: 'CHAIRMAN 등급 회원 1,248명의 최근 30일 구매 데이터',
+      reason: '소비자 1,248명의 최근 30일 구매 데이터',
       badge: '회원 인사이트', tone: '#FFC83D',
       items: Array.from(new Map([...best, ...isNewList].map(p => [p.id, p])).values()).slice(0, 6),
     },

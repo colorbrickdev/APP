@@ -4,8 +4,8 @@
 // 공식 상세 HTML 임베드 매핑 — 제품 ID → assets 경로
 // 이 매핑에 등록된 제품은 'info' 탭에서 기존 데이터 기반 섹션 대신 원본 HTML을 그대로 렌더
 const HTML_DETAIL_MAP = {
-  '000017': 'assets/hemohim-shot-detail.html', // 애터미 헤모힘 샷
-  '000570': 'assets/thefame-detail.html',      // 애터미 스킨케어 시스템 더페임
+  '000017': '/assets/hemohim-shot-detail.html', // 애터미 헤모힘 샷
+  '000570': '/assets/thefame-detail.html',      // 애터미 스킨케어 시스템 더페임
 };
 const hasHtmlDetail = (id) => !!HTML_DETAIL_MAP[id];
 
@@ -30,7 +30,7 @@ const HEMOHIM_DETAIL = {
 
   // 회원 소개 영상
   memberStory: {
-    videoUrl: 'assets/member-story.mp4',
+    videoUrl: '/assets/member-story.mp4',
     title: '아침 루틴, 헤모힘 한 잔',
     badge: 'BEST 석세스클립',
     headline: ['회원이 직접 들려주는', '헤모힘 샷 사용 후기'],
@@ -303,13 +303,13 @@ const THEFAME_DETAIL = {
   reviewsCount: 32,
 
   // 히어로 영상 — 더페임 공식 홍보 영상
-  videoUrl: 'assets/thefame-promo.mp4',
+  videoUrl: '/assets/thefame-promo.mp4',
   videoPoster: 'https://image.atomy.com/KR/goods/000570/org/787/260315000050787.jpg?w=480&h=480',
   videoTitle: '15년의 명성, 애터미 스킨케어 시스템 더페임',
 
   // 회원 소개 영상 — 더페임 브랜드 필름
   memberStory: {
-    videoUrl: 'assets/thefame-member-story.mp4',
+    videoUrl: '/assets/thefame-member-story.mp4',
     title: '봄향기 같은 더페임',
     badge: '더페임 BRAND FILM',
     headline: ['15년의 명성을 넘어', '100년을 이어갑니다'],
@@ -710,7 +710,7 @@ function AtomyProductDetail({ product, isMobile = false, onClose, onPlayVideo, e
       {/* 1.5. 회원 소개 영상 — 상세 정보 탭 가장 상단 (embedded이면 info 탭일 때만) */}
       {(!embedded || tab === 'info') && (() => {
         const ms = p.memberStory || {
-          videoUrl: 'assets/member-story.mp4',
+          videoUrl: '/assets/member-story.mp4',
           title: '아침 루틴, 헤모힘 한 잔',
           badge: 'BEST 석세스클립',
           headline: ['회원이 직접 들려주는', '헤모힘 샷 사용 후기'],
@@ -2605,51 +2605,55 @@ function PipPortal({ pipVisible, muted, progress, isMobile, pipVideoRef, openFul
 // 제품 설명/탭 없이 풀스크린 세로 영상 + CTA만. 스크롤/스와이프/다른 영상 버튼으로 피드 이동.
 // =============================================================
 
-// 영상 피드 — 영상 보유 제품들을 순환. 각 entry는 {product, videoUrl, poster, title}
-const VIDEO_FEED_ITEMS = [
+// 영상 피드 — 제품별로 그룹화 (스크롤은 같은 제품 내 영상 순환, '다른 제품' 버튼은 제품 이동)
+// 각 product entry: { product, videos: [{ url, poster, title }, ...] }
+const VIDEO_FEED_PRODUCTS = [
   {
-    key: '000017-hero',
     product: HEMOHIM_DETAIL,
-    videoUrl: HEMOHIM_DETAIL.videoUrl,
-    poster: HEMOHIM_DETAIL.videoPoster,
-    title: HEMOHIM_DETAIL.videoTitle,
+    videos: [
+      {
+        url: HEMOHIM_DETAIL.videoUrl,
+        poster: HEMOHIM_DETAIL.videoPoster,
+        title: HEMOHIM_DETAIL.videoTitle,
+      },
+      {
+        url: HEMOHIM_DETAIL.memberStory.videoUrl,
+        poster: HEMOHIM_DETAIL.videoPoster,
+        title: HEMOHIM_DETAIL.memberStory.title,
+      },
+    ],
   },
   {
-    key: '000017-story',
-    product: HEMOHIM_DETAIL,
-    videoUrl: HEMOHIM_DETAIL.memberStory.videoUrl,
-    poster: HEMOHIM_DETAIL.videoPoster,
-    title: HEMOHIM_DETAIL.memberStory.title,
-  },
-  {
-    // iPhone 17 영상 피드 — 더페임 첫번째 영상: 리뉴얼 출시 LIVE 다시보기 (480p 인코딩)
-    key: '000570-live',
     product: THEFAME_DETAIL,
-    videoUrl: 'assets/thefame-live-replay.mp4',
-    poster: THEFAME_DETAIL.videoPoster,
-    title: '🧴 더페임 리뉴얼 출시 LIVE! 다시보기',
-  },
-  {
-    key: '000570-story',
-    product: THEFAME_DETAIL,
-    videoUrl: THEFAME_DETAIL.memberStory.videoUrl,
-    poster: THEFAME_DETAIL.videoPoster,
-    title: THEFAME_DETAIL.memberStory.title,
+    videos: [
+      { url: '/assets/thefame-1.mp4', poster: THEFAME_DETAIL.videoPoster, title: '더페임 1' },
+      { url: '/assets/thefame-2.mp4', poster: THEFAME_DETAIL.videoPoster, title: '더페임 2' },
+      { url: '/assets/thefame-3.mp4', poster: THEFAME_DETAIL.videoPoster, title: '더페임 3' },
+      { url: '/assets/thefame-4.mp4', poster: THEFAME_DETAIL.videoPoster, title: '더페임 4' },
+      { url: '/assets/thefame-5.mp4', poster: THEFAME_DETAIL.videoPoster, title: '더페임 5' },
+    ],
   },
 ];
 
 function IPhoneVideoDetail({ product, onClose, onPlayVideo }) {
   // 클릭한 제품의 첫 영상 피드 위치를 시작점으로
-  const initialIdx = Math.max(0, VIDEO_FEED_ITEMS.findIndex(it => it.product.id === (product && product.id)));
-  const [idx, setIdx] = React.useState(initialIdx);
+  const initialProductIdx = Math.max(0, VIDEO_FEED_PRODUCTS.findIndex(p => p.product.id === (product && product.id)));
+  const [productIdx, setProductIdx] = React.useState(initialProductIdx);
+  const [videoIdx, setVideoIdx] = React.useState(0); // 현재 제품 내 영상 인덱스
   const [started, setStarted] = React.useState(false); // 섬네일 클릭 전엔 영상 정지
   const [muted, setMuted] = React.useState(true);
+  const [progress, setProgress] = React.useState(0); // 재생 진행률 0..1
+  const [isPaused, setIsPaused] = React.useState(true); // 재생/정지 상태
   const [host, setHost] = React.useState(null);
+  const seekingRef = React.useRef(false); // 진행 바를 드래그 중인지
   const anchorRef = React.useRef(null); // 빈 div — 호스트(phone-scroll의 부모) 찾기 용
   const rootRef = React.useRef(null);
   const videoRef = React.useRef(null);
-  const item = VIDEO_FEED_ITEMS[idx];
-  const p = item.product;
+
+  const currentProduct = VIDEO_FEED_PRODUCTS[productIdx];
+  const p = currentProduct.product;
+  const item = currentProduct.videos[videoIdx];
+  const totalVideos = currentProduct.videos.length;
   const fmtKR = (n) => Number(n).toLocaleString('ko-KR');
 
   // 마운트 시 phone-scroll의 부모(=디바이스 콘텐츠 컨테이너)를 portal host로 지정
@@ -2668,23 +2672,70 @@ function IPhoneVideoDetail({ product, onClose, onPlayVideo }) {
     return () => document.body.classList.remove('in-ios-video-detail');
   }, []);
 
+  // 스크롤/스와이프 = 같은 제품 내 다음/이전 영상 (제품 경계는 넘지 않음)
   const goNext = React.useCallback(() => {
-    setIdx(i => (i + 1) % VIDEO_FEED_ITEMS.length);
-    setStarted(true); // 피드 이동 시 자동 재생
-  }, []);
+    setVideoIdx(i => (i + 1) % totalVideos);
+    setStarted(true);
+  }, [totalVideos]);
   const goPrev = React.useCallback(() => {
-    setIdx(i => (i - 1 + VIDEO_FEED_ITEMS.length) % VIDEO_FEED_ITEMS.length);
+    setVideoIdx(i => (i - 1 + totalVideos) % totalVideos);
+    setStarted(true);
+  }, [totalVideos]);
+
+  // '다른 제품' 버튼 = 다음 제품으로 이동 (영상 인덱스 리셋)
+  const goNextProduct = React.useCallback(() => {
+    setProductIdx(i => (i + 1) % VIDEO_FEED_PRODUCTS.length);
+    setVideoIdx(0);
     setStarted(true);
   }, []);
 
-  // 인덱스 변경 시 영상 리셋·재생
+  // 인덱스 변경 시 영상 리셋·재생 + progress 0으로
   React.useEffect(() => {
+    setProgress(0);
     const v = videoRef.current;
     if (!v) return;
     v.currentTime = 0;
     if (started) v.play().catch(() => {});
     else v.pause();
-  }, [idx, started]);
+  }, [productIdx, videoIdx, started]);
+
+  // 영상 진행률 추적 (timeupdate 이벤트) — 사용자 seek 중이거나 브라우저가 seek 중일 땐 갱신 안 함
+  React.useEffect(() => {
+    if (!host) return;
+    const v = videoRef.current;
+    if (!v) return;
+    const onTime = () => {
+      if (seekingRef.current) return;           // 사용자가 드래그 중
+      if (v.seeking) return;                    // 브라우저가 seek 처리 중 (옛 시간으로 timeupdate 발사 방지)
+      if (v.duration) setProgress(v.currentTime / v.duration);
+    };
+    v.addEventListener('timeupdate', onTime);
+    return () => v.removeEventListener('timeupdate', onTime);
+  }, [host, productIdx, videoIdx]);
+
+  // 재생/정지 상태 sync (외부 변경에도 대응)
+  React.useEffect(() => {
+    if (!host) return;
+    const v = videoRef.current;
+    if (!v) return;
+    const onPlay = () => setIsPaused(false);
+    const onPause = () => setIsPaused(true);
+    setIsPaused(v.paused);
+    v.addEventListener('play', onPlay);
+    v.addEventListener('pause', onPause);
+    return () => {
+      v.removeEventListener('play', onPlay);
+      v.removeEventListener('pause', onPause);
+    };
+  }, [host, productIdx, videoIdx]);
+
+  const togglePlay = () => {
+    const v = videoRef.current;
+    if (!v) return;
+    if (!started) setStarted(true);
+    if (v.paused) v.play().catch(() => {});
+    else v.pause();
+  };
 
   // 휠 스크롤 → 피드 이동 (디바운스) — host 발견 후 portal 마운트되면 attach
   React.useEffect(() => {
@@ -2742,27 +2793,16 @@ function IPhoneVideoDetail({ product, onClose, onPlayVideo }) {
       {/* 영상 — 섬네일 모드일 땐 일시정지 상태, 클릭 시 재생 */}
       <video
         ref={videoRef}
-        key={item.key}
-        src={item.videoUrl}
+        key={productIdx + '-' + videoIdx}
+        src={item.url}
         poster={item.poster}
         muted={muted}
         loop
         playsInline
         preload="metadata"
         onClick={() => {
-          // 시작 전: 섬네일 클릭 → 인라인 재생 시작
-          if (!started) {
-            setStarted(true);
-            const v = videoRef.current;
-            if (v) v.play().catch(() => {});
-            return;
-          }
-          // 이미 재생 중: 전체화면 모달로 전환 (소리 포함)
-          if (onPlayVideo) onPlayVideo({
-            videoUrl: item.videoUrl,
-            thumb: item.poster,
-            title: item.title,
-          });
+          // 영상 위 클릭 → 재생/정지 토글 (시작 전이면 시작)
+          togglePlay();
         }}
         style={{
           width: '100%', height: '100%', objectFit: 'cover',
@@ -2804,7 +2844,7 @@ function IPhoneVideoDetail({ product, onClose, onPlayVideo }) {
             width: 5, height: 5, borderRadius: 999, background: '#FF3B6A',
             animation: 'pulseDot 1.6s ease-in-out infinite',
           }} />
-          {idx + 1} / {VIDEO_FEED_ITEMS.length}
+          {videoIdx + 1} / {totalVideos}
         </div>
       </div>
 
@@ -2829,18 +2869,19 @@ function IPhoneVideoDetail({ product, onClose, onPlayVideo }) {
         </div>
       )}
 
-      {/* 음소거 토글 (재생 시작 이후만) */}
-      {started && (
+      {/* 음소거 토글 — 항상 표시 */}
+      {true && (
         <button
           onClick={(e) => { e.stopPropagation(); setMuted(m => !m); }}
           aria-label={muted ? '음소거 해제' : '음소거'}
           style={{
-            position: 'absolute', right: 14, top: 60, zIndex: 6,
-            width: 36, height: 36, borderRadius: '50%',
-            background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(10px)',
-            border: '1px solid rgba(255,255,255,0.22)',
+            position: 'absolute', right: 14, top: 60, zIndex: 20,
+            width: 40, height: 40, borderRadius: '50%',
+            background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255,255,255,0.28)',
             cursor: 'pointer', padding: 0,
             display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
           }}>
           {muted ? (
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -2858,9 +2899,34 @@ function IPhoneVideoDetail({ product, onClose, onPlayVideo }) {
         </button>
       )}
 
-      {/* 우측 사이드 — '다른 제품 보기' 버튼 (화면 중앙 높이, 어시스턴트 플로팅과 분리) */}
+      {/* 재생/정지 토글 — 항상 표시 (음소거 아래) */}
       <button
-        onClick={goNext}
+        onClick={(e) => { e.stopPropagation(); togglePlay(); }}
+        aria-label={isPaused ? '재생' : '정지'}
+        style={{
+          position: 'absolute', right: 14, top: 108, zIndex: 20,
+          width: 40, height: 40, borderRadius: '50%',
+          background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(10px)',
+          border: '1px solid rgba(255,255,255,0.28)',
+          cursor: 'pointer', padding: 0,
+          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
+        }}>
+        {isPaused ? (
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff">
+            <path d="M8 5v14l11-7L8 5z" />
+          </svg>
+        ) : (
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="#fff">
+            <rect x="6" y="5" width="4" height="14" rx="1" />
+            <rect x="14" y="5" width="4" height="14" rx="1" />
+          </svg>
+        )}
+      </button>
+
+      {/* 우측 사이드 — '다른 제품 보기' 버튼 (스크롤과 달리 제품 자체를 전환) */}
+      <button
+        onClick={goNextProduct}
         aria-label="다른 제품 보기"
         style={{
           position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
@@ -2919,6 +2985,113 @@ function IPhoneVideoDetail({ product, onClose, onPlayVideo }) {
             background: 'rgba(0,182,240,0.95)', color: '#fff',
             fontSize: 10.5, fontWeight: 800, fontVariantNumeric: 'tabular-nums',
           }}>PV {fmtKR(p.pv)}</span>
+        </div>
+      </div>
+
+      {/* 재생 진행률 바 — CTA 바로 위. 터치/마우스로 탭 또는 드래그하면 그 시점부터 재생 (seek) */}
+      <div
+        onClick={(e) => {
+          // 폴백: pointer 이벤트가 일부 환경에서 동작 안 할 때
+          if (seekingRef.current) return; // 드래그였으면 무시
+          e.stopPropagation();
+          const v = videoRef.current;
+          if (!v || !v.duration) return;
+          const rect = e.currentTarget.getBoundingClientRect();
+          const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+          v.currentTime = ratio * v.duration;
+          setProgress(ratio);
+          if (!started) setStarted(true);
+          // 시점 이동 후 항상 재생
+          v.play().catch(() => {});
+        }}
+        onPointerDown={(e) => {
+          e.stopPropagation();
+          const v = videoRef.current;
+          if (!v) return;
+          if (!started) setStarted(true);
+          seekingRef.current = true;
+          try { e.currentTarget.setPointerCapture(e.pointerId); } catch (_) {}
+          const rect = e.currentTarget.getBoundingClientRect();
+          const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+          // 드래그 시작 시점엔 시각적 progress만 — 실제 seek는 pointerUp 한 번에
+          setProgress(ratio);
+        }}
+        onPointerMove={(e) => {
+          if (!seekingRef.current) return;
+          e.stopPropagation();
+          const rect = e.currentTarget.getBoundingClientRect();
+          const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+          // 드래그 중엔 시각 progress만 갱신 — 매번 seek 안 함 (큰 영상에서 디코딩 폭주 방지)
+          setProgress(ratio);
+        }}
+        onPointerUp={(e) => {
+          if (!seekingRef.current) return;
+          e.stopPropagation();
+          try { e.currentTarget.releasePointerCapture(e.pointerId); } catch (_) {}
+          const v = videoRef.current;
+          if (!v) {
+            seekingRef.current = false;
+            return;
+          }
+          const rect = e.currentTarget.getBoundingClientRect();
+          const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+          setProgress(ratio);
+
+          const doSeekAndPlay = () => {
+            try { v.currentTime = ratio * v.duration; } catch (_) {}
+            // 같은 사용자 제스처 안에서 즉시 play 호출 (브라우저 정책 통과)
+            v.play().catch(() => {});
+            // seek 디코딩 끝나면 한 번 더 시도 (큰 영상 대비)
+            const onReady = () => {
+              v.play().catch(() => {});
+              v.removeEventListener('seeked', onReady);
+              v.removeEventListener('canplay', onReady);
+            };
+            v.addEventListener('seeked', onReady, { once: true });
+            v.addEventListener('canplay', onReady, { once: true });
+          };
+
+          if (v.duration) {
+            doSeekAndPlay();
+          } else {
+            // duration 아직 없으면 metadata 로드 후 seek + play
+            const onLoaded = () => {
+              v.removeEventListener('loadedmetadata', onLoaded);
+              doSeekAndPlay();
+            };
+            v.addEventListener('loadedmetadata', onLoaded, { once: true });
+          }
+
+          // 잠시 후 false — onClick이 드래그 끝 시점 click을 무시할 수 있게
+          setTimeout(() => { seekingRef.current = false; }, 50);
+        }}
+        onPointerCancel={() => { seekingRef.current = false; }}
+        // 부모 컨테이너의 스와이프(다음/이전 영상)와 충돌 방지
+        onTouchStart={(e) => e.stopPropagation()}
+        onTouchMove={(e) => e.stopPropagation()}
+        onTouchEnd={(e) => e.stopPropagation()}
+        style={{
+          position: 'absolute', left: 0, right: 0, bottom: 76, zIndex: 8,
+          height: 32, // 터치 영역 32px (시각 바 4px + 위아래 패딩 충분히)
+          cursor: 'pointer',
+          display: 'flex', alignItems: 'center',
+          padding: '0 12px',
+          touchAction: 'none', // 브라우저가 스크롤/줌으로 해석하지 않도록
+          // 디버그/시각 확인용 살짝 배경 — 빈 영역 클릭도 잘 잡힘
+          background: 'transparent',
+        }}>
+        <div style={{
+          width: '100%', height: 4, borderRadius: 99,
+          background: 'rgba(255,255,255,0.28)', overflow: 'hidden',
+          boxShadow: '0 0 8px rgba(0,0,0,0.4)',
+          pointerEvents: 'none', // 시각 바는 이벤트 받지 않고, 부모(32px touch area)가 받음
+        }}>
+          <div style={{
+            height: '100%', width: `${progress * 100}%`,
+            background: 'linear-gradient(90deg, #00B6F0 0%, #5CD3F7 100%)',
+            transition: seekingRef.current ? 'none' : 'width 0.18s linear',
+            borderRadius: 99,
+          }} />
         </div>
       </div>
 

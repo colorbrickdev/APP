@@ -632,7 +632,7 @@ function AtomyShopAI({ isMobile = true, onSelectProduct = () => {} }) {
       kind: 'similar',
       kicker: '비슷한 회원이 좋아한',
       title: '같은 등급의 회장님들이 자주 구매',
-      reason: 'CHAIRMAN 등급 회원 1,248명의 최근 30일 구매 데이터',
+      reason: '소비자 1,248명의 최근 30일 구매 데이터',
       items: Array.from(new Map([...best, ...isNew].map(p => [p.id, p])).values()).slice(0, 6),
       badge: '회원 인사이트',
       tone: '#FFC83D',
