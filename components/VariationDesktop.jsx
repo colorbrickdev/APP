@@ -709,6 +709,7 @@ function VariationDesktop() {
   React.useEffect(() => {
     const inDetail = currentPage === 'shop' && !!shopProduct;
     document.body.classList.toggle('in-product-detail', inDetail);
+    document.body.classList.toggle('atomy-shop-active', currentPage === 'shop');
     return () => document.body.classList.remove('in-product-detail');
   }, [currentPage, shopProduct]);
 
@@ -778,13 +779,6 @@ function VariationDesktop() {
           shopProduct.id === '000017' ? (
             <HemohimShotDetail
               product={HEMOHIM_DETAIL}
-              isMobile={false}
-              onClose={() => setShopProduct(null)}
-              onPlayVideo={setProductVideo}
-            />
-          ) : shopProduct.id === '000570' ? (
-            <HemohimShotDetail
-              product={THEFAME_DETAIL}
               isMobile={false}
               onClose={() => setShopProduct(null)}
               onPlayVideo={setProductVideo}
@@ -1112,8 +1106,6 @@ function ShopOverlay({ isMobile, onClose, onPlayVideo }) {
         {selectedProduct ? (
           selectedProduct.id === '000017' ? (
             <HemohimShotDetail product={HEMOHIM_DETAIL} isMobile={isMobile} onClose={() => setSelectedProduct(null)} onPlayVideo={onPlayVideo} />
-          ) : selectedProduct.id === '000570' ? (
-            <HemohimShotDetail product={THEFAME_DETAIL} isMobile={isMobile} onClose={() => setSelectedProduct(null)} onPlayVideo={onPlayVideo} />
           ) : selectedProduct.id === '000168' ? (
             <HemohimDetail product={selectedProduct} isMobile={isMobile} onClose={() => setSelectedProduct(null)} />
           ) : selectedProduct.id === '000605' ? (
@@ -1127,8 +1119,8 @@ function ShopOverlay({ isMobile, onClose, onPlayVideo }) {
           <AtomyShop
             isMobile={isMobile}
             onSelectProduct={(p) => {
-              // 상세 페이지 보유 제품만 진입 (다른 제품은 alert 등으로 대체)
-              if (p.detail || p.id === '000017' || p.id === '000570') {
+              // 헤모힘 샷만 상세 페이지로 (다른 제품은 alert 등으로 대체)
+              if (p.detail || p.id === '000017') {
                 setSelectedProduct(p);
               } else {
                 // 상세 없는 제품은 일단 클릭 무반응 또는 동일 모달로 대체 가능

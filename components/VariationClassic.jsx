@@ -1870,7 +1870,7 @@ function ActionButton({ type, color = '#fff', label = '', filled = false, onClic
   );
 }
 
-function VariationClassic({ shopVariant = 'default', deviceVariant = 'android', initialPage = 'shorts', onPageChange } = {}) {
+function VariationClassic({ shopVariant = 'default', onPageChange } = {}) {
   const _onPageChangeRef = React.useRef(onPageChange);
   React.useEffect(() => { _onPageChangeRef.current = onPageChange; });
   const { t } = (typeof useTranslation === 'function') ? useTranslation() : { t: (k) => k };
@@ -1898,8 +1898,8 @@ function VariationClassic({ shopVariant = 'default', deviceVariant = 'android', 
     return window.notifStore.subscribe(sync);
   }, []);
 
-  // 라우팅 — 현재 페이지 (initialPage prop으로 초기값 override 가능)
-  const [currentPage, setCurrentPage] = React.useState(initialPage);
+  // 라우팅 — 현재 페이지
+  const [currentPage, setCurrentPage] = React.useState('shorts');
   const [shopProduct, setShopProduct] = React.useState(null);
   const [productVideo, setProductVideo] = React.useState(null);
   const contentRef = React.useRef(null);
@@ -1928,6 +1928,7 @@ function VariationClassic({ shopVariant = 'default', deviceVariant = 'android', 
   React.useEffect(() => {
     const inDetail = currentPage === 'shop' && !!shopProduct;
     document.body.classList.toggle('in-product-detail', inDetail);
+    document.body.classList.toggle('atomy-shop-active', currentPage === 'shop');
     return () => document.body.classList.remove('in-product-detail');
   }, [currentPage, shopProduct]);
 
@@ -2057,24 +2058,9 @@ function VariationClassic({ shopVariant = 'default', deviceVariant = 'android', 
         <div ref={contentRef} style={{ flex: 1 }}>
           {currentPage === 'shop' && (
             shopProduct ? (
-              deviceVariant === 'ios' ? (
-                <IPhoneVideoDetail
-                  product={shopProduct}
-                  onClose={() => setShopProduct(null)}
-                  onPlayVideo={setProductVideo}
-                  onSelectProduct={(np) => setShopProduct(np)}
-                />
-              ) : shopProduct.id === '000017' ? (
+              shopProduct.id === '000017' ? (
                 <HemohimShotDetail
                   product={HEMOHIM_DETAIL}
-                  isMobile={true}
-                  onClose={() => setShopProduct(null)}
-                  onPlayVideo={setProductVideo}
-                  onSelectProduct={(np) => setShopProduct(np)}
-                />
-              ) : shopProduct.id === '000570' ? (
-                <HemohimShotDetail
-                  product={THEFAME_DETAIL}
                   isMobile={true}
                   onClose={() => setShopProduct(null)}
                   onPlayVideo={setProductVideo}

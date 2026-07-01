@@ -117,11 +117,6 @@ const SHOP_PRODUCTS = [
     sub: '180ml · 부드러운 결', price: 25800, pv: 13000,
     image: 'https://image.atomy.com/KR/goods/000565/org/753/260315000050753.png?w=480&h=480',
     rating: 4.6, reviews: 49, badges: ['신제품'], category: '뷰티' },
-  { id: '000570', name: '애터미 스킨케어 시스템 더페임 *1set',
-    sub: '토너·로션·세럼·아이크림·크림 5종 1세트', price: 99800, pv: 42000,
-    image: 'https://image.atomy.com/KR/goods/000570/org/787/260315000050787.jpg?w=480&h=480',
-    rating: 4.7, reviews: 32, badges: ['신제품'], category: '뷰티',
-    detail: true },
   { id: '004041', name: '애터미 알티지 오메가3 (180캡슐)',
     sub: '180캡슐 · 3개월분', price: 34800, pv: 14000,
     image: 'https://image.atomy.com/KR/goods/004041/a0c152bd-0da4-4701-b41b-be57be3048c9.jpg?w=480&h=480',
@@ -221,12 +216,15 @@ function ProductCard({ product, isMobile = false, onSelect, large = false }) {
   const [cartCount, setCartCount] = React.useState(0);
   const rootRef = React.useRef(null);
   const [isIphone, setIsIphone] = React.useState(false);
+  const [isS26, setIsS26] = React.useState(false);
 
   React.useEffect(() => {
     if (rootRef.current && rootRef.current.closest('.iphone-noto')) {
       setIsIphone(true);
+    } else if (isMobile) {
+      setIsS26(true); // 안드로이드 모바일(S26 등) — 켄번즈 모션 적용
     }
-  }, []);
+  }, [isMobile]);
 
   // id 해시 기반 — 아이폰17에서만 ~1/3 카드를 숏폼 영상으로
   const _idNum = parseInt(String(p.id).replace(/\D/g, ''), 10) || 0;
@@ -236,10 +234,28 @@ function ProductCard({ product, isMobile = false, onSelect, large = false }) {
   return (
     <button
       ref={rootRef}
-      onClick={() => onSelect && onSelect(p)}
+      onClick={(e) => {
+        if (e.currentTarget.dataset.pulling) return;
+        e.currentTarget.dataset.pulling = '1';
+        window.productPullToScreen(e.currentTarget, () => onSelect && onSelect(p));
+      }}
       onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
+      onMouseMove={(e) => {
+        if (!isIphone) return;
+        const el = e.currentTarget;
+        const r = el.getBoundingClientRect();
+        const px = (e.clientX - r.left) / r.width - 0.5;   // -0.5 ~ 0.5
+        const py = (e.clientY - r.top) / r.height - 0.5;
+        const ry = px * 16;   // 좌우 기울기
+        const rx = -py * 16;  // 상하 기울기
+        el.style.transform = `perspective(620px) rotateX(${rx}deg) rotateY(${ry}deg) translateY(-4px) scale(1.03)`;
+      }}
+      onMouseLeave={(e) => {
+        setHover(false);
+        if (isIphone) e.currentTarget.style.transform = '';
+      }}
       style={{
+        position: 'relative',
         background: '#fff',
         border: '1px solid rgba(11,31,58,0.06)',
         borderRadius: 14,
@@ -247,7 +263,10 @@ function ProductCard({ product, isMobile = false, onSelect, large = false }) {
         textAlign: 'left',
         cursor: 'pointer',
         overflow: 'hidden',
-        transition: 'transform 0.2s, box-shadow 0.2s, border-color 0.2s',
+        transition: isIphone
+          ? 'transform 0.12s ease-out, box-shadow 0.2s, border-color 0.2s'
+          : 'transform 0.2s, box-shadow 0.2s, border-color 0.2s',
+        transformStyle: 'preserve-3d',
         transform: hover ? 'translateY(-3px)' : 'translateY(0)',
         boxShadow: hover ? '0 14px 36px rgba(11,31,58,0.12)' : '0 2px 6px rgba(11,31,58,0.04)',
         borderColor: hover ? 'rgba(0,182,240,0.3)' : 'rgba(11,31,58,0.06)',
@@ -295,8 +314,12 @@ function ProductCard({ product, isMobile = false, onSelect, large = false }) {
             style={{
               width: '100%', height: '100%',
               objectFit: 'cover', display: 'block',
-              transform: hover ? 'scale(1.05)' : 'scale(1)',
-              transition: 'transform 0.4s cubic-bezier(.2,.7,.3,1)',
+              transform: (isS26 || hover) ? undefined : 'scale(1)',
+              animation: (isS26 && hover)
+                ? `${['gsKB_n','gsKB_ne','gsKB_e','gsKB_se','gsKB_s','gsKB_sw','gsKB_w','gsKB_nw'][_idNum % 8]} ${(9 + (_idNum % 5) * 1.7).toFixed(1)}s ease-in-out -${((_idNum % 9) * 2.4).toFixed(1)}s infinite alternate`
+                : 'none',
+              transition: isS26 ? 'none' : 'transform 0.4s cubic-bezier(.2,.7,.3,1)',
+              ...(!isS26 && { transform: hover ? 'scale(1.05)' : 'scale(1)' }),
             }}
           />
         )}
@@ -351,21 +374,34 @@ function ProductCard({ product, isMobile = false, onSelect, large = false }) {
             setCartCount(c => {
               const next = c + 1;
               if (window.showToast) window.showToast((window.translate ? window.translate('toast.cart_added', { n: next }) : `장바구니에 ${next}개 담았습니다.`));
+              if (window.atomyCartBump) window.atomyCartBump();
               return next;
             });
           }}
           aria-label="장바구니 담기"
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = '#00B6F0';
+            e.currentTarget.style.transform = 'scale(1.12)';
+            const svg = e.currentTarget.querySelector('svg'); if (svg) svg.style.stroke = '#fff';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'rgba(255,255,255,0.95)';
+            e.currentTarget.style.transform = 'scale(1)';
+            const svg = e.currentTarget.querySelector('svg'); if (svg) svg.style.stroke = '#1A1A1A';
+          }}
           style={{
-            position: 'absolute', top: 10, right: 10,
-            width: 32, height: 32, borderRadius: 8, border: 'none',
+            position: 'absolute', bottom: 10, right: 10,
+            width: 38, height: 38, borderRadius: 10, border: 'none',
             background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(6px)',
             cursor: 'pointer', padding: 0,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: '0 2px 8px rgba(11,31,58,0.14)',
+            boxShadow: '0 2px 8px rgba(11,31,58,0.18)',
+            transition: 'background 0.18s, transform 0.18s',
           }}
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-               stroke="#00B6F0" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="21" height="21" viewBox="0 0 24 24" fill="none"
+               stroke="#1A1A1A" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"
+               style={{ transition: 'stroke 0.18s' }}>
             <path d="M5 8h14l-1 12.2a1.5 1.5 0 01-1.5 1.3h-9A1.5 1.5 0 016 20.2L5 8z" />
             <path d="M9 11V7a3 3 0 016 0v4" />
           </svg>
@@ -490,11 +526,210 @@ function AtomyShop({ isMobile = false, shopVariant = 'default', onSelectProduct 
   return <AtomyShopDefault isMobile={isMobile} onSelectProduct={onSelectProduct} />;
 }
 
+// 필터 드로어 — 우→좌 슬라이드 (kr.atomy.com 스타일)
+const FILTER_FUNCTIONS = ['안티에이징','수분보습','브라이트닝','각질/모공/세정','진정','자외선 차단','클렌징','면역','종합건강','여드름','뼈/관절 건강','피부건강','혈관 건강/혈당/항산화','눈 건강','전립선/갱년기 건강','간/위 건강','다이어트','여성 이너케어','건강','보습','세정','수면/두뇌 건강','근육 건강','장 건강'];
+const FILTER_PLACES = ['주방','세탁기/다용도실','선물추천','거실','야외/반려 동물','욕실','침실'];
+const FILTER_TARGETS = ['여성','남성','온가족','임산부/영유아'];
+
+function FilterChip({ label }) {
+  const [on, setOn] = React.useState(false);
+  return (
+    <button onClick={() => setOn(v => !v)} style={{
+      display: 'inline-flex', alignItems: 'center', gap: 5,
+      padding: '7px 12px', borderRadius: 999,
+      border: on ? '1px solid #00B6F0' : '1px solid rgba(11,31,58,0.18)',
+      background: on ? 'rgba(0,182,240,0.08)' : '#fff',
+      color: on ? '#0088B8' : '#4A5568',
+      fontSize: 12, fontWeight: on ? 800 : 600, cursor: 'pointer',
+      fontFamily: 'inherit', letterSpacing: '-0.01em',
+    }}>
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9" /></svg>
+      {label}
+    </button>
+  );
+}
+
+function FilterSection({ title, children }) {
+  const [open, setOpen] = React.useState(true);
+  return (
+    <div style={{ borderTop: '1px solid rgba(11,31,58,0.08)', padding: '18px 0' }}>
+      <button onClick={() => setOpen(o => !o)} style={{
+        width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+        fontSize: 15, fontWeight: 800, color: '#0B1F3A', fontFamily: 'inherit', marginBottom: open ? 14 : 0,
+      }}>
+        {title}
+        <span style={{ fontSize: 18, color: '#8A97AD' }}>{open ? '—' : '+'}</span>
+      </button>
+      {open && <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>{children}</div>}
+    </div>
+  );
+}
+
+function ShopFilterDrawer({ onClose, maxPv = 700000, maxPrice = 1480000 }) {
+  const [price, setPrice] = React.useState([0, maxPrice]);
+  const [pv, setPv] = React.useState([0, maxPv]);
+  const fmt = (n) => (n || 0).toLocaleString('ko-KR');
+  const parseNum = (s) => Math.max(0, parseInt(String(s).replace(/[^\d]/g, ''), 10) || 0);
+  const numInput = (val, onCommit) => ({
+    value: fmt(val),
+    inputMode: 'numeric',
+    onChange: (e) => onCommit(parseNum(e.target.value)),
+    style: {
+      flex: 1, minWidth: 0, textAlign: 'right', border: 'none', outline: 'none',
+      background: 'transparent', fontSize: 13, fontWeight: 700, color: '#0B1F3A',
+      fontFamily: 'inherit',
+    },
+  });
+  const rangeWrap = { position: 'relative', height: 22, marginTop: 8 };
+  const rangeInput = (z) => ({
+    position: 'absolute', left: 0, top: 0, width: '100%', height: 22, margin: 0,
+    background: 'transparent', accentColor: '#00B6F0', zIndex: z,
+    pointerEvents: 'none',
+  });
+  return (
+    <div onClick={onClose} style={{
+      position: 'absolute', inset: 0, zIndex: 50,
+      background: 'rgba(11,31,58,0.4)', animation: 'shortsFadeIn 0.2s ease both',
+      display: 'flex', justifyContent: 'flex-end',
+    }}>
+      <div onClick={(e) => e.stopPropagation()} style={{
+        width: '92%', maxWidth: 380, height: '100%', background: '#fff',
+        display: 'flex', flexDirection: 'column',
+        boxShadow: '-12px 0 40px rgba(11,31,58,0.25)',
+        animation: 'filterSlideIn 0.3s cubic-bezier(.2,.7,.3,1) both',
+        fontFamily: '"Pretendard","Noto Sans KR",system-ui,sans-serif',
+      }}>
+        {/* 헤더 */}
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '16px 18px', borderBottom: '1px solid rgba(11,31,58,0.08)', flexShrink: 0,
+        }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ fontSize: 20, fontWeight: 900, color: '#0B1F3A' }}>필터</span>
+            <button style={{
+              display: 'inline-flex', alignItems: 'center', gap: 4,
+              padding: '5px 10px', borderRadius: 999, border: '1px solid rgba(11,31,58,0.15)',
+              background: '#fff', color: '#4A5568', fontSize: 11.5, fontWeight: 700,
+              cursor: 'pointer', fontFamily: 'inherit',
+            }}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 11-3-6.7L21 7" /><polyline points="21 3 21 7 17 7" /></svg>
+              모두 지우기
+            </button>
+          </div>
+          <button onClick={onClose} aria-label="닫기" style={{
+            background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: '#0B1F3A',
+          }}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+          </button>
+        </div>
+
+        {/* 본문 스크롤 */}
+        <div className="filter-scroll" style={{ flex: 1, overflowY: 'auto', padding: '4px 18px 16px' }}>
+          {/* 빠른 토글 */}
+          <div style={{ display: 'flex', gap: 16, padding: '16px 0', flexWrap: 'wrap' }}>
+            {['신제품','품절제외','추가혜택'].map(l => <FilterCheck key={l} label={l} />)}
+          </div>
+
+          {/* 가격 */}
+          <div style={{ borderTop: '1px solid rgba(11,31,58,0.08)', padding: '18px 0' }}>
+            <div style={{ fontSize: 15, fontWeight: 800, color: '#0B1F3A', marginBottom: 14 }}>가격</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+              <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 4, border: '1px solid rgba(11,31,58,0.15)', borderRadius: 8, padding: '10px 10px' }}>
+                <input {...numInput(price[0], (v) => setPrice([Math.min(v, price[1]), price[1]]))} />
+                <span style={{ fontSize: 12, color: '#8A97AD' }}>원</span>
+              </div>
+              <span style={{ color: '#8A97AD' }}>~</span>
+              <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 4, border: '1px solid rgba(11,31,58,0.15)', borderRadius: 8, padding: '10px 10px' }}>
+                <input {...numInput(price[1], (v) => setPrice([price[0], Math.min(Math.max(v, price[0]), maxPrice)]))} />
+                <span style={{ fontSize: 12, color: '#8A97AD' }}>원</span>
+              </div>
+            </div>
+            <div style={rangeWrap}>
+              <div style={{ position: 'absolute', left: 0, right: 0, top: 9, height: 4, borderRadius: 4, background: 'rgba(11,31,58,0.12)' }} />
+              <div style={{ position: 'absolute', top: 9, height: 4, borderRadius: 4, background: '#00B6F0',
+                left: (price[0] / maxPrice * 100) + '%', right: (100 - price[1] / maxPrice * 100) + '%' }} />
+              <input className="dual-range" type="range" min="0" max={maxPrice} step="10000" value={price[0]}
+                onChange={(e) => setPrice([Math.min(+e.target.value, price[1]), price[1]])} style={rangeInput(3)} />
+              <input className="dual-range" type="range" min="0" max={maxPrice} step="10000" value={price[1]}
+                onChange={(e) => setPrice([price[0], Math.max(+e.target.value, price[0])])} style={rangeInput(4)} />
+            </div>
+          </div>
+
+          {/* PV */}
+          <div style={{ borderTop: '1px solid rgba(11,31,58,0.08)', padding: '18px 0' }}>
+            <div style={{ fontSize: 15, fontWeight: 800, color: '#0B1F3A', marginBottom: 14 }}>PV</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+              <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 4, border: '1px solid rgba(11,31,58,0.15)', borderRadius: 8, padding: '10px 10px' }}>
+                <input {...numInput(pv[0], (v) => setPv([Math.min(v, pv[1]), pv[1]]))} />
+                <span style={{ fontSize: 12, color: '#8A97AD' }}>PV</span>
+              </div>
+              <span style={{ color: '#8A97AD' }}>~</span>
+              <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 4, border: '1px solid rgba(11,31,58,0.15)', borderRadius: 8, padding: '10px 10px' }}>
+                <input {...numInput(pv[1], (v) => setPv([pv[0], Math.min(Math.max(v, pv[0]), maxPv)]))} />
+                <span style={{ fontSize: 12, color: '#8A97AD' }}>PV</span>
+              </div>
+            </div>
+            <div style={rangeWrap}>
+              <div style={{ position: 'absolute', left: 0, right: 0, top: 9, height: 4, borderRadius: 4, background: 'rgba(11,31,58,0.12)' }} />
+              <div style={{ position: 'absolute', top: 9, height: 4, borderRadius: 4, background: '#00B6F0',
+                left: (pv[0] / maxPv * 100) + '%', right: (100 - pv[1] / maxPv * 100) + '%' }} />
+              <input className="dual-range" type="range" min="0" max={maxPv} step="5000" value={pv[0]}
+                onChange={(e) => setPv([Math.min(+e.target.value, pv[1]), pv[1]])} style={rangeInput(3)} />
+              <input className="dual-range" type="range" min="0" max={maxPv} step="5000" value={pv[1]}
+                onChange={(e) => setPv([pv[0], Math.max(+e.target.value, pv[0])])} style={rangeInput(4)} />
+            </div>
+          </div>
+
+          <FilterSection title="기능별">
+            {FILTER_FUNCTIONS.map(l => <FilterChip key={l} label={l} />)}
+          </FilterSection>
+          <FilterSection title="용도/장소">
+            {FILTER_PLACES.map(l => <FilterChip key={l} label={l} />)}
+          </FilterSection>
+          <FilterSection title="대상별">
+            {FILTER_TARGETS.map(l => <FilterChip key={l} label={l} />)}
+          </FilterSection>
+        </div>
+
+        {/* 적용 버튼 */}
+        <button onClick={onClose} style={{
+          flexShrink: 0, padding: '16px', border: 'none',
+          background: '#00B6F0', color: '#fff', fontSize: 15, fontWeight: 800,
+          cursor: 'pointer', fontFamily: 'inherit',
+        }}>적용</button>
+      </div>
+    </div>
+  );
+}
+
+function FilterCheck({ label }) {
+  const [on, setOn] = React.useState(false);
+  return (
+    <button onClick={() => setOn(v => !v)} style={{
+      display: 'inline-flex', alignItems: 'center', gap: 7,
+      background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+      fontFamily: 'inherit', fontSize: 13, fontWeight: 600, color: '#0B1F3A',
+    }}>
+      <span style={{
+        width: 20, height: 20, borderRadius: 5,
+        border: on ? 'none' : '1.5px solid rgba(11,31,58,0.25)',
+        background: on ? '#00B6F0' : '#fff',
+        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        {on && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>}
+      </span>
+      {label}
+    </button>
+  );
+}
+
 function AtomyShopDefault({ isMobile = false, onSelectProduct = () => {} }) {
   const { t } = (typeof useTranslation === 'function') ? useTranslation() : { t: (k) => k };
   const [category, setCategory] = React.useState(null); // null = 메인 / 'all' | 'health' | ... = 카테고리 화면
   const [sortKey, setSortKey] = React.useState('popular');
   const [viewMode, setViewMode] = React.useState('grid'); // grid | list
+  const [filterOpen, setFilterOpen] = React.useState(false);
 
   // 카테고리 화면용 필터링 + 정렬
   const categoryProducts = React.useMemo(() => {
@@ -507,9 +742,13 @@ function AtomyShopDefault({ isMobile = false, onSelectProduct = () => {} }) {
         });
     list = [...list];
     if (sortKey === 'popular') list.sort((a, b) => (b.reviews || 0) - (a.reviews || 0));
-    else if (sortKey === 'low')  list.sort((a, b) => a.price - b.price);
-    else if (sortKey === 'high') list.sort((a, b) => b.price - a.price);
+    else if (sortKey === 'eval') list.sort((a, b) => (b.reviews || 0) - (a.reviews || 0));
     else if (sortKey === 'new')  list.sort((a, b) => (b.badges?.includes('신제품') ? 1 : 0) - (a.badges?.includes('신제품') ? 1 : 0));
+    else if (sortKey === 'high_pv') list.sort((a, b) => (b.pv || 0) - (a.pv || 0));
+    else if (sortKey === 'low_pv')  list.sort((a, b) => (a.pv || 0) - (b.pv || 0));
+    else if (sortKey === 'high') list.sort((a, b) => b.price - a.price);
+    else if (sortKey === 'low')  list.sort((a, b) => a.price - b.price);
+    else if (sortKey === 'pv_by_price') list.sort((a, b) => ((b.pv || 0) / b.price) - ((a.pv || 0) / a.price));
     return list;
   }, [category, sortKey]);
 
@@ -579,9 +818,13 @@ function AtomyShopDefault({ isMobile = false, onSelectProduct = () => {} }) {
                 }}
               >
                 <option value="popular">판매 인기순</option>
-                <option value="new">신제품순</option>
-                <option value="low">낮은 가격순</option>
-                <option value="high">높은 가격순</option>
+                <option value="eval">리뷰 많은순</option>
+                <option value="new">최신 상품순</option>
+                <option value="high_pv">PV 높은순</option>
+                <option value="low_pv">PV 낮은순</option>
+                <option value="high">가격 높은순</option>
+                <option value="low">가격 낮은순</option>
+                <option value="pv_by_price">가격 대비 PV 높은순</option>
               </select>
               <svg
                 width="11" height="11" viewBox="0 0 24 24" fill="none"
@@ -610,6 +853,7 @@ function AtomyShopDefault({ isMobile = false, onSelectProduct = () => {} }) {
             {/* 필터 */}
             <button
               aria-label="필터"
+              onClick={() => setFilterOpen(true)}
               style={{
                 padding: isMobile ? '7px 11px' : '8px 14px',
                 border: '1px solid rgba(11,31,58,0.15)', borderRadius: 6,
@@ -625,6 +869,8 @@ function AtomyShopDefault({ isMobile = false, onSelectProduct = () => {} }) {
             </button>
           </div>
         </div>
+
+        {filterOpen && <ShopFilterDrawer onClose={() => setFilterOpen(false)} maxPv={700000} maxPrice={1480000} />}
 
         {/* 제품 리스트 */}
         <section style={{
@@ -771,13 +1017,13 @@ function ShopAICurationDesktop({ isMobile = false, allProducts, bestProducts, pr
       title: '오늘의 컨디션을 위한 한 가지',
       reason: '전날 활동 패턴과 비슷한 회원의 선호를 반영했어요',
       badge: 'AI 큐레이션', tone: '#00B6F0',
-      items: [best[0], all.find(p => p.id === '000570'), best[1], best[3], all[5], all[6]].filter(Boolean).slice(0, 6),
+      items: Array.from(new Map([best[0], best[2], best[1], best[3], all[5], all[6]].filter(Boolean).map(p => [p.id, p])).values()).slice(0, 6),
     },
     {
       kind: 'similar',
       kicker: '비슷한 회원이 좋아한',
       title: '지금 가장 많이 담고 있는 조합',
-      reason: '소비자 1,248명의 최근 30일 구매 데이터',
+      reason: 'CHAIRMAN 등급 회원 1,248명의 최근 30일 구매 데이터',
       badge: '회원 인사이트', tone: '#FFC83D',
       items: Array.from(new Map([...best, ...isNewList].map(p => [p.id, p])).values()).slice(0, 6),
     },
@@ -787,7 +1033,7 @@ function ShopAICurationDesktop({ isMobile = false, allProducts, bestProducts, pr
       title: '곧 떨어질 제품을 미리 챙기세요',
       reason: '평균 32일 사용 기준 · 마지막 구매로부터 28일 경과',
       badge: '리오더', tone: '#16A34A',
-      items: [best[3], best[1], best[0], all[2], all[4], all[8]].filter(Boolean).slice(0, 6),
+      items: Array.from(new Map([best[3], best[1], best[0], all[2], all[4], all[8]].filter(Boolean).map(p => [p.id, p])).values()).slice(0, 6),
     },
     {
       kind: 'chairman',
@@ -816,7 +1062,7 @@ function ShopAICurationDesktop({ isMobile = false, allProducts, bestProducts, pr
   ];
 
   return (
-    <div style={{ width: '100%', background: '#F5F7FA' }}>
+    <div className="shop-curation-body" style={{ width: '100%', background: '#F5F7FA' }}>
       {/* AI 헤더 배너 */}
       <div style={{
         maxWidth: 1280, margin: '0 auto', width: '100%',
@@ -872,20 +1118,6 @@ function ShopAICurationDesktop({ isMobile = false, allProducts, bestProducts, pr
           }}>전체상품 보기 →</button>
         </div>
 
-        {/* AI 디스크레이머 */}
-        <div style={{ padding: '24px 16px 8px', textAlign: 'center' }}>
-          <div style={{
-            fontSize: 11.5, fontWeight: 700, letterSpacing: '0.18em',
-            color: '#7B8597', marginBottom: 10,
-          }}>✦ ATOMY AI</div>
-          <div style={{
-            fontSize: 12.5, color: 'rgba(11,31,58,0.7)', lineHeight: 1.7,
-            maxWidth: 640, margin: '0 auto',
-          }}>
-            ATOMY AI 추천은 회원님의 구매 이력, 등급, 선호 카테고리,<br />
-            같은 등급 회원의 인기 제품을 종합해 만들어집니다.
-          </div>
-        </div>
       </div>
 
       <ShopFooter isMobile={isMobile} />
@@ -903,12 +1135,50 @@ function DesktopCurationRow({ row, isMobile = false, isChairman, onSelect }) {
     budget: ['💰 -28% 가성비', '🎁 2만원 이하', '✓ 첫 구매 추천'],
   };
   const insights = INSIGHT[row.kind] || [];
+  const scrollRef = React.useRef(null);
+  const [canLeft, setCanLeft] = React.useState(false);
+  const [canRight, setCanRight] = React.useState(false);
+  const updateArrows = React.useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    setCanLeft(el.scrollLeft > 4);
+    setCanRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 4);
+  }, []);
+  React.useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    updateArrows();
+    el.addEventListener('scroll', updateArrows, { passive: true });
+    const ro = new ResizeObserver(updateArrows);
+    ro.observe(el);
+    return () => { el.removeEventListener('scroll', updateArrows); ro.disconnect(); };
+  }, [updateArrows]);
+  const scrollByDir = (dir) => {
+    const el = scrollRef.current;
+    if (!el) return;
+    el.scrollBy({ left: dir * el.clientWidth * 0.8, behavior: 'smooth' });
+  };
+  const rowArrowStyle = (side) => ({
+    position: 'absolute', top: '50%', transform: 'translateY(-50%)',
+    [side]: 4, zIndex: 6,
+    width: 30, height: 30, borderRadius: 999,
+    background: 'rgba(255,255,255,0.55)', backdropFilter: 'blur(4px)',
+    border: '1px solid rgba(255,255,255,0.5)',
+    boxShadow: '0 2px 8px rgba(11,31,58,0.18)', cursor: 'pointer', padding: 0,
+    display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0B1F3A',
+    opacity: 0.55, transition: 'opacity 0.18s, background 0.18s',
+  });
 
   return (
-    <section style={{
+    <section className="shop-curation-row" style={{
       padding: isMobile ? '20px 0 6px' : '28px 0 8px',
       borderBottom: '1px solid rgba(11,31,58,0.06)',
     }}>
+      {/* iPhone 진열장 — 칸 상단 조명 (다른 기기에서는 숨김) */}
+      <div className="case-lamp" aria-hidden="true">
+        <span className="case-lamp-fixture" />
+        <span className="case-lamp-glow" />
+      </div>
       <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: isMobile ? 12 : 16, gap: 16 }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: isMobile ? 6 : 8, flexWrap: 'wrap' }}>
@@ -923,11 +1193,11 @@ function DesktopCurationRow({ row, isMobile = false, isChairman, onSelect }) {
               color: row.tone, textTransform: 'uppercase',
             }}>{row.kicker}</div>
           </div>
-          <div style={{
+          <div className="cr-title" style={{
             fontSize: isMobile ? 17 : 22, fontWeight: 800, letterSpacing: '-0.02em',
             lineHeight: 1.25, marginBottom: 6, color: '#0B1F3A',
           }}>{row.title}</div>
-          <div style={{
+          <div className="cr-reason" style={{
             fontSize: isMobile ? 11 : 12.5, fontWeight: 500, color: 'rgba(11,31,58,0.6)',
             display: 'flex', alignItems: 'center', gap: 6,
           }}>
@@ -940,24 +1210,40 @@ function DesktopCurationRow({ row, isMobile = false, isChairman, onSelect }) {
       </div>
 
       {isMobile ? (
-        // 모바일 — 가로 스크롤 (카드 폭 고정)
-        <div className="drag-scroll-x" style={{
+        // 모바일 — 가로 스크롤 (카드 폭 고정) + 좌우 화살표
+        <div style={{ position: 'relative' }}>
+        <div ref={scrollRef} className="drag-scroll-x" style={{
           display: 'flex', gap: 10, overflowX: 'auto', overflowY: 'hidden',
           padding: '2px 0 8px', marginLeft: -16, marginRight: -16, paddingLeft: 16, paddingRight: 16,
           WebkitOverflowScrolling: 'touch',
           cursor: 'grab',
         }}>
-          {row.items.map((p) => {
+          {row.items.map((p, _ix) => {
             if (!p) return null;
             const insight = insights[(parseInt(String(p.id).replace(/\D/g, ''), 10) || 0) % (insights.length || 1)];
             return (
               <div key={`${row.kind}-${p.id}`} style={{
                 flex: '0 0 46%', minWidth: 0, scrollSnapAlign: 'start',
               }}>
-                <DesktopAICard product={p} insight={insight} onSelect={() => onSelect(p)} />
+                <DesktopAICard product={p} insight={insight} onSelect={() => onSelect(p)} kb={_ix} />
               </div>
             );
           })}
+        </div>
+        {canLeft && (
+          <button aria-label="이전" onClick={() => scrollByDir(-1)} style={rowArrowStyle('left')}
+            onMouseEnter={(e) => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.background = 'rgba(255,255,255,0.95)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.opacity = '0.55'; e.currentTarget.style.background = 'rgba(255,255,255,0.55)'; }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
+          </button>
+        )}
+        {canRight && (
+          <button aria-label="다음" onClick={() => scrollByDir(1)} style={rowArrowStyle('right')}
+            onMouseEnter={(e) => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.background = 'rgba(255,255,255,0.95)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.opacity = '0.55'; e.currentTarget.style.background = 'rgba(255,255,255,0.55)'; }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
+          </button>
+        )}
         </div>
       ) : (
         <div style={{
@@ -965,11 +1251,11 @@ function DesktopCurationRow({ row, isMobile = false, isChairman, onSelect }) {
           gridTemplateColumns: isChairman ? 'repeat(5, 1fr)' : 'repeat(6, 1fr)',
           gap: 14,
         }}>
-          {row.items.map((p) => {
+          {row.items.map((p, _ix) => {
             if (!p) return null;
             const insight = insights[(parseInt(String(p.id).replace(/\D/g, ''), 10) || 0) % (insights.length || 1)];
             return (
-              <DesktopAICard key={`${row.kind}-${p.id}`} product={p} insight={insight} onSelect={() => onSelect(p)} />
+              <DesktopAICard key={`${row.kind}-${p.id}`} product={p} insight={insight} onSelect={() => onSelect(p)} kb={_ix} />
             );
           })}
         </div>
@@ -978,26 +1264,69 @@ function DesktopCurationRow({ row, isMobile = false, isChairman, onSelect }) {
   );
 }
 
-function DesktopAICard({ product, insight, onSelect }) {
+function DesktopAICard({ product, insight, onSelect, kb }) {
   const p = product;
+  const _kbName = ['gsKB_n','gsKB_ne','gsKB_e','gsKB_se','gsKB_s','gsKB_sw','gsKB_w','gsKB_nw'][(kb || 0) % 8];
+  const _kbDur = `${(9 + ((kb || 0) % 5) * 1.7).toFixed(1)}s`;
+  const _kbDelay = `-${((kb || 0) * 2.4).toFixed(1)}s`;
+  const [kbHover, setKbHover] = React.useState(false);
+  const [cartCount, setCartCount] = React.useState(0);
+  const [pulling, setPulling] = React.useState(false);
+  const wrapRef = React.useRef(null);
+  const [isS26, setIsS26] = React.useState(false);
+  React.useEffect(() => {
+    if (wrapRef.current && !wrapRef.current.closest('.iphone-noto')) {
+      const w = wrapRef.current.closest('.phone-scroll');
+      if (w && w.clientWidth < 520) setIsS26(true);
+    }
+  }, []);
+  const handleOpen = (e) => {
+    if (pulling) return;
+    setPulling(true);
+    const card = e && e.currentTarget;
+    if (card && window.productPullToScreen) {
+      window.productPullToScreen(card, () => onSelect && onSelect());
+    } else {
+      setTimeout(() => onSelect && onSelect(), 420);
+    }
+  };
+  const addToCart = (e) => {
+    e.stopPropagation();
+    const card = e.currentTarget.closest('button');
+    const img = card && card.querySelector('img');
+    if (img && window.flyToCart) window.flyToCart(img.src, img.getBoundingClientRect());
+    setCartCount(c => {
+      const next = c + 1;
+      if (window.showToast) window.showToast((window.translate ? window.translate('toast.cart_added', { n: next }) : `장바구니에 ${next}개 담았습니다.`));
+      if (window.atomyCartBump) window.atomyCartBump();
+      return next;
+    });
+  };
   return (
+    <div ref={wrapRef} className={"aicard-wrap" + (pulling ? " is-pulling" : "")} style={{ position: 'relative' }}>
+    <span className="aicard-oval-shadow" aria-hidden="true" />
     <button
-      onClick={onSelect}
+      onClick={handleOpen}
+      className={pulling ? "" : ""}
       style={{
+        position: 'relative', zIndex: 1,
         background: '#fff',
         border: '1px solid rgba(11,31,58,0.06)',
         borderRadius: 14,
         padding: 0, textAlign: 'left',
         cursor: 'pointer', overflow: 'hidden',
         fontFamily: 'inherit',
+        width: '100%',
         transition: 'transform 0.2s, box-shadow 0.2s',
         boxShadow: '0 2px 6px rgba(11,31,58,0.04)',
       }}
       onMouseEnter={(e) => {
+        setKbHover(true);
         e.currentTarget.style.transform = 'translateY(-2px)';
         e.currentTarget.style.boxShadow = '0 12px 28px rgba(11,31,58,0.10)';
       }}
       onMouseLeave={(e) => {
+        setKbHover(false);
         e.currentTarget.style.transform = 'translateY(0)';
         e.currentTarget.style.boxShadow = '0 2px 6px rgba(11,31,58,0.04)';
       }}
@@ -1008,6 +1337,7 @@ function DesktopAICard({ product, insight, onSelect }) {
       }}>
         <img src={p.image} alt={p.name} style={{
           width: '100%', height: '100%', objectFit: 'cover', display: 'block',
+          animation: (isS26 && kbHover) ? `${_kbName} ${_kbDur} ease-in-out ${_kbDelay} infinite alternate` : 'none',
         }} />
         {insight && (
           <div style={{
@@ -1018,6 +1348,48 @@ function DesktopAICard({ product, insight, onSelect }) {
             letterSpacing: '-0.01em',
           }}>{insight}</div>
         )}
+        {/* 장바구니 담기 — 우상단 */}
+        <span
+          role="button"
+          aria-label="장바구니 담기"
+          onClick={addToCart}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = '#00B6F0';
+            e.currentTarget.style.transform = 'scale(1.12)';
+            const svg = e.currentTarget.querySelector('svg'); if (svg) svg.style.stroke = '#fff';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'rgba(255,255,255,0.95)';
+            e.currentTarget.style.transform = 'scale(1)';
+            const svg = e.currentTarget.querySelector('svg'); if (svg) svg.style.stroke = '#1A1A1A';
+          }}
+          style={{
+            position: 'absolute', bottom: 8, right: 8,
+            width: 36, height: 36, borderRadius: 10,
+            background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(6px)',
+            cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: '0 2px 8px rgba(11,31,58,0.18)',
+            transition: 'background 0.18s, transform 0.18s',
+          }}
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+               stroke="#1A1A1A" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"
+               style={{ transition: 'stroke 0.18s' }}>
+            <path d="M5 8h14l-1 12.2a1.5 1.5 0 01-1.5 1.3h-9A1.5 1.5 0 016 20.2L5 8z" />
+            <path d="M9 11V7a3 3 0 016 0v4" />
+          </svg>
+          {cartCount > 0 && (
+            <span style={{
+              position: 'absolute', top: -6, right: -6,
+              minWidth: 17, height: 17, padding: '0 5px',
+              borderRadius: 999, border: '1.5px solid #fff',
+              background: '#00B6F0', color: '#fff', fontSize: 9.5, fontWeight: 800,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontVariantNumeric: 'tabular-nums',
+            }}>{cartCount}</span>
+          )}
+        </span>
       </div>
       <div style={{ padding: '10px 12px 12px' }}>
         <div style={{
@@ -1040,6 +1412,7 @@ function DesktopAICard({ product, insight, onSelect }) {
         }}>★ {p.rating} · {(p.reviews || 0).toLocaleString()}</div>
       </div>
     </button>
+    </div>
   );
 }
 
@@ -1089,8 +1462,71 @@ const HERO_SLIDES = [
   },
 ];
 
-function HeroBannerCard({ slide, isMobile, onSelectProduct, animKey }) {
+function HeroBannerCard({ slide, isMobile, onSelectProduct, animKey, gs, active }) {
   const product = SHOP_PRODUCTS.find(p => p.id === slide.id) || SHOP_PRODUCTS[0];
+  if (gs) {
+    // GS Shop 스타일 — 1:1 풀블리드 배너 (배경 미디어 + 하단 텍스트 오버레이 + 투명 클릭 레이어)
+    return (
+      <div
+        onClick={() => onSelectProduct && onSelectProduct(product)}
+        role="button" tabIndex={0}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelectProduct && onSelectProduct(product); } }}
+        style={{
+          flex: 1, minWidth: 0,
+          position: 'relative', overflow: 'hidden',
+          aspectRatio: '1 / 1', background: slide.bg,
+          cursor: 'pointer',
+        }}
+      >
+        {/* 배경 미디어 (제품 이미지) — 풀사이즈 + 켄번즈 */}
+        <img
+          src={product.image}
+          alt=""
+          aria-hidden="true"
+          draggable={false}
+          style={{
+            position: 'absolute', inset: 0,
+            width: '100%', height: '100%', objectFit: 'cover',
+            userSelect: 'none', pointerEvents: 'none',
+            transformOrigin: 'center',
+            animation: active ? 'gsKenBurns 7s ease-out both' : 'none',
+            transform: active ? undefined : 'scale(1.08)',
+          }}
+        />
+        {/* 하단 가독성 그라디언트 */}
+        <div style={{
+          position: 'absolute', inset: 0, pointerEvents: 'none',
+          background: 'linear-gradient(0deg, rgba(0,0,0,0.42) 0%, rgba(0,0,0,0.12) 28%, rgba(0,0,0,0) 52%)',
+        }} />
+        {/* 텍스트 오버레이 — 하단 정렬 */}
+        <div style={{
+          position: 'absolute', inset: 0, zIndex: 1,
+          display: 'flex', flexDirection: 'column', justifyContent: 'flex-end',
+          padding: '32px 24px 62px',
+          color: '#fff', letterSpacing: '-0.4px',
+          textShadow: '0 1px 3px rgba(0,0,0,0.28)',
+          pointerEvents: 'none',
+        }}>
+          {slide.chips && slide.chips[0] && (
+            <span style={{
+              alignSelf: 'flex-start',
+              display: 'inline-flex', alignItems: 'center', height: 26,
+              padding: '0 10px', marginBottom: 12,
+              background: '#00B6F0', color: '#fff',
+              fontSize: 13.5, fontWeight: 600, borderRadius: 20,
+              letterSpacing: '-0.01em',
+            }}>{slide.chips[0]}</span>
+          )}
+          <strong style={{
+            fontSize: 25, fontWeight: 700, lineHeight: 1.28,
+            color: '#fff', maxWidth: 300, wordBreak: 'keep-all',
+          }}>
+            {slide.sub}<br />{slide.title[1]}
+          </strong>
+        </div>
+      </div>
+    );
+  }
   return (
     <div
       key={animKey}
@@ -1101,12 +1537,12 @@ function HeroBannerCard({ slide, isMobile, onSelectProduct, animKey }) {
       style={{
         flex: 1, minWidth: 0,
         background: slide.bg,
-        borderRadius: isMobile ? 14 : 18,
-        padding: isMobile ? '22px 22px 20px' : '34px 34px 32px',
+        borderRadius: gs ? 0 : (isMobile ? 14 : 18),
+        padding: gs ? '26px 24px' : (isMobile ? '22px 22px 20px' : '34px 34px 32px'),
         position: 'relative', overflow: 'hidden',
         display: 'flex', flexDirection: 'row',
-        gap: isMobile ? 12 : 22, alignItems: 'center',
-        minHeight: isMobile ? 204 : 288,
+        gap: gs ? 14 : (isMobile ? 12 : 22), alignItems: 'center',
+        minHeight: gs ? 260 : (isMobile ? 204 : 288),
         cursor: 'pointer',
       }}
     >
@@ -1162,8 +1598,8 @@ function HeroBannerCard({ slide, isMobile, onSelectProduct, animKey }) {
         onClick={() => onSelectProduct(product)}
         style={{
           flexShrink: 0,
-          width: isMobile ? 120 : 204,
-          height: isMobile ? 144 : 240,
+          width: gs ? 150 : (isMobile ? 120 : 204),
+          height: gs ? 180 : (isMobile ? 144 : 240),
           position: 'relative', cursor: 'pointer',
           filter: 'drop-shadow(0 10px 22px rgba(0,0,0,0.18))',
         }}
@@ -1275,6 +1711,10 @@ function ShopHero({ isMobile, onSelectProduct }) {
   // 실제 컨테이너 폭을 관찰해 넓은 면(Fold7 등)은 2개씩 노출
   const wrapRef = React.useRef(null);
   const [wideMobile, setWideMobile] = React.useState(false);
+  const [isIphone, setIsIphone] = React.useState(false);
+  React.useEffect(() => {
+    if (wrapRef.current && wrapRef.current.closest('.iphone-noto')) setIsIphone(true);
+  }, []);
   React.useEffect(() => {
     if (!wrapRef.current) return;
     const el = wrapRef.current;
@@ -1287,10 +1727,13 @@ function ShopHero({ isMobile, onSelectProduct }) {
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
-  const visibleCount = (!isMobile || wideMobile) ? 2 : 1;
+  const visibleCount = 1;
+  // GS Shop 스타일 풀블리드 히어로 — 전체 기기 적용
+  const gsMode = true;
   const [idx, setIdx] = React.useState(0);
   const [animOn, setAnimOn] = React.useState(true);
   const [paused, setPaused] = React.useState(false);
+  const [dragPx, setDragPx] = React.useState(0);
 
   // 무한 루프용 — 앞쪽에 visibleCount만큼 복제 추가
   const extended = React.useMemo(
@@ -1352,28 +1795,112 @@ function ShopHero({ isMobile, onSelectProduct }) {
 
   const gapPx = isMobile ? 4 : 6;
 
+  // 마우스/터치 스와이프 (window 레벨 리스너로 안정적으로 추적)
+  const dragRef = React.useRef({ down: false, startX: 0, moved: false });
+  const beginDrag = (clientX) => {
+    dragRef.current = { down: true, startX: clientX, moved: false };
+    setPaused(true);
+  };
+  const endDrag = (clientX) => {
+    const d = dragRef.current;
+    if (!d.down) return;
+    const dx = clientX - d.startX;
+    d.down = false;
+    setPaused(false);
+    setDragPx(0);
+    if (Math.abs(dx) > 40) {
+      go(dx < 0 ? 1 : -1);
+      if (d.moved) {
+        const blocker = (ev) => { ev.stopPropagation(); ev.preventDefault(); };
+        window.addEventListener('click', blocker, { capture: true, once: true });
+      }
+    }
+  };
+  const onMouseDown = (e) => {
+    if (e.button !== 0) return;
+    beginDrag(e.clientX);
+    const onMove = (ev) => {
+      if (!dragRef.current.down) return;
+      const dx = ev.clientX - dragRef.current.startX;
+      if (Math.abs(dx) > 6) dragRef.current.moved = true;
+      setDragPx(dx);
+    };
+    const onUp = (ev) => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+      endDrag(ev.clientX);
+    };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+  };
+  const onTouchStart = (e) => { beginDrag(e.touches[0].clientX); };
+  const onTouchMove = (e) => {
+    if (!dragRef.current.down) return;
+    const dx = e.touches[0].clientX - dragRef.current.startX;
+    if (Math.abs(dx) > 6) dragRef.current.moved = true;
+    setDragPx(dx);
+  };
+  const onTouchEnd = (e) => {
+    const x = (e.changedTouches && e.changedTouches[0]) ? e.changedTouches[0].clientX : dragRef.current.startX;
+    endDrag(x);
+  };
+
+  const navBtnStyle = (side) => ({
+    position: 'absolute', top: '50%', transform: 'translateY(-50%)',
+    [side]: isMobile ? 8 : 14, zIndex: 6,
+    width: isMobile ? 30 : 40, height: isMobile ? 30 : 40, borderRadius: 999,
+    background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(6px)',
+    border: '1px solid rgba(11,31,58,0.1)', cursor: 'pointer', padding: 0,
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    boxShadow: '0 4px 12px rgba(11,31,58,0.15)', color: '#0B1F3A',
+  });
+
   return (
     <section
       ref={wrapRef}
       onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
+      onMouseLeave={() => { setPaused(false); }}
+      onMouseDown={onMouseDown}
+      onTouchStart={onTouchStart}
+      onTouchMove={onTouchMove}
+      onTouchEnd={onTouchEnd}
       style={{
         background: '#F4F6F8',
         padding: 0,
         position: 'relative', overflow: 'hidden',
+        touchAction: 'pan-y', cursor: 'grab',
       }}
     >
       <div style={{
         position: 'relative', maxWidth: 1280, margin: '0 auto',
         overflow: 'hidden',
       }}>
+        {gsMode ? (
+          // GS 페이드 + 켄번즈 스택 — 활성 슬라이드만 노출, 이미지가 천천히 움직임
+          <div style={{ position: 'relative', width: '100%', aspectRatio: '1 / 1' }}>
+            {HERO_SLIDES.map((slide, i) => (
+              <div
+                key={slide.id}
+                style={{
+                  position: 'absolute', inset: 0,
+                  opacity: i === displayIdx ? 1 : 0,
+                  transition: 'opacity 0.8s ease',
+                  pointerEvents: i === displayIdx ? 'auto' : 'none',
+                  zIndex: i === displayIdx ? 1 : 0,
+                }}
+              >
+                <HeroBannerCard slide={slide} isMobile={isMobile} onSelectProduct={onSelectProduct} gs={true} active={i === displayIdx} />
+              </div>
+            ))}
+          </div>
+        ) : (
         <div style={{
           display: 'flex',
           gap: gapPx,
           // 각 슬라이드 = (100% - gap*(vc-1)) / vc
           // translateX = -idx * (slideWidth + gap)
-          transform: `translateX(calc(${-idx} * ((100% - ${gapPx * (visibleCount - 1)}px) / ${visibleCount} + ${gapPx}px)))`,
-          transition: animOn ? 'transform 0.6s cubic-bezier(.4,.0,.2,1)' : 'none',
+          transform: `translateX(calc(${-idx} * ((100% - ${gapPx * (visibleCount - 1)}px) / ${visibleCount} + ${gapPx}px) + ${dragPx}px))`,
+          transition: (animOn && dragPx === 0) ? 'transform 0.6s cubic-bezier(.4,.0,.2,1)' : 'none',
           willChange: 'transform',
         }}>
           {extended.map((slide, i) => (
@@ -1384,14 +1911,67 @@ function ShopHero({ isMobile, onSelectProduct }) {
                 minWidth: 0,
               }}
             >
-              <HeroBannerCard slide={slide} isMobile={isMobile} onSelectProduct={onSelectProduct} animKey={null} />
+              <HeroBannerCard slide={slide} isMobile={isMobile} onSelectProduct={onSelectProduct} animKey={null} gs={gsMode} />
             </div>
           ))}
         </div>
+        )}
       </div>
 
-      {/* 페이지네이션 + 좌우 네비 */}
-      <div style={{
+      {/* 좌·우 화살표 네비 (GS 모드에서는 숨김 — 스와이프만) */}
+      {!gsMode && (<button onClick={() => go(-1)} aria-label="이전 배너" style={navBtnStyle('left')}>
+        <svg width={isMobile ? 16 : 20} height={isMobile ? 16 : 20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
+      </button>)}
+      {!gsMode && (<button onClick={() => go(1)} aria-label="다음 배너" style={navBtnStyle('right')}>
+        <svg width={isMobile ? 16 : 20} height={isMobile ? 16 : 20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
+      </button>)}
+
+      {/* GS 스타일 하단 컨트롤 바 — 프로그레스 + 카운터 + 전체보기(+) */}
+      {gsMode && (
+        <div style={{
+          position: 'absolute', left: 0, right: 0, bottom: 18, zIndex: 3,
+          display: 'flex', alignItems: 'center', gap: 12,
+          padding: '0 12px 0 16px', boxSizing: 'border-box',
+        }}>
+          <div style={{
+            flex: 1, height: 2, borderRadius: 10,
+            background: 'rgba(255,255,255,0.3)', position: 'relative', overflow: 'hidden',
+          }}>
+            <div style={{
+              position: 'absolute', top: 0, bottom: 0, left: 0,
+              width: `${((displayIdx + 1) / total) * 100}%`,
+              background: '#fff', borderRadius: 10,
+              transition: 'width 0.4s cubic-bezier(.4,0,.2,1)',
+            }} />
+          </div>
+          <div style={{
+            display: 'inline-flex', alignItems: 'center', gap: 5, height: 32,
+            fontSize: 13, fontWeight: 700, color: '#fff',
+            fontVariantNumeric: 'tabular-nums', textShadow: '0 1px 3px rgba(0,0,0,0.35)',
+          }}>
+            <strong style={{ fontWeight: 800 }}>{displayIdx + 1}</strong>
+            <span style={{ opacity: 0.5 }}>|</span>
+            <span style={{ opacity: 0.7 }}>{total}</span>
+          </div>
+          <button
+            onClick={(e) => { e.stopPropagation(); setPaused(p => !p); }}
+            aria-label={paused ? '재생' : '일시정지'}
+            style={{
+              width: 32, height: 32, borderRadius: '50%', flexShrink: 0,
+              background: 'rgba(25,25,35,0.38)', backdropFilter: 'blur(4px)',
+              border: 'none', cursor: 'pointer', color: '#fff',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
+            }}
+          >
+            {paused
+              ? <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4" /></svg>
+              : <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" /><rect x="14" y="5" width="4" height="14" /></svg>}
+          </button>
+        </div>
+      )}
+
+      {/* 페이지네이션 + 좌우 네비 (기본 모드) */}
+      {!gsMode && (<div style={{
         position: 'absolute', bottom: isMobile ? 10 : 16, right: isMobile ? 16 : 36,
         display: 'inline-flex', alignItems: 'center', gap: 6,
         padding: isMobile ? '4px 8px' : '5px 10px', borderRadius: 999,
@@ -1427,7 +2007,7 @@ function ShopHero({ isMobile, onSelectProduct }) {
             <svg width={isMobile ? 10 : 11} height={isMobile ? 10 : 11} viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" /><rect x="14" y="5" width="4" height="14" /></svg>
           )}
         </button>
-      </div>
+      </div>)}
     </section>
   );
 }

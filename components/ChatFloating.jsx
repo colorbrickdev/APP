@@ -507,45 +507,104 @@ function fieldInputStyle() {
 
 // 음성 대화 패널 — 마이크 시각화 + 자동 텍스트 변환 데모
 function VoiceChatPanel({ onClose, onTranscript }) {
-  const [state, setState] = React.useState('listening'); // 'listening' | 'transcribing' | 'done'
+  const [state, setState] = React.useState('listening'); // 'listening' | 'transcribing' | 'done' | 'error'
   const [seconds, setSeconds] = React.useState(0);
-  const [transcript, setTranscript] = React.useState('');
+  const [transcript, setTranscript] = React.useState('');   // 확정 텍스트
+  const [interim, setInterim] = React.useState('');         // 인식 중 임시 텍스트
+  const [errorMsg, setErrorMsg] = React.useState('');
+  const recogRef = React.useRef(null);
+  const finalRef = React.useRef('');
+  const stoppedRef = React.useRef(false);
 
-  // 데모 — 4초 간 듣고, 1.5초 텍스트 변환 후 자동 전송
-  // 실제로는 SpeechRecognition API 연결 가능
-  React.useEffect(() => {
-    let mounted = true;
-    let timer;
-    if (state === 'listening') {
-      timer = setInterval(() => {
-        if (!mounted) return;
-        setSeconds(s => {
-          if (s >= 4) {
-            setState('transcribing');
-            return s;
-          }
-          return s + 1;
-        });
-      }, 1000);
-    } else if (state === 'transcribing') {
-      // 1.5초 후 가짜 텍스트 표시
-      const t = setTimeout(() => {
-        if (!mounted) return;
-        const samples = [
-          '헤모힘 샷에 대해 알려주세요',
-          '애터미 사업자 가입은 어떻게 하나요',
-          '제가 사는 곳 근처에 센터가 있나요',
-          '제품 추천해주세요',
-        ];
-        setTranscript(samples[Math.floor(Math.random() * samples.length)]);
-        setState('done');
-      }, 1500);
-      return () => clearTimeout(t);
+  const SR = (typeof window !== 'undefined') &&
+    (window.SpeechRecognition || window.webkitSpeechRecognition);
+
+  // 실제 마이크 인식 시작
+  const startRecognition = React.useCallback(() => {
+    if (!SR) {
+      setState('error');
+      setErrorMsg('이 브라우저는 음성 인식을 지원하지 않아요. 직접 입력해 주세요.');
+      return;
     }
-    return () => {
-      mounted = false;
-      clearInterval(timer);
+    stoppedRef.current = false;
+    finalRef.current = '';
+    setTranscript('');
+    setInterim('');
+    setErrorMsg('');
+    setSeconds(0);
+    setState('listening');
+
+    let recog;
+    try {
+      recog = new SR();
+    } catch (e) {
+      setState('error');
+      setErrorMsg('마이크를 시작할 수 없어요. 권한을 확인해 주세요.');
+      return;
+    }
+    recog.lang = 'ko-KR';
+    recog.interimResults = true;
+    recog.continuous = true;
+    recog.maxAlternatives = 1;
+
+    recog.onresult = (event) => {
+      let interimText = '';
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const res = event.results[i];
+        if (res.isFinal) finalRef.current += res[0].transcript;
+        else interimText += res[0].transcript;
+      }
+      setInterim(interimText);
+      setTranscript(finalRef.current.trim());
     };
+    recog.onerror = (event) => {
+      stoppedRef.current = true;
+      if (event.error === 'no-speech') {
+        setState('error');
+        setErrorMsg('음성이 감지되지 않았어요. 다시 시도해 주세요.');
+      } else if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+        setState('error');
+        setErrorMsg('마이크 권한이 거부되었어요. 브라우저 설정에서 허용해 주세요.');
+      } else if (event.error === 'aborted') {
+        // 사용자가 중단 — 무시
+      } else {
+        setState('error');
+        setErrorMsg('음성 인식 중 오류가 발생했어요. 다시 시도해 주세요.');
+      }
+    };
+    recog.onend = () => {
+      // 사용자가 멈췄거나 자동 종료된 경우
+      const finalText = (finalRef.current || '').trim();
+      if (stoppedRef.current) {
+        if (finalText) { setTranscript(finalText); setState('done'); }
+        return;
+      }
+      // 자동 종료(침묵 등) — 인식된 게 있으면 완료, 없으면 재시작 시도
+      if (finalText) { setTranscript(finalText); setState('done'); }
+    };
+
+    recogRef.current = recog;
+    try {
+      recog.start();
+    } catch (e) {
+      // 이미 시작된 경우 무시
+    }
+  }, [SR]);
+
+  // 마운트 시 자동 시작
+  React.useEffect(() => {
+    startRecognition();
+    return () => {
+      stoppedRef.current = true;
+      if (recogRef.current) { try { recogRef.current.abort(); } catch (e) {} }
+    };
+  }, [startRecognition]);
+
+  // 듣는 시간 카운터
+  React.useEffect(() => {
+    if (state !== 'listening') return;
+    const timer = setInterval(() => setSeconds(s => s + 1), 1000);
+    return () => clearInterval(timer);
   }, [state]);
 
   React.useEffect(() => {
@@ -554,8 +613,19 @@ function VoiceChatPanel({ onClose, onTranscript }) {
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
 
+  // 말하기 종료 — 인식 멈추고 결과 확정
+  const stopListening = () => {
+    stoppedRef.current = true;
+    const r = recogRef.current;
+    if (r) { try { r.stop(); } catch (e) {} }
+    const finalText = ((finalRef.current || '') + ' ' + (interim || '')).trim();
+    if (finalText) { setTranscript(finalText); setState('done'); }
+    else { setState('error'); setErrorMsg('음성이 감지되지 않았어요. 다시 시도해 주세요.'); }
+  };
+
   const handleSend = () => {
-    if (transcript) onTranscript && onTranscript(transcript);
+    const out = (transcript || '').trim();
+    if (out) onTranscript && onTranscript(out);
   };
 
   // 파형 막대 — 8개 (CSS 애니메이션으로 들썩임)
@@ -693,26 +763,25 @@ function VoiceChatPanel({ onClose, onTranscript }) {
               <div style={{ fontSize: 13.5, fontWeight: 800, color: '#fff', marginBottom: 4 }}>
                 듣고 있어요...
               </div>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>
-                자유롭게 말씀해주세요 · {seconds}초 / 5초
-              </div>
+              {(transcript || interim) ? (
+                <div style={{ fontSize: 13.5, fontWeight: 600, color: '#fff', lineHeight: 1.5, marginTop: 6 }}>
+                  {transcript}<span style={{ color: 'rgba(255,255,255,0.5)' }}>{transcript && interim ? ' ' : ''}{interim}</span>
+                </div>
+              ) : (
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>
+                  자유롭게 말씀해주세요 · {seconds}초
+                </div>
+              )}
             </>
           )}
-          {state === 'transcribing' && (
+          {state === 'error' && (
             <>
-              <div style={{ fontSize: 13.5, fontWeight: 800, color: '#fff', marginBottom: 4 }}>
-                텍스트로 변환 중...
-              </div>
               <div style={{
-                display: 'inline-flex', gap: 4, marginTop: 4,
-              }}>
-                {[0,1,2].map(i => (
-                  <span key={i} style={{
-                    width: 6, height: 6, borderRadius: 999,
-                    background: '#FFB800',
-                    animation: `voiceBar 1s ease-in-out ${i * 150}ms infinite`,
-                  }} />
-                ))}
+                fontSize: 9.5, fontWeight: 800, color: '#FF7A8A',
+                letterSpacing: '0.14em', marginBottom: 6,
+              }}>오류</div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: '#fff', lineHeight: 1.5 }}>
+                {errorMsg || '음성 인식에 실패했어요.'}
               </div>
             </>
           )}
@@ -736,7 +805,7 @@ function VoiceChatPanel({ onClose, onTranscript }) {
             gridTemplateColumns: '1fr 1.5fr', gap: 8,
           }}>
             <button
-              onClick={() => { setTranscript(''); setSeconds(0); setState('listening'); }}
+              onClick={() => startRecognition()}
               style={{
                 padding: '12px', borderRadius: 10,
                 background: 'rgba(255,255,255,0.08)',
@@ -761,24 +830,35 @@ function VoiceChatPanel({ onClose, onTranscript }) {
               메시지 보내기 →
             </button>
           </div>
-        ) : (
+        ) : state === 'error' ? (
           <button
-            onClick={() => state === 'listening' && setState('transcribing')}
-            disabled={state === 'transcribing'}
+            onClick={() => startRecognition()}
             style={{
               marginTop: 14, width: '100%',
-              padding: '12px', borderRadius: 10, border: 'none',
-              background: state === 'listening'
-                ? 'rgba(255,255,255,0.1)'
-                : 'rgba(255,255,255,0.05)',
-              color: state === 'listening' ? '#fff' : 'rgba(255,255,255,0.5)',
+              padding: '12px', borderRadius: 10,
+              background: 'linear-gradient(135deg, #00B6F0, #5CD3F7)',
+              color: '#0B1F3A', fontSize: 13, fontWeight: 900,
+              cursor: 'pointer', fontFamily: 'inherit', border: 'none',
+              boxShadow: '0 6px 18px rgba(0,182,240,0.4)',
+            }}
+          >
+            다시 시도
+          </button>
+        ) : (
+          <button
+            onClick={stopListening}
+            style={{
+              marginTop: 14, width: '100%',
+              padding: '12px', borderRadius: 10,
+              background: 'rgba(255,255,255,0.1)',
+              color: '#fff',
               fontSize: 12.5, fontWeight: 800,
-              cursor: state === 'listening' ? 'pointer' : 'default',
+              cursor: 'pointer',
               fontFamily: 'inherit',
               border: '1px solid rgba(255,255,255,0.18)',
             }}
           >
-            {state === 'listening' ? '🔇 말하기 종료' : '잠시만 기다려주세요...'}
+            ■ 말하기 종료
           </button>
         )}
       </div>
@@ -794,7 +874,7 @@ function ChatPanel({ isMobile, width, height, bottom, right, onClose }) {
   const [messages, setMessages] = React.useState([
     {
       role: 'bot',
-      text: '안녕하세요! 애터미입니다 🦢\n무엇이든 물어보세요. 제품, 회원가입, 비즈니스 모두 답해드려요.',
+      text: '안녕하세요! 애터미 어시스턴트입니다 🦢\n애터미 사업 구조(PV·바이너리·수당·직급 등) 무엇이든 물어보세요.',
     },
   ]);
   const scrollRef = React.useRef(null);
@@ -804,18 +884,69 @@ function ChatPanel({ isMobile, width, height, bottom, right, onClose }) {
     if (el) el.scrollTop = el.scrollHeight;
   }, [messages]);
 
-  const send = () => {
-    const text = input.trim();
-    if (!text) return;
-    setMessages(m => [...m, { role: 'user', text }]);
+  const [thinking, setThinking] = React.useState(false);
+
+  const send = async (overrideText) => {
+    const text = (overrideText != null ? overrideText : input).trim();
+    if (!text || thinking) return;
+    const history = [...messages, { role: 'user', text }];
+    setMessages(history);
     setInput('');
-    // 가짜 응답 — 실제 연결 시 API 호출로 교체
-    setTimeout(() => {
-      setMessages(m => [...m, {
-        role: 'bot',
-        text: '문의 감사합니다. 담당자가 곧 답변드릴게요. 빠른 답변이 필요하시면 1:1 상담을 신청해주세요.',
-      }]);
-    }, 700);
+
+    const knowledge = window.ATOMY_GUIDE_KNOWLEDGE || '';
+    const canUseClaude = typeof window !== 'undefined' && window.claude && typeof window.claude.complete === 'function';
+
+    if (!canUseClaude || !knowledge) {
+      setTimeout(() => {
+        setMessages(m => [...m, {
+          role: 'bot',
+          text: '문의 감사합니다. 담당자가 곧 답변드릴게요. 빠른 답변이 필요하시면 1:1 상담을 신청해주세요.',
+        }]);
+      }, 600);
+      return;
+    }
+
+    setThinking(true);
+    setMessages(m => [...m, { role: 'bot', text: '…', _typing: true }]);
+
+    // 최근 대화 맥락 (가입문의 등 시스템 메시지는 제외)
+    const convo = history
+      .filter(mm => mm.text && mm.text !== '…')
+      .slice(-8)
+      .map(mm => `${mm.role === 'user' ? '고객' : '어시스턴트'}: ${mm.text}`)
+      .join('\n');
+
+    const prompt = `당신은 애터미 사업가 비즈니스 가이드를 안내하는 친절한 '애터미 어시스턴트'입니다.
+아래 [가이드 자료]만을 근거로 한국어로 정확하고 간결하게 답변하세요.
+
+규칙:
+- 반드시 [가이드 자료]에 있는 내용으로만 답하세요. 자료에 없으면 "해당 내용은 가이드에 포함되어 있지 않아, 1:1 상담을 통해 정확히 안내해드릴게요."라고 답하세요.
+- 숫자(PV, %, 직급 조건 등)는 자료 그대로 정확히 인용하세요.
+- 3~5문장 이내로 핵심만, 필요하면 항목을 줄바꿈으로 정리하세요.
+- 과장하거나 수익을 보장하는 표현은 쓰지 마세요.
+
+[가이드 자료]
+${knowledge}
+
+[대화]
+${convo}
+
+어시스턴트:`;
+
+    try {
+      const reply = await window.claude.complete(prompt);
+      setMessages(m => {
+        const base = m.filter(mm => !mm._typing);
+        return [...base, { role: 'bot', text: (reply || '').trim() || '죄송해요, 답변을 불러오지 못했어요. 다시 한 번 질문해 주시겠어요?' }];
+      });
+    } catch (e) {
+      setMessages(m => {
+        const base = m.filter(mm => !mm._typing);
+        return [...base, { role: 'bot', text: '일시적으로 답변을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.' }];
+      });
+    } finally {
+      setThinking(false);
+    }
   };
 
   const onKeyDown = (e) => {
@@ -826,7 +957,7 @@ function ChatPanel({ isMobile, width, height, bottom, right, onClose }) {
   };
 
   return (
-    <div style={{
+    <div className="chat-panel-root" style={{
       position: 'absolute',
       bottom,
       right,
@@ -936,6 +1067,33 @@ function ChatPanel({ isMobile, width, height, bottom, right, onClose }) {
             }}>{m.text}</div>
           </div>
         ))}
+
+        {/* AI 제안 — 버튼 클릭만으로 질문 (입력 불필요) */}
+        {!thinking && (() => {
+          const asked = new Set(messages.filter(m => m.role === 'user').map(m => m.text));
+          const pool = (window.ATOMY_SUGGESTED_QUESTIONS || []).filter(q => !asked.has(q));
+          const chips = pool.slice(0, 4);
+          if (!chips.length) return null;
+          return (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 2 }}>
+              <div style={{ fontSize: 10.5, fontWeight: 800, color: '#8A97AD', letterSpacing: '0.08em', margin: '2px 2px 0' }}>
+                이런 게 궁금하셨나요?
+              </div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                {chips.map((q) => (
+                  <button key={q} onClick={() => send(q)} style={{
+                    padding: '8px 12px', borderRadius: 999,
+                    background: '#fff', border: '1px solid rgba(0,182,240,0.4)',
+                    color: '#0088B8', fontSize: 12, fontWeight: 700,
+                    letterSpacing: '-0.01em', cursor: 'pointer', fontFamily: 'inherit',
+                    textAlign: 'left', lineHeight: 1.3,
+                    boxShadow: '0 1px 3px rgba(11,31,58,0.06)',
+                  }}>{q}</button>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
       </div>
 
       {/* 애터미 가입문의 CTA — 강조 버튼 */}
@@ -1069,16 +1227,9 @@ function ChatPanel({ isMobile, width, height, bottom, right, onClose }) {
         <VoiceChatPanel
           onClose={() => setVoiceOpen(false)}
           onTranscript={(text) => {
-            // 음성을 텍스트로 변환해서 메시지에 추가
-            setMessages(m => [...m, { role: 'user', text }]);
+            // 음성을 텍스트로 변환 → 가이드 기반 답변 로직으로 전송
             setVoiceOpen(false);
-            // 봇 응답
-            setTimeout(() => {
-              setMessages(m => [...m, {
-                role: 'bot',
-                text: '음성 메시지 잘 들었습니다! 더 궁금하신 점이 있으면 언제든 말씀해주세요 🦢',
-              }]);
-            }, 800);
+            send(text);
           }}
         />
       )}

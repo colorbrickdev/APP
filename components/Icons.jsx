@@ -149,7 +149,12 @@ const iconByKey = (key, size, color) => {
     case 'yt': return ProfileIcon.youtube(size, color);
     case 'kk': return ProfileIcon.kakao(size, color);
     case 'fb': return ProfileIcon.facebook(size, color);
-    case 'bl': return ProfileIcon.blog(size, color);
+    case 'bl': return (
+      <img src="assets/naver-blog.png" alt="Blog"
+        style={{ width: size, height: size, objectFit: 'contain', display: 'block', borderRadius: 4,
+          filter: color === '#03C75A' ? 'none' : 'grayscale(1) brightness(0)',
+          transition: 'filter 0.18s ease' }} />
+    );
     case 'tt': return ProfileIcon.tiktok(size, color);
     default: return null;
   }

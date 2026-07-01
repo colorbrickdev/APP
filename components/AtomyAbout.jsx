@@ -75,7 +75,7 @@ const NONI_TIMELINE = [
 ];
 
 // 섹션별 영상 카드 — 모두 같은 mp4를 사용 (실제 운영 시 애터미 공식 영상으로 교체)
-const _ABOUT_VIDEO = 'https://www.genspark.ai/api/files/s/mb60FN8q';
+const _ABOUT_VIDEO = 'assets/member-story.mp4';
 const SECTION_VIDEOS = {
   hemohim: {
     thumb: 'https://sspark.genspark.ai/cfimages?u1=Jhjz0IURcZDh0l9RVxrz5xQqr3%2FSDUj8E8jH1%2B1ih%2F8l%2FZbZtW%2BIevSEGJcN3cygYdcnKTv8ZsEA4CiuR55cJ304eQanPED1gL4hrukR4xE18jq%2FjnjW5DkeJTztJBAg0sIb%2BfDfWALihsLJjxRKDU9PyFzCmWIgOJ4%3D&u2=9YibfyLhMrnobOkc&width=2560',
