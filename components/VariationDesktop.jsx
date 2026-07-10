@@ -3,7 +3,7 @@
 // 우측: 50개 석세스클립 그리드 (5열)
 // 상단: 글로벌 헤더(제품구매 / 석세스클립 / 인생시나리오 / 애터미소개 + 검색 + 로그인 등)
 
-function DesktopHeader({ notifOpen = false, onToggleNotif = () => {}, onNavClick = () => {}, currentPage = 'shorts' }) {
+function DesktopHeader({ notifOpen = false, onToggleNotif = () => {}, onNavClick = () => {}, currentPage = 'shorts', onOpenSearch = () => {} }) {
   // 알림 미읽음 카운트 — notifStore 구독
   const [notifUnread, setNotifUnread] = React.useState(() => (window.notifStore ? window.notifStore.unreadCount() : 3));
   React.useEffect(() => {
@@ -85,10 +85,13 @@ function DesktopHeader({ notifOpen = false, onToggleNotif = () => {}, onNavClick
           </svg>
           <input
             placeholder="제품, 석세스클립 검색"
+            readOnly
+            onClick={(e) => onOpenSearch(e.currentTarget)}
+            onFocus={(e) => onOpenSearch(e.currentTarget)}
             style={{
               flex: 1, background: 'transparent', border: 'none',
               color: '#0B1F3A', fontSize: 13, outline: 'none',
-              fontFamily: 'inherit',
+              fontFamily: 'inherit', cursor: 'pointer',
             }}
           />
         </div>
@@ -125,6 +128,18 @@ function DesktopHeader({ notifOpen = false, onToggleNotif = () => {}, onNavClick
           )}
         </button>
 
+        {/* 주문내역 */}
+        <button aria-label="주문내역" onClick={(e) => window.openOrderHistory && window.openOrderHistory(e.currentTarget)} style={{
+          background: '#fff', border: '1px solid rgba(11,31,58,0.14)', cursor: 'pointer',
+          padding: '7px 13px', lineHeight: 0, borderRadius: 999,
+          display: 'inline-flex', alignItems: 'center', gap: 6,
+        }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0B1F3A"
+               strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M3 7l9-4 9 4-9 4-9-4z" /><path d="M3 7v10l9 4 9-4V7" /><path d="M12 11v10" />
+          </svg>
+          <span style={{ fontSize: 12.5, fontWeight: 800, color: '#0B1F3A', lineHeight: 1 }}>{(typeof translate==='function')?translate('nav.orders',null,(window.i18nStore&&window.i18nStore.lang)||'ko'):'주문내역'}</span>
+        </button>
         {/* 장바구니 — 카운트 배지 */}
         <button aria-label="장바구니 2건" data-cart-icon style={{
           background: 'transparent', border: 'none', cursor: 'pointer',
@@ -145,7 +160,7 @@ function DesktopHeader({ notifOpen = false, onToggleNotif = () => {}, onNavClick
             background: '#00B6F0',
             color: '#fff', fontSize: 10, fontWeight: 800,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}><span data-cart-count>2</span></span>
+          }}><span data-cart-count>{(() => { try { return localStorage.getItem('quickMember') ? '2' : '0'; } catch (_) { return '0'; } })()}</span></span>
         </button>
       </div>
     </div>
@@ -546,7 +561,8 @@ function DesktopShortCard({ short, index, onClick }) {
   );
 }
 
-function DesktopShortsGrid({ onPlay, filteredShorts, tab, setTab, flagFilter, setFlagFilter }) {
+function DesktopShortsGrid({ onPlay, filteredShorts, tab, setTab, flagFilter, setFlagFilter, clipSort = 'reco', setClipSort = () => {} }) {
+  const { t } = (typeof useTranslation === 'function') ? useTranslation() : { t: (k) => k };
   const [hoverId, setHoverId] = React.useState(null);
 
   const tabs = [
@@ -629,6 +645,30 @@ function DesktopShortsGrid({ onPlay, filteredShorts, tab, setTab, flagFilter, se
                 </button>
               );
             })}
+            {/* 정렬 드롭다운 */}
+            <div style={{ position: 'relative', marginLeft: 6 }}>
+              <select
+                value={clipSort}
+                onChange={(e) => setClipSort(e.target.value)}
+                aria-label="정렬"
+                style={{
+                  appearance: 'none', WebkitAppearance: 'none',
+                  padding: '6px 24px 6px 12px', borderRadius: 999,
+                  border: '1px solid rgba(11,31,58,0.1)', background: '#fff',
+                  fontSize: 11.5, fontWeight: 700, color: '#4A5568',
+                  fontFamily: 'inherit', cursor: 'pointer', outline: 'none',
+                }}
+              >
+                <option value="reco">{t('sort.reco')}</option>
+                <option value="new">{t('sort.new')}</option>
+                <option value="views">{t('sort.views')}</option>
+                <option value="likes">{t('sort.likes')}</option>
+              </select>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#8A97AD" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"
+                   style={{ position: 'absolute', right: 9, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </div>
           </div>
         </div>
       </div>
@@ -680,11 +720,13 @@ function VariationDesktop() {
   const [playerIdx, setPlayerIdx] = React.useState(null);
   const [tab, setTab] = React.useState('all');
   const [flagFilter, setFlagFilter] = React.useState('all');
+  const [clipSort, setClipSort] = React.useState('reco');
   const [notifOpen, setNotifOpen] = React.useState(false);
 
   // 라우팅 — 현재 페이지
   const [currentPage, setCurrentPage] = React.useState('shorts'); // 'shorts' | 'shop' | 'life' | 'about'
   const [shopProduct, setShopProduct] = React.useState(null); // 제품 상세 페이지로 진입했을 때
+  const [searchOpen, setSearchOpen] = React.useState(null);
   const [productVideo, setProductVideo] = React.useState(null); // 상품상세에서 영상 풀스크린
 
   const rootRef = React.useRef(null);
@@ -727,8 +769,12 @@ function VariationDesktop() {
     else if (tab !== 'all') r = r.filter(s => s.category === tab);
     if (flagFilter === 'official') r = r.filter(s => s.flag === '공식');
     else if (flagFilter === 'personal') r = r.filter(s => s.flag === '개인');
+    const num = (v) => { const s = String(v || '0'); return s.endsWith('K') ? parseFloat(s) * 1000 : parseFloat(s) || 0; };
+    if (clipSort === 'new') r = r.slice().sort((a, b) => (parseInt(b.id, 10) || 0) - (parseInt(a.id, 10) || 0));
+    else if (clipSort === 'views') r = r.slice().sort((a, b) => num(b.views) - num(a.views));
+    else if (clipSort === 'likes') r = r.slice().sort((a, b) => num(b.likes) - num(a.likes));
     return r;
-  }, [tab, flagFilter]);
+  }, [tab, flagFilter, clipSort]);
 
   return (
     <div ref={rootRef} style={{
@@ -743,7 +789,19 @@ function VariationDesktop() {
         onToggleNotif={() => setNotifOpen(o => !o)}
         onNavClick={goPage}
         currentPage={currentPage}
+        onOpenSearch={(el) => setSearchOpen(el)}
       />
+      {searchOpen && (() => {
+        const GSO = window.GlobalSearchOverlay;
+        return GSO ? (
+          <GSO
+            anchorEl={searchOpen}
+            onClose={() => setSearchOpen(null)}
+            onProduct={(p) => { setSearchOpen(null); setCurrentPage('shop'); setShopProduct(p); }}
+            onClips={() => { setSearchOpen(null); setCurrentPage('shorts'); }}
+          />
+        ) : null;
+      })()}
 
       {/* 알림 드롭다운 */}
       <NotificationPopup
@@ -770,6 +828,8 @@ function VariationDesktop() {
             setTab={setTab}
             flagFilter={flagFilter}
             setFlagFilter={setFlagFilter}
+            clipSort={clipSort}
+            setClipSort={setClipSort}
           />
         </div>
       )}

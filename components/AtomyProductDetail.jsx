@@ -514,9 +514,11 @@ function ProductTools({ productId }) {
 // =============================================================
 function AtomyProductDetail({ product, isMobile = false, onClose, onPlayVideo, embedded = false, heroMedia = null, onSelectProduct }) {
   const _raw = product || HEMOHIM_DETAIL;
+  window.__lastOrderProduct = { id: _raw.id, name: _raw.name, price: _raw.price, image: (_raw.images && _raw.images[0]) || _raw.image };
   // 상세 전용 필드가 없는 일반 상품도 안전하게 렌더되도록 기본값 보강
   const p = React.useMemo(() => ({
     ..._raw,
+    breadcrumb: (_raw.breadcrumb && _raw.breadcrumb.length) ? _raw.breadcrumb : ['홈', _raw.category || '전체상품', _raw.name],
     englishName: _raw.englishName || '',
     tagline: _raw.tagline || _raw.sub || '',
     description: _raw.description || '',
@@ -593,14 +595,34 @@ function AtomyProductDetail({ product, isMobile = false, onClose, onPlayVideo, e
           display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap',
           fontSize: isMobile ? 11 : 12, color: '#8A97AD', fontWeight: 600,
         }}>
-          {p.breadcrumb.map((c, i) => (
+          {p.breadcrumb.map((c, i) => {
+            const isLast = i === p.breadcrumb.length - 1;
+            return (
             <React.Fragment key={i}>
               {i > 0 && (
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#C3CBD6" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
               )}
-              <span style={{ color: i === p.breadcrumb.length - 1 ? '#0B1F3A' : '#8A97AD' }}>{c}</span>
+              {isLast ? (
+                <span style={{ color: '#0B1F3A' }}>{c}</span>
+              ) : (
+                <button
+                  onClick={() => {
+                    // 홈(i=0) → 제품구매 메인 / 1·2depth → 해당 카테고리 화면
+                    window.__shopNavCategory = i === 0 ? null : c;
+                    onClose && onClose();
+                  }}
+                  style={{
+                    background: 'none', border: 'none', padding: 0, cursor: 'pointer',
+                    fontFamily: 'inherit', fontSize: 'inherit', fontWeight: 'inherit',
+                    color: '#8A97AD', textDecoration: 'none',
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = '#0088B8'; e.currentTarget.style.textDecoration = 'underline'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = '#8A97AD'; e.currentTarget.style.textDecoration = 'none'; }}
+                >{c}</button>
+              )}
             </React.Fragment>
-          ))}
+            );
+          })}
         </nav>
       )}
 
@@ -845,7 +867,7 @@ function AtomyProductDetail({ product, isMobile = false, onClose, onPlayVideo, e
                 color: '#fff', fontSize: 15, fontWeight: 800,
                 letterSpacing: '-0.01em', cursor: 'pointer',
               }}>장바구니</button>
-              <button className="cta-pulse" style={{
+              <button className="cta-pulse" onClick={(e) => window.openOrderComplete && window.openOrderComplete(e.currentTarget)} style={{
                 padding: '15px', borderRadius: 8,
                 background: '#00B6F0',
                 border: 'none', color: '#fff', fontSize: 15, fontWeight: 800,
@@ -1705,6 +1727,7 @@ const NEXT_PRODUCTS_FEED = [
 
 function HemohimShotDetail({ product, isMobile = false, onClose, onPlayVideo, onSelectProduct }) {
   const p = product || HEMOHIM_DETAIL;
+  window.__lastOrderProduct = { id: p.id, name: p.name, price: p.price, image: (p.images && p.images[0]) || p.image };
   const heroVideoRef = React.useRef(null);
   const pipVideoRef = React.useRef(null);
   const heroWrapRef = React.useRef(null);
@@ -2104,7 +2127,7 @@ function StickyCtaPortal({ isMobile, rootRef, visible = true }) {
       }}>
         장바구니
       </button>
-      <button className="cta-pulse" style={{
+      <button className="cta-pulse" onClick={(e) => window.openOrderComplete && window.openOrderComplete(e.currentTarget)} style={{
         padding: '12px', borderRadius: 8,
         background: '#00B6F0',
         border: 'none', color: '#fff', fontSize: 14, fontWeight: 800,

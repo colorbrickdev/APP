@@ -676,9 +676,9 @@ window.atomyCartBump = function() {
 function showCartRecModal() {
   const scrolls = Array.from(document.querySelectorAll('.phone-scroll'))
     .filter(sc => !sc.parentElement.closest('.phone-scroll') && !sc.closest('.chat-floating-host') && !sc.closest('.chat-panel-root'));
-  // 현재 제품구매 활성 디바이스 우선, 없으면 첫 디바이스
-  let host = null;
-  for (const sc of scrolls) { if (document.body.classList.contains('atomy-shop-active')) { host = sc.parentElement; break; } }
+  // 마지막으로 담은 기기 화면에 표시 (fly-to-cart가 기록)
+  let host = (window.__lastCartHost && document.body.contains(window.__lastCartHost)) ? window.__lastCartHost : null;
+  if (!host) for (const sc of scrolls) { if (document.body.classList.contains('atomy-shop-active')) { host = sc.parentElement; break; } }
   if (!host && scrolls[0]) host = scrolls[0].parentElement;
   if (!host) return;
   if (getComputedStyle(host).position === 'static') host.style.position = 'relative';
@@ -766,15 +766,31 @@ window.flyToCart = function(imgSrc, sourceRect) {
     });
   if (carts.length === 0 || !sourceRect) return;
 
-  // sourceRect와 가장 가까운 카트 선택
+  // source와 같은 디바이스(화면) 안의 카트 우선 — 없으면 가장 가까운 카트
   const cx = sourceRect.left + sourceRect.width / 2;
   const cy = sourceRect.top + sourceRect.height / 2;
-  let nearest = carts[0], minD = Infinity;
-  carts.forEach(el => {
+  const deviceHostOf = (el) => {
+    let c = el.parentElement;
+    while (c && c !== document.body) {
+      if (c.querySelector(':scope > .phone-scroll')) return c;
+      c = c.parentElement;
+    }
+    return null;
+  };
+  const containing = carts.filter(el => {
+    const h = deviceHostOf(el);
+    if (!h) return false;
+    const r = h.getBoundingClientRect();
+    return cx >= r.left && cx <= r.right && cy >= r.top && cy <= r.bottom;
+  });
+  const pool = containing.length ? containing : carts;
+  let nearest = pool[0], minD = Infinity;
+  pool.forEach(el => {
     const r = el.getBoundingClientRect();
     const d = Math.hypot((r.left + r.width/2) - cx, (r.top + r.height/2) - cy);
     if (d < minD) { minD = d; nearest = el; }
   });
+  window.__lastCartHost = deviceHostOf(nearest);
   const targetRect = nearest.getBoundingClientRect();
 
   // 클론 이미지 생성
@@ -993,9 +1009,11 @@ ReactDOM.createRoot(document.getElementById('root')).render(<App />);
     if (proofDismissed) { setTimeout(loop, 180000); return; }
     const store = window.notifStore;
     // 미읽음 건만 필터 (스토어 미사용 시에는 전체 노출 — 폴백)
+    let __allowed = PROOFS;
+    try { if (!localStorage.getItem('quickMember')) __allowed = PROOFS.filter(p => p.id === 3 || p.id === 4); } catch (_) {}
     const queue = store
-      ? PROOFS.filter(p => store.isUnread(p.id))
-      : PROOFS;
+      ? __allowed.filter(p => store.isUnread(p.id))
+      : __allowed;
     if (queue.length > 0) {
       const p = queue[proofIdx % queue.length];
       showProof(p);

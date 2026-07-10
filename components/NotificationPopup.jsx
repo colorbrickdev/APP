@@ -59,6 +59,23 @@ let NOTIFICATIONS = [
   },
 ];
 
+// 비회원 gating — 구매이력 기반 알림(1 구매10회, 2 출고, 5 리뷰적립)은 간편회원만
+(function () {
+  let m = false; try { m = !!localStorage.getItem('quickMember'); } catch (_) {}
+  if (!m) {
+    NOTIFICATIONS = [
+      {
+        id: 9, type: 'event', icon: 'gift',
+        title: '간편가입하면 배송·재구매 알림을 받아요',
+        body: '휴대폰 번호만으로 3초 · 지난 주문도 자동 연결됩니다.',
+        cta: { label: '간편가입 하기', url: '#' },
+        time: '지금', unread: true, accent: '#00B6F0',
+      },
+      ...NOTIFICATIONS.filter(n => ![1, 2, 5].includes(n.id)),
+    ];
+  }
+})();
+
 // 작은 SVG 아이콘 풀
 function NotifIcon({ type, color = '#fff', size = 18 }) {
   const props = {

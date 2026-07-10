@@ -7,6 +7,431 @@ const HEMOHIM_SHOT_IMG = 'https://image.atomy.com/KR/goods/000017/org/911/250902
 // 제품 데이터 — atomy.com/main에서 가져온 실제 상품
 // =============================================================
 // 제품 데이터 — kr.atomy.com/category에서 가져온 실제 상품 목록 (이미지/이름/가격/PV/리뷰)
+// =============================================================
+// 주문완료 + 간편가입 (전체 기기) — window.openOrderComplete(triggerEl)
+// =============================================================
+(function () {
+  function hostFrom(el) {
+    const sc = el && el.closest ? el.closest('.phone-scroll') : null;
+    let parent = sc ? sc.parentElement : null;
+    if (!parent && el) {
+      // portal(스티키 바 등)에서 열린 경우 — .phone-scroll을 직접 자식으로 가진 조상 탐색
+      let cur = el.parentElement;
+      while (cur && cur !== document.body) {
+        if (cur.querySelector(':scope > .phone-scroll')) { parent = cur; break; }
+        cur = cur.parentElement;
+      }
+    }
+    if (!parent) return null;
+    if (getComputedStyle(parent).position === 'static') parent.style.position = 'relative';
+    return parent;
+  }
+  const overlayBase = 'position:absolute;inset:0;z-index:10001;background:rgba(11,31,58,0.5);display:flex;align-items:flex-end;justify-content:center;animation:shortsFadeIn 0.2s ease both;';
+  const sheetBase = 'width:100%;max-width:560px;background:#fff;border-radius:18px 18px 0 0;overflow:hidden;animation:aiBriefUp 0.32s cubic-bezier(.2,.8,.3,1) both;font-family:inherit;';
+  // 현재 언어 문자열 선택 (ko/en/ja/zh)
+  function TT(map) {
+    const l = (window.i18nStore && window.i18nStore.lang) || 'ko';
+    return map[l] != null ? map[l] : map.ko;
+  }
+  // 휴대폰 번호 자동 하이픈 (010-0000-0000)
+  function attachPhoneFormat(input) {
+    input.addEventListener('input', () => {
+      const d = input.value.replace(/\D/g, '').slice(0, 11);
+      let v = d;
+      if (d.length > 7) v = d.slice(0, 3) + '-' + d.slice(3, 7) + '-' + d.slice(7);
+      else if (d.length > 3) v = d.slice(0, 3) + '-' + d.slice(3);
+      input.value = v;
+    });
+  }
+
+  window.openOrderComplete = function (triggerEl) {
+    const host = hostFrom(triggerEl);
+    if (!host || host.querySelector('.__order_done')) return;
+    const orderNo = 'A' + String(Date.now()).slice(-8);
+    // 주문 저장 — 주문내역 시트에서 사용
+    try {
+      const prod = window.__lastOrderProduct || {};
+      const orders = JSON.parse(localStorage.getItem('quickOrders') || '[]');
+      orders.unshift({ no: orderNo, date: new Date().toISOString().slice(0, 10), status: '배송중', name: prod.name || '애터미 상품', price: prod.price || 0, image: prod.image || '' });
+      localStorage.setItem('quickOrders', JSON.stringify(orders.slice(0, 20)));
+      // 배송정보(이름·주소) 저장 — 간편가입/사업자 가입에 인계
+      if (!localStorage.getItem('quickProfile')) {
+        localStorage.setItem('quickProfile', JSON.stringify({ name: '김애터미', addr: '서울특별시 강남구 테헤란로 123, 101동 1001호' }));
+      }
+    } catch (_) {}
+    const isMember = !!localStorage.getItem('quickMember');
+    const ov = document.createElement('div');
+    ov.className = '__order_done';
+    ov.style.cssText = overlayBase;
+    ov.innerHTML = `
+      <div style="${sheetBase}">
+        <div style="padding:26px 20px 18px;text-align:center;">
+          <div style="width:52px;height:52px;border-radius:999px;background:rgba(0,182,240,0.12);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#00B6F0" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <div style="font-size:17px;font-weight:900;color:#0B1F3A;">${TT({ko:'주문이 완료됐어요',en:'Order complete',ja:'ご注文が完了しました',zh:'订单已完成'})}</div>
+          <div style="margin-top:5px;font-size:12px;font-weight:600;color:#8A97AD;">${TT({ko:'주문번호',en:'Order No.',ja:'注文番号',zh:'订单号'})} <span style="color:#0088B8;font-weight:800;">${orderNo}</span> · ${isMember ? TT({ko:'간편회원 주문',en:'Member order',ja:'簡単会員注文',zh:'快捷会员订单'}) : TT({ko:'비회원 주문',en:'Guest order',ja:'ゲスト注文',zh:'非会员订单'})}</div>
+        </div>
+        ${isMember ? '' : `
+        <div style="margin:0 16px 14px;padding:14px;border-radius:14px;background:linear-gradient(120deg,#0B1F3A,#0E5F86);color:#fff;">
+          <div style="font-size:13.5px;font-weight:900;">✦ ${TT({ko:'휴대폰 번호만으로 3초 간편가입',en:'3-sec signup with just your phone number',ja:'携帯番号だけで3秒会員登録',zh:'仅凭手机号3秒注册'})}</div>
+          <div style="margin-top:4px;font-size:11.5px;font-weight:600;color:rgba(255,255,255,0.85);line-height:1.5;">${TT({ko:'이번 주문이 계정에 자동 연결돼요.<br/>다음부턴 주문조회가 한 번에 + PV 적립 시작',en:'This order links to your account.<br/>One-tap order tracking + PV rewards',ja:'今回の注文がアカウントに自動連携。<br/>次回から注文照会がワンタップ + PV積立',zh:'本次订单自动关联账户。<br/>下次一键查询订单 + 开始累积PV'})}</div>
+          <button class="__go_signup" style="margin-top:11px;width:100%;padding:11px;border:none;border-radius:9px;background:#00B6F0;color:#fff;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;">${TT({ko:'간편가입 하기',en:'Quick sign up',ja:'簡単登録',zh:'快捷注册'})}</button>
+        </div>`}
+        <div style="padding:0 16px 16px;display:flex;flex-direction:column;gap:8px;">
+          ${isMember ? '<button class="__od_hist" style="width:100%;padding:12px;border:none;border-radius:9px;background:#0B1F3A;color:#5CD3F7;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;">' + TT({ko:'주문 내역 보기',en:'View orders',ja:'注文履歴を見る',zh:'查看订单'}) + '</button>' : ''}
+          <button class="__od_close" style="width:100%;padding:12px;border:1px solid rgba(11,31,58,0.14);border-radius:9px;background:#fff;color:#6B7A90;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">${isMember ? TT({ko:'확인',en:'OK',ja:'確認',zh:'确认'}) : TT({ko:'다음에 할게요',en:'Maybe later',ja:'また今度',zh:'下次再说'})}</button>
+        </div>
+      </div>`;
+    host.appendChild(ov);
+    const close = () => ov.remove();
+    ov.addEventListener('click', (e) => { if (e.target === ov) close(); });
+    ov.querySelector('.__od_close').addEventListener('click', close);
+    const hist = ov.querySelector('.__od_hist');
+    if (hist) hist.addEventListener('click', () => { close(); window.openOrderHistory(host); });
+    const go = ov.querySelector('.__go_signup');
+    if (go) go.addEventListener('click', () => { close(); window.openQuickSignup(host); });
+  };
+
+  window.openQuickSignup = function (hostOrEl) {
+    const host = hostOrEl && hostOrEl.classList && hostOrEl.querySelector ? hostOrEl : hostFrom(hostOrEl);
+    if (!host || host.querySelector('.__quick_signup')) return;
+    const ov = document.createElement('div');
+    ov.className = '__quick_signup';
+    ov.style.cssText = overlayBase;
+    ov.innerHTML = `
+      <div style="${sheetBase}">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 18px 12px;border-bottom:1px solid rgba(11,31,58,0.07);">
+          <div style="font-size:15px;font-weight:900;color:#0B1F3A;">✦ ${TT({ko:'3초 간편가입',en:'3-sec Quick Signup',ja:'3秒簡単登録',zh:'3秒快捷注册'})}</div>
+          <button class="__qs_x" style="width:28px;height:28px;border-radius:999px;border:none;background:rgba(11,31,58,0.06);cursor:pointer;color:#4A5568;font-size:13px;">✕</button>
+        </div>
+        <div class="__qs_body" style="padding:18px;"></div>
+      </div>`;
+    host.appendChild(ov);
+    const body = ov.querySelector('.__qs_body');
+    const close = () => ov.remove();
+    ov.addEventListener('click', (e) => { if (e.target === ov) close(); });
+    ov.querySelector('.__qs_x').addEventListener('click', close);
+
+    function step1() {
+      body.innerHTML = `
+        <div style="font-size:12px;font-weight:700;color:#6B7A90;margin-bottom:7px;">${TT({ko:'이름',en:'Name',ja:'お名前',zh:'姓名'})}</div>
+        <input class="__qs_name" type="text" placeholder="${TT({ko:'이름',en:'Name',ja:'お名前',zh:'姓名'})}" style="width:100%;box-sizing:border-box;padding:13px 14px;border:1.5px solid rgba(11,31,58,0.12);border-radius:10px;font-size:15px;font-weight:700;color:#0B1F3A;font-family:inherit;outline:none;" />
+        <div style="font-size:12px;font-weight:700;color:#6B7A90;margin:12px 0 7px;">${TT({ko:'휴대폰 번호',en:'Phone number',ja:'携帯番号',zh:'手机号'})}</div>
+        <input class="__qs_phone" type="tel" placeholder="010-0000-0000" style="width:100%;box-sizing:border-box;padding:13px 14px;border:1.5px solid rgba(11,31,58,0.12);border-radius:10px;font-size:15px;font-weight:700;color:#0B1F3A;font-family:inherit;outline:none;" />
+        <div style="margin-top:8px;font-size:11px;font-weight:600;color:#A0AABA;line-height:1.5;">${TT({ko:'비밀번호 없이 번호 인증으로 로그인해요. 주소는 방금 주문 정보에서 자동으로 연결됩니다.',en:'Log in via phone verification. Your address links automatically from your recent order.',ja:'番号認証でログイン。住所は注文情報から自動連携されます。',zh:'通过号码验证登录。地址将从订单信息自动关联。'})}</div>
+        <button class="__qs_send" style="margin-top:14px;width:100%;padding:13px;border:none;border-radius:10px;background:#00B6F0;color:#fff;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;">${TT({ko:'인증번호 받기',en:'Send code',ja:'認証番号を受け取る',zh:'获取验证码'})}</button>`;
+      const nameEl = body.querySelector('.__qs_name');
+      const phone = body.querySelector('.__qs_phone');
+      attachPhoneFormat(phone);
+      // 기존 프로필 이름 프리필
+      try { const pf = JSON.parse(localStorage.getItem('quickProfile') || '{}'); if (pf.name && pf.name !== '김애터미') nameEl.value = pf.name; } catch (_) {}
+      nameEl.focus();
+      body.querySelector('.__qs_send').addEventListener('click', () => {
+        let ok = true;
+        if (!(nameEl.value || '').trim()) { nameEl.style.borderColor = '#FF3B6A'; ok = false; }
+        if ((phone.value || '').replace(/\D/g, '').length < 10) { phone.style.borderColor = '#FF3B6A'; ok = false; }
+        if (!ok) return;
+        step2(phone.value, nameEl.value.trim());
+      });
+    }
+    function step2(phone, name) {
+      body.innerHTML = `
+        <div style="font-size:12px;font-weight:700;color:#6B7A90;margin-bottom:7px;">${phone}  ${TT({ko:'로 보낸 인증번호 4자리',en:'— enter the 4-digit code we sent',ja:'に送信した4桁の認証番号',zh:'收到的4位验证码'})}</div>
+        <input class="__qs_code" type="tel" maxlength="4" placeholder="0000" style="width:100%;box-sizing:border-box;padding:13px 14px;border:1.5px solid rgba(11,31,58,0.12);border-radius:10px;font-size:20px;font-weight:900;letter-spacing:0.4em;text-align:center;color:#0B1F3A;font-family:inherit;outline:none;" />
+        <button class="__qs_ok" style="margin-top:14px;width:100%;padding:13px;border:none;border-radius:10px;background:#00B6F0;color:#fff;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;">확인</button>`;
+      const code = body.querySelector('.__qs_code');
+      code.focus();
+      const done = () => { if ((code.value || '').length === 4) stepPw(phone, name); else code.style.borderColor = '#FF3B6A'; };
+      body.querySelector('.__qs_ok').addEventListener('click', done);
+      code.addEventListener('input', () => { if (code.value.length === 4) done(); });
+    }
+    function stepPw(phone, name) {
+      body.innerHTML = `
+        <div style="font-size:12px;font-weight:700;color:#6B7A90;margin-bottom:7px;">${TT({ko:'로그인 비밀번호 설정',en:'Set login password',ja:'ログインパスワード設定',zh:'设置登录密码'})} <span style="color:#A0AABA;font-weight:600;">${TT({ko:'(숫자 4자리 이상)',en:'(4+ digits)',ja:'（数字4桁以上）',zh:'（4位以上数字）'})}</span></div>
+        <input class="__qs_pw" type="password" inputmode="numeric" placeholder="${TT({ko:'비밀번호',en:'Password',ja:'パスワード',zh:'密码'})}" style="width:100%;box-sizing:border-box;padding:13px 14px;border:1.5px solid rgba(11,31,58,0.12);border-radius:10px;font-size:16px;font-weight:800;letter-spacing:0.2em;color:#0B1F3A;font-family:inherit;outline:none;" />
+        <div style="margin-top:8px;font-size:11px;font-weight:600;color:#A0AABA;line-height:1.5;">${TT({ko:'다음부터는 휴대폰 번호 + 비밀번호로 로그인해요. 매번 인증번호를 받지 않아도 돼요.',en:'From now on, log in with phone + password. No more codes every time.',ja:'次回から携帯番号＋パスワードでログイン。毎回の認証は不要です。',zh:'今后使用手机号+密码登录，无需每次验证。'})}</div>
+        <button class="__qs_setpw" style="margin-top:14px;width:100%;padding:13px;border:none;border-radius:10px;background:#00B6F0;color:#fff;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;">${TT({ko:'설정 완료',en:'Done',ja:'設定完了',zh:'完成设置'})}</button>`;
+      const pw = body.querySelector('.__qs_pw');
+      pw.focus();
+      body.querySelector('.__qs_setpw').addEventListener('click', () => {
+        if ((pw.value || '').length < 4) { pw.style.borderColor = '#FF3B6A'; return; }
+        try {
+          localStorage.setItem('quickAccount', JSON.stringify({ phone, pw: pw.value }));
+          localStorage.setItem('quickMember', phone);
+          // 이름 저장 — 사업자 가입 등에 인계
+          const pf = JSON.parse(localStorage.getItem('quickProfile') || '{}');
+          localStorage.setItem('quickProfile', JSON.stringify({ ...pf, name: name || pf.name || '' }));
+        } catch (_) {}
+        step3();
+      });
+    }
+    function step3() {
+      body.innerHTML = `
+        <div style="text-align:center;padding:6px 0 2px;">
+          <div style="width:52px;height:52px;border-radius:999px;background:rgba(0,182,240,0.12);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#00B6F0" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <div style="font-size:16px;font-weight:900;color:#0B1F3A;">${TT({ko:'가입 완료!',en:'Signed up!',ja:'登録完了！',zh:'注册完成！'})}</div>
+          <div style="margin-top:6px;font-size:12.5px;font-weight:600;color:#6B7A90;line-height:1.6;">${TT({ko:'지난 주문 1건이 계정에 연결됐어요.<br/>다음부터는 휴대폰 번호 + 비밀번호로 로그인하세요.',en:'Your recent order is now linked.<br/>Log in with phone + password next time.',ja:'直近の注文1件がアカウントに連携されました。<br/>次回から番号＋パスワードでログイン。',zh:'最近1笔订单已关联账户。<br/>下次请用手机号+密码登录。'})}</div>
+          <button class="__qs_done" style="margin-top:16px;width:100%;padding:13px;border:none;border-radius:10px;background:#0B1F3A;color:#5CD3F7;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;">주문 내역 보기</button>
+        </div>`;
+      body.querySelector('.__qs_done').addEventListener('click', () => { close(); window.openOrderHistory(host); });
+    }
+    step1();
+  };
+
+  // 주문내역 시트 — 헤더 아이콘/가입완료에서 진입
+  window.openOrderHistory = function (hostOrEl) {
+    const host = hostOrEl && hostOrEl.querySelector && hostOrEl.querySelector(':scope > .phone-scroll') ? hostOrEl : hostFrom(hostOrEl);
+    if (!host || host.querySelector('.__order_hist')) return;
+    const member = localStorage.getItem('quickMember');
+    let orders = [];
+    try { orders = JSON.parse(localStorage.getItem('quickOrders') || '[]'); } catch (_) {}
+    const ov = document.createElement('div');
+    ov.className = '__order_hist';
+    ov.style.cssText = overlayBase;
+    const krw = n => (n || 0).toLocaleString('ko-KR');
+    const rows = orders.length ? orders.map(o => `
+      <div style="display:flex;gap:11px;align-items:center;padding:12px 0;border-bottom:1px solid rgba(11,31,58,0.06);">
+        <div style="flex:0 0 auto;width:48px;height:48px;border-radius:10px;background:#F1F4F9;overflow:hidden;">${o.image ? `<img src="${o.image}" style="width:100%;height:100%;object-fit:cover;display:block;"/>` : ''}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:12.5px;font-weight:700;color:#0B1F3A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${o.name}</div>
+          <div style="margin-top:2px;font-size:11px;font-weight:600;color:#8A97AD;">${o.date} · ${o.no}${o.price ? ' · ' + krw(o.price) + '원' : ''}</div>
+        </div>
+        <span style="flex:0 0 auto;padding:4px 9px;border-radius:999px;background:rgba(0,182,240,0.1);color:#0088B8;font-size:10.5px;font-weight:800;">${o.status}</span>
+      </div>`).join('') : `
+      <div style="text-align:center;padding:28px 0;color:#8A97AD;font-size:12.5px;font-weight:600;line-height:1.6;">${TT({ko:'아직 주문 내역이 없어요.<br/>첫 주문을 하면 여기에 모입니다.',en:'No orders yet.<br/>Your orders will appear here.',ja:'まだ注文履歴がありません。<br/>注文するとここに表示されます。',zh:'暂无订单记录。<br/>下单后将显示在这里。'})}</div>`;
+    ov.innerHTML = `
+      <div style="${sheetBase}max-height:78%;display:flex;flex-direction:column;">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 18px 12px;border-bottom:1px solid rgba(11,31,58,0.07);flex-shrink:0;">
+          <div>
+            <div style="font-size:15px;font-weight:900;color:#0B1F3A;">${TT({ko:'주문 내역',en:'Order History',ja:'注文履歴',zh:'订单记录'})}</div>
+            ${member ? `<div style="margin-top:2px;font-size:11px;font-weight:700;color:#0088B8;">${TT({ko:'간편회원',en:'Member',ja:'簡単会員',zh:'快捷会员'})} · ${member}</div>` : ''}
+          </div>
+          <button class="__oh_x" style="width:28px;height:28px;border-radius:999px;border:none;background:rgba(11,31,58,0.06);cursor:pointer;color:#4A5568;font-size:13px;">✕</button>
+        </div>
+        <div class="filter-scroll" style="flex:1;overflow-y:auto;padding:4px 18px 14px;">
+          ${member ? (localStorage.getItem('quickBiz') ? `
+            <div style="margin:12px 0 2px;padding:12px 14px;border-radius:12px;background:linear-gradient(120deg,#0B1F3A,#0E5F86);color:#fff;display:flex;align-items:center;gap:10px;">
+              <span style="font-size:18px;">🏅</span>
+              <div style="flex:1;min-width:0;">
+                <div style="font-size:12.5px;font-weight:900;">${TT({ko:'애터미 사업자 회원',en:'Atomy Business Member',ja:'アトミ事業者会員',zh:'艾多美事业会员'})}</div>
+                <div style="margin-top:2px;font-size:10.5px;font-weight:600;color:rgba(255,255,255,0.8);">${TT({ko:'회원번호',en:'Member no.',ja:'会員番号',zh:'会员号'})} ${(JSON.parse(localStorage.getItem('quickBiz')||'{}').no)||''} · ${TT({ko:'구매 PV가 수당으로 적립돼요',en:'Purchase PV counts toward commissions',ja:'購入PVが報酬に積み立てられます',zh:'购买PV计入奖金'})}</div>
+              </div>
+            </div>` + rows : `
+            <button class="__oh_biz" style="width:100%;margin:12px 0 2px;padding:0;border:none;border-radius:12px;background:linear-gradient(120deg,#0B1F3A,#0E5F86);color:#fff;cursor:pointer;font-family:inherit;text-align:left;overflow:hidden;">
+              <div style="display:flex;align-items:center;gap:10px;padding:13px 14px;">
+                <span style="font-size:18px;">💼</span>
+                <div style="flex:1;min-width:0;">
+                  <div style="font-size:13px;font-weight:900;">${TT({ko:'소비가 소득이 되는 애터미 사업자',en:'Atomy Business — spending becomes income',ja:'消費が所得になるアトミ事業者',zh:'消费变收入的艾多美事业者'})}</div>
+                  <div style="margin-top:2px;font-size:10.5px;font-weight:600;color:rgba(255,255,255,0.82);">${TT({ko:'간편회원 정보 그대로 1분 가입 · 구매 PV가 수당으로',en:'1-min signup with your member info · PV becomes commissions',ja:'会員情報そのまま1分登録・購入PVが報酬に',zh:'会员信息直接使用，1分钟注册 · PV变奖金'})}</div>
+                </div>
+                <span style="flex:0 0 auto;padding:6px 11px;border-radius:999px;background:#00B6F0;font-size:11px;font-weight:800;">${TT({ko:'가입하기',en:'Join',ja:'登録する',zh:'注册'})}</span>
+              </div>
+            </button>` + rows) + `
+            <button class="__oh_logout" style="width:100%;margin:14px 0 16px;padding:12px;border:1.5px solid rgba(255,59,106,0.4);border-radius:10px;background:#fff;color:#FF3B6A;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>${TT({ko:'간편회원 연동 해제 (로그아웃)',en:'Unlink account (log out)',ja:'会員連携を解除（ログアウト）',zh:'解除会员关联（退出登录）'})}</button>` : `
+            <div style="text-align:center;padding:22px 0 6px;color:#6B7A90;font-size:12.5px;font-weight:600;line-height:1.6;">${TT({ko:'주문 내역은 간편회원만 볼 수 있어요.<br/>휴대폰 번호만으로 3초면 끝!',en:'Order history is for members.<br/>Sign up in 3 seconds with your phone!',ja:'注文履歴は会員のみ閲覧できます。<br/>携帯番号だけで3秒！',zh:'订单记录仅会员可见。<br/>手机号3秒搞定！'})}</div>
+            ${localStorage.getItem('quickAccount') ? '<button class="__oh_login" style="width:100%;margin:10px 0 0;padding:13px;border:none;border-radius:10px;background:#0B1F3A;color:#5CD3F7;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;">' + TT({ko:'로그인',en:'Log in',ja:'ログイン',zh:'登录'}) + '</button>' : ''}
+            <button class="__oh_signup" style="width:100%;margin:10px 0 6px;padding:13px;border:none;border-radius:10px;background:#00B6F0;color:#fff;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;">✦ ${TT({ko:'간편가입 하기',en:'Quick sign up',ja:'簡単登録',zh:'快捷注册'})}</button>
+            <div style="margin:14px 0 4px;padding-top:12px;border-top:1px solid rgba(11,31,58,0.07);">
+              <div style="font-size:12px;font-weight:800;color:#0B1F3A;margin-bottom:8px;">${TT({ko:'비회원 주문조회',en:'Guest order lookup',ja:'非会員注文照会',zh:'非会员订单查询'})}</div>
+              <input class="__oh_gno" type="text" placeholder="${TT({ko:'주문번호 (예: A12345678)',en:'Order no. (e.g. A12345678)',ja:'注文番号（例: A12345678）',zh:'订单号（例: A12345678）'})}" style="width:100%;box-sizing:border-box;padding:11px 13px;border:1.5px solid rgba(11,31,58,0.12);border-radius:10px;font-size:13px;font-weight:700;color:#0B1F3A;font-family:inherit;outline:none;" />
+              <input class="__oh_gph" type="tel" placeholder="${TT({ko:'주문자 휴대폰 번호',en:'Phone number on order',ja:'注文者の携帯番号',zh:'下单人手机号'})}" style="width:100%;box-sizing:border-box;margin-top:7px;padding:11px 13px;border:1.5px solid rgba(11,31,58,0.12);border-radius:10px;font-size:13px;font-weight:700;color:#0B1F3A;font-family:inherit;outline:none;" />
+              <button class="__oh_gfind" style="width:100%;margin:9px 0 4px;padding:12px;border:1px solid rgba(0,182,240,0.5);border-radius:10px;background:#fff;color:#0088B8;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;">${TT({ko:'주문 조회',en:'Find order',ja:'注文を照会',zh:'查询订单'})}</button>
+              <div class="__oh_gres" style="padding-bottom:10px;"></div>
+            </div>`}
+        </div>
+      </div>`;
+    host.appendChild(ov);
+    const close = () => ov.remove();
+    ov.addEventListener('click', (e) => { if (e.target === ov) close(); });
+    ov.querySelector('.__oh_x').addEventListener('click', close);
+    const su = ov.querySelector('.__oh_signup');
+    if (su) su.addEventListener('click', () => { close(); window.openQuickSignup(host); });
+    // 비회원 주문조회 — 주문번호 + 휴대폰 번호
+    const gfind = ov.querySelector('.__oh_gfind');
+    if (gfind) {
+      const gph = ov.querySelector('.__oh_gph');
+      if (gph && typeof attachPhoneFormat === 'function') attachPhoneFormat(gph);
+      gfind.addEventListener('click', () => {
+        const no = (ov.querySelector('.__oh_gno').value || '').trim().toUpperCase();
+        const ph = (gph.value || '').replace(/\D/g, '');
+        const res = ov.querySelector('.__oh_gres');
+        if (!no || ph.length < 10) {
+          res.innerHTML = '<div style="padding:8px 2px;font-size:11.5px;font-weight:700;color:#FF3B6A;">' + TT({ko:'주문번호와 휴대폰 번호를 모두 입력해주세요.',en:'Enter both order number and phone.',ja:'注文番号と携帯番号を入力してください。',zh:'请输入订单号和手机号。'}) + '</div>';
+          return;
+        }
+        const found = orders.find(o => String(o.no).toUpperCase() === no);
+        if (!found) {
+          res.innerHTML = '<div style="padding:8px 2px;font-size:11.5px;font-weight:700;color:#FF3B6A;">' + TT({ko:'일치하는 주문을 찾지 못했어요. 주문번호를 확인해주세요.',en:'No matching order found. Check the number.',ja:'一致する注文が見つかりません。番号をご確認ください。',zh:'未找到匹配订单，请核对订单号。'}) + '</div>';
+          return;
+        }
+        res.innerHTML = `
+          <div style="display:flex;gap:11px;align-items:center;padding:12px;margin-top:4px;border:1px solid rgba(0,182,240,0.3);border-radius:12px;background:rgba(0,182,240,0.04);">
+            <div style="flex:0 0 auto;width:44px;height:44px;border-radius:9px;background:#F1F4F9;overflow:hidden;">${found.image ? `<img src="${found.image}" style="width:100%;height:100%;object-fit:cover;display:block;"/>` : ''}</div>
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:12px;font-weight:700;color:#0B1F3A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${found.name}</div>
+              <div style="margin-top:2px;font-size:10.5px;font-weight:600;color:#8A97AD;">${found.date} · ${found.no}</div>
+            </div>
+            <span style="flex:0 0 auto;padding:4px 9px;border-radius:999px;background:rgba(0,182,240,0.1);color:#0088B8;font-size:10px;font-weight:800;">${found.status}</span>
+          </div>`;
+      });
+    }
+    const li = ov.querySelector('.__oh_login');
+    if (li) li.addEventListener('click', () => { close(); window.openQuickLogin(host); });
+    const lo = ov.querySelector('.__oh_logout');
+    if (lo) lo.addEventListener('click', () => {
+      try { localStorage.removeItem('quickMember'); } catch (_) {}
+      close();
+      if (window.showToast) window.showToast(TT({ko:'간편회원 연동이 해제됐어요',en:'Account unlinked',ja:'会員連携を解除しました',zh:'已解除会员关联'}));
+      window.openOrderHistory(host); // 비회원 상태로 재오픈
+    });
+    const biz = ov.querySelector('.__oh_biz');
+    if (biz) biz.addEventListener('click', () => { close(); window.openBizHandoff(host); });
+  };
+  // 간편 로그인 — 휴대폰 번호 + 비밀번호
+  window.openQuickLogin = function (hostOrEl) {
+    const host = hostOrEl && hostOrEl.querySelector && hostOrEl.querySelector(':scope > .phone-scroll') ? hostOrEl : hostFrom(hostOrEl);
+    if (!host || host.querySelector('.__quick_login')) return;
+    let acc = null;
+    try { acc = JSON.parse(localStorage.getItem('quickAccount') || 'null'); } catch (_) {}
+    const ov = document.createElement('div');
+    ov.className = '__quick_login';
+    ov.style.cssText = overlayBase;
+    ov.innerHTML = `
+      <div style="${sheetBase}">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 18px 12px;border-bottom:1px solid rgba(11,31,58,0.07);">
+          <div style="font-size:15px;font-weight:900;color:#0B1F3A;">${TT({ko:'로그인',en:'Log in',ja:'ログイン',zh:'登录'})}</div>
+          <button class="__ql_x" style="width:28px;height:28px;border-radius:999px;border:none;background:rgba(11,31,58,0.06);cursor:pointer;color:#4A5568;font-size:13px;">✕</button>
+        </div>
+        <div style="padding:18px;">
+          <div style="font-size:12px;font-weight:700;color:#6B7A90;margin-bottom:7px;">${TT({ko:'휴대폰 번호',en:'Phone number',ja:'携帯番号',zh:'手机号'})}</div>
+          <input class="__ql_phone" type="tel" placeholder="010-0000-0000" value="${acc ? acc.phone : ''}" style="width:100%;box-sizing:border-box;padding:13px 14px;border:1.5px solid rgba(11,31,58,0.12);border-radius:10px;font-size:15px;font-weight:700;color:#0B1F3A;font-family:inherit;outline:none;" />
+          <div style="font-size:12px;font-weight:700;color:#6B7A90;margin:12px 0 7px;">${TT({ko:'비밀번호',en:'Password',ja:'パスワード',zh:'密码'})}</div>
+          <input class="__ql_pw" type="password" inputmode="numeric" placeholder="${TT({ko:'비밀번호',en:'Password',ja:'パスワード',zh:'密码'})}" style="width:100%;box-sizing:border-box;padding:13px 14px;border:1.5px solid rgba(11,31,58,0.12);border-radius:10px;font-size:16px;font-weight:800;letter-spacing:0.2em;color:#0B1F3A;font-family:inherit;outline:none;" />
+          <div class="__ql_err" style="display:none;margin-top:8px;font-size:11.5px;font-weight:700;color:#FF3B6A;">${TT({ko:'번호 또는 비밀번호가 맞지 않아요.',en:'Phone or password is incorrect.',ja:'番号またはパスワードが違います。',zh:'号码或密码不正确。'})}</div>
+          <button class="__ql_go" style="margin-top:14px;width:100%;padding:13px;border:none;border-radius:10px;background:#00B6F0;color:#fff;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;">${TT({ko:'로그인',en:'Log in',ja:'ログイン',zh:'登录'})}</button>
+        </div>
+      </div>`;
+    host.appendChild(ov);
+    const close = () => ov.remove();
+    ov.addEventListener('click', (e) => { if (e.target === ov) close(); });
+    ov.querySelector('.__ql_x').addEventListener('click', close);
+    attachPhoneFormat(ov.querySelector('.__ql_phone'));
+    ov.querySelector('.__ql_go').addEventListener('click', () => {
+      const ph = ov.querySelector('.__ql_phone').value.replace(/\D/g, '');
+      const pw = ov.querySelector('.__ql_pw').value;
+      if (acc && ph === String(acc.phone).replace(/\D/g, '') && pw === acc.pw) {
+        try { localStorage.setItem('quickMember', acc.phone); } catch (_) {}
+        close();
+        if (window.showToast) window.showToast(TT({ko:'로그인됐어요',en:'Logged in',ja:'ログインしました',zh:'已登录'}));
+        window.openOrderHistory(host);
+      } else {
+        ov.querySelector('.__ql_err').style.display = 'block';
+      }
+    });
+  };
+  // 사업자 가입 핸드오프 — 간편회원 정보 전달 동의
+  window.openBizHandoff = function (hostOrEl) {
+    const host = hostOrEl && hostOrEl.querySelector && hostOrEl.querySelector(':scope > .phone-scroll') ? hostOrEl : hostFrom(hostOrEl);
+    if (!host || host.querySelector('.__biz_handoff')) return;
+    const member = localStorage.getItem('quickMember') || '';
+    let prof = {};
+    try { prof = JSON.parse(localStorage.getItem('quickProfile') || '{}'); } catch (_) {}
+    const fmtPhone = (p) => { const d = String(p).replace(/\D/g, ''); return d.length === 11 ? d.slice(0,3)+'-'+d.slice(3,7)+'-'+d.slice(7) : p; };
+    const ov = document.createElement('div');
+    ov.className = '__biz_handoff';
+    ov.style.cssText = overlayBase;
+    const row = (label, val) => `
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 0;border-bottom:1px solid rgba(11,31,58,0.06);">
+        <span style="flex:0 0 auto;font-size:12px;font-weight:700;color:#8A97AD;">${label}</span>
+        <span style="min-width:0;font-size:13px;font-weight:800;color:#0B1F3A;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${val}</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#00B6F0" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>`;
+    ov.innerHTML = `
+      <div style="${sheetBase}">
+        <div style="padding:18px 18px 6px;">
+          <div style="font-size:15.5px;font-weight:900;color:#0B1F3A;">💼 ${TT({ko:'애터미 사업자 가입으로 이동',en:'Continue to Atomy Business signup',ja:'アトミ事業者登録へ移動',zh:'前往艾多美事业者注册'})}</div>
+          <div style="margin-top:4px;font-size:12px;font-weight:600;color:#6B7A90;line-height:1.5;">${TT({ko:'아래 간편회원 정보를 가입 양식에 그대로 전달해요.<br/>다시 입력할 필요가 없습니다.',en:'We pass your member info to the signup form.<br/>No need to re-enter it.',ja:'会員情報を登録フォームへそのまま引き継ぎます。<br/>再入力は不要です。',zh:'会员信息将直接传入注册表单。<br/>无需重新输入。'})}</div>
+        </div>
+        <div style="padding:4px 18px 2px;">
+          ${row(TT({ko:'이름',en:'Name',ja:'お名前',zh:'姓名'}), prof.name || TT({ko:'주문 배송정보에서 인계',en:'From order shipping info',ja:'注文配送情報から引継',zh:'从订单配送信息导入'}))}
+          ${row(TT({ko:'휴대폰 번호',en:'Phone',ja:'携帯番号',zh:'手机号'}), fmtPhone(member) + ' <span style="color:#00B6F0;font-size:10.5px;">' + TT({ko:'인증완료',en:'Verified',ja:'認証済み',zh:'已验证'}) + '</span>')}
+          ${row(TT({ko:'배송지 주소',en:'Address',ja:'配送先住所',zh:'收货地址'}), prof.addr || TT({ko:'주문 배송정보에서 인계',en:'From order shipping info',ja:'注文配送情報から引継',zh:'从订单配送信息导入'}))}
+        </div>
+        <div style="padding:12px 18px 18px;display:flex;flex-direction:column;gap:8px;">
+          <button class="__bh_go" style="width:100%;padding:14px;border:none;border-radius:10px;background:#00B6F0;color:#fff;font-size:14.5px;font-weight:800;cursor:pointer;font-family:inherit;">${TT({ko:'동의하고 가입 계속하기',en:'Agree & continue',ja:'同意して続行',zh:'同意并继续'})}</button>
+          <button class="__bh_x" style="width:100%;padding:12px;border:1px solid rgba(11,31,58,0.14);border-radius:10px;background:#fff;color:#6B7A90;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">${TT({ko:'취소',en:'Cancel',ja:'キャンセル',zh:'取消'})}</button>
+        </div>
+      </div>`;
+    host.appendChild(ov);
+    const close = () => ov.remove();
+    ov.addEventListener('click', (e) => { if (e.target === ov) close(); });
+    ov.querySelector('.__bh_x').addEventListener('click', close);
+    ov.querySelector('.__bh_go').addEventListener('click', () => { close(); window.open('https://atomy.page/EPrb8oCZ', '_blank'); });
+  };
+
+  // 애터미 사업자 가입 — 간편회원 정보 자동 인계
+  window.openBizSignup = function (hostOrEl) {
+    const host = hostOrEl && hostOrEl.querySelector && hostOrEl.querySelector(':scope > .phone-scroll') ? hostOrEl : hostFrom(hostOrEl);
+    if (!host || host.querySelector('.__biz_signup')) return;
+    const member = localStorage.getItem('quickMember') || '';
+    let prof = {};
+    try { prof = JSON.parse(localStorage.getItem('quickProfile') || '{}'); } catch (_) {}
+    const fmtPhone = (p) => { const d = String(p).replace(/\D/g, ''); return d.length === 11 ? d.slice(0,3)+'-'+d.slice(3,7)+'-'+d.slice(7) : p; };
+    const ov = document.createElement('div');
+    ov.className = '__biz_signup';
+    ov.style.cssText = overlayBase;
+    const inputCss = 'width:100%;box-sizing:border-box;padding:12px 13px;border:1.5px solid rgba(11,31,58,0.12);border-radius:10px;font-size:14px;font-weight:700;color:#0B1F3A;font-family:inherit;outline:none;';
+    const labelCss = 'font-size:12px;font-weight:700;color:#6B7A90;margin:12px 0 6px;';
+    ov.innerHTML = `
+      <div style="${sheetBase}max-height:82%;display:flex;flex-direction:column;">
+        <div style="flex-shrink:0;padding:16px 18px 13px;background:linear-gradient(120deg,#0B1F3A,#0E5F86);color:#fff;position:relative;">
+          <div style="font-size:15.5px;font-weight:900;">💼 애터미 사업자 가입</div>
+          <div style="margin-top:3px;font-size:11.5px;font-weight:600;color:rgba(255,255,255,0.85);">간편회원 정보가 자동으로 채워졌어요 — 확인만 하면 됩니다</div>
+          <button class="__bz_x" style="position:absolute;top:14px;right:14px;width:28px;height:28px;border-radius:999px;border:none;background:rgba(255,255,255,0.15);cursor:pointer;color:#fff;font-size:13px;">✕</button>
+        </div>
+        <div class="__bz_body filter-scroll" style="flex:1;overflow-y:auto;padding:6px 18px 18px;">
+          <div style="${labelCss}">${TT({ko:'이름',en:'Name',ja:'お名前',zh:'姓名'})}</div>
+          <input class="__bz_name" type="text" placeholder="${TT({ko:'이름',en:'Name',ja:'お名前',zh:'姓名'})}" value="${prof.name || ''}" style="${inputCss}" />
+          <div style="${labelCss}">휴대폰 번호 <span style="color:#00B6F0;">· 간편회원 인증 완료</span></div>
+          <input class="__bz_phone" type="tel" value="${fmtPhone(member)}" readonly style="${inputCss}background:#F5F7FA;color:#6B7A90;" />
+          <div style="${labelCss}">주소</div>
+          <input class="__bz_addr" type="text" placeholder="배송지 주소" value="${prof.addr || ''}" style="${inputCss}" />
+          <div style="${labelCss}">추천인 회원번호 <span style="color:#A0AABA;font-weight:600;">(선택)</span></div>
+          <input class="__bz_ref" type="text" placeholder="예: 12345678" style="${inputCss}" />
+          <div style="margin-top:12px;padding:11px 13px;border-radius:10px;background:rgba(0,182,240,0.07);font-size:11.5px;font-weight:600;color:#0088B8;line-height:1.55;">가입 즉시 지금까지의 주문 PV가 계정에 연결되고, 이후 구매 PV는 수당 산정에 반영됩니다.</div>
+          <button class="__bz_go" style="margin-top:14px;width:100%;padding:14px;border:none;border-radius:10px;background:#00B6F0;color:#fff;font-size:14.5px;font-weight:800;cursor:pointer;font-family:inherit;">사업자 가입 신청</button>
+        </div>
+      </div>`;
+    host.appendChild(ov);
+    const close = () => ov.remove();
+    ov.addEventListener('click', (e) => { if (e.target === ov) close(); });
+    ov.querySelector('.__bz_x').addEventListener('click', close);
+    ov.querySelector('.__bz_go').addEventListener('click', () => {
+      const name = ov.querySelector('.__bz_name').value.trim();
+      const addr = ov.querySelector('.__bz_addr').value.trim();
+      if (!name) { ov.querySelector('.__bz_name').style.borderColor = '#FF3B6A'; return; }
+      if (!addr) { ov.querySelector('.__bz_addr').style.borderColor = '#FF3B6A'; return; }
+      const no = String(10000000 + Math.floor(Math.random() * 89999999));
+      try {
+        localStorage.setItem('quickProfile', JSON.stringify({ name, addr }));
+        localStorage.setItem('quickBiz', JSON.stringify({ no, name, date: new Date().toISOString().slice(0, 10) }));
+      } catch (_) {}
+      const body = ov.querySelector('.__bz_body');
+      body.innerHTML = `
+        <div style="text-align:center;padding:26px 0 18px;">
+          <div style="width:52px;height:52px;border-radius:999px;background:rgba(0,182,240,0.12);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:24px;">🏅</div>
+          <div style="font-size:16.5px;font-weight:900;color:#0B1F3A;">${name}님, 사업자 가입 완료!</div>
+          <div style="margin-top:6px;font-size:12.5px;font-weight:600;color:#6B7A90;line-height:1.6;">회원번호 <b style="color:#0088B8;">${no}</b><br/>이제 모든 구매 PV가 수당으로 이어집니다.</div>
+          <button class="__bz_done" style="margin-top:16px;width:100%;padding:13px;border:none;border-radius:10px;background:#0B1F3A;color:#5CD3F7;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;">확인</button>
+        </div>`;
+      body.querySelector('.__bz_done').addEventListener('click', () => { close(); if (window.showToast) window.showToast('🏅 애터미 사업자 가입을 축하합니다!'); if (window.fireConfetti) window.fireConfetti(host); });
+    });
+  };
+})();
+
 const SHOP_PRODUCTS = [
   // ★ 강조 — 헤모힘 샷 (id: 000017) ─ 상세페이지 연결 (히어로/네비용 유지)
   {
@@ -726,7 +1151,16 @@ function FilterCheck({ label }) {
 
 function AtomyShopDefault({ isMobile = false, onSelectProduct = () => {} }) {
   const { t } = (typeof useTranslation === 'function') ? useTranslation() : { t: (k) => k };
-  const [category, setCategory] = React.useState(null); // null = 메인 / 'all' | 'health' | ... = 카테고리 화면
+  const [category, setCategory] = React.useState(() => {
+    // 브레드크럼 네비게이션 — 상세에서 카테고리 클릭 시 진입
+    const nav = window.__shopNavCategory;
+    if (nav) {
+      window.__shopNavCategory = null;
+      const hit = (typeof CATEGORY_ICONS !== 'undefined' ? CATEGORY_ICONS : []).find(c => c.label === nav);
+      return hit ? hit.key : 'all';
+    }
+    return null;
+  }); // null = 메인 / 'all' | 'health' | ... = 카테고리 화면
   const [sortKey, setSortKey] = React.useState('popular');
   const [viewMode, setViewMode] = React.useState('grid'); // grid | list
   const [filterOpen, setFilterOpen] = React.useState(false);
@@ -916,6 +1350,9 @@ function AtomyShopDefault({ isMobile = false, onSelectProduct = () => {} }) {
       {/* 1.5 카테고리 아이콘 — kr.atomy.com 메인 스타일 */}
       <ShopCategoryIcons isMobile={isMobile} onSelectCategory={(key) => setCategory(key)} />
 
+      {/* AI 맞춤 진열 CTA — 첫 화면 노출 */}
+      <AIShelfCta isMobile={isMobile} />
+
       {/* AI 큐레이션 — 데스크탑/모바일 동일 구성, 사이즈에 맞춰 그리드 자동 적응 */}
       <ShopAICurationDesktop
         isMobile={isMobile}
@@ -1003,19 +1440,371 @@ function CategorySwitcher({ currentKey, currentLabel, isMobile, onSelect }) {
 }
 
 // =============================================================
+// S26 전용 — AI 쇼핑 브리핑 + AI 맞춤 진열 (퀴즈 → 재배열)
+// =============================================================
+const AI_QUIZ_WHO = [
+  { key: 'me',     emoji: '🙋', label: { ko: '나를 위해', en: 'For me', ja: '自分のため', zh: '为自己' }, short: { ko: '나', en: 'Me', ja: '自分', zh: '自己' } },
+  { key: 'family', emoji: '👪', label: { ko: '가족을 위해', en: 'For family', ja: '家族のため', zh: '为家人' }, short: { ko: '가족', en: 'Family', ja: '家族', zh: '家人' } },
+  { key: 'gift',   emoji: '🎁', label: { ko: '지인 선물용', en: 'As a gift', ja: '贈り物用', zh: '送礼' }, short: { ko: '선물', en: 'Gift', ja: 'ギフト', zh: '礼物' } },
+];
+const AI_QUIZ_FOCUS = [
+  { key: 'energy',   emoji: '⚡', label: { ko: '피로 · 활력', en: 'Fatigue · Energy', ja: '疲労・活力', zh: '疲劳 · 活力' }, short: { ko: '피로·활력', en: 'Energy', ja: '活力', zh: '活力' } },
+  { key: 'immunity', emoji: '🛡️', label: { ko: '면역 · 장 건강', en: 'Immunity · Gut', ja: '免疫・腸の健康', zh: '免疫 · 肠道' }, short: { ko: '면역·장', en: 'Immunity', ja: '免疫', zh: '免疫' } },
+  { key: 'beauty',   emoji: '✨', label: { ko: '피부 · 뷰티', en: 'Skin · Beauty', ja: '肌・ビューティー', zh: '皮肤 · 美容' }, short: { ko: '피부·뷰티', en: 'Beauty', ja: '美容', zh: '美容' } },
+];
+const AI_QUIZ_BUDGET = [
+  { key: 'low',  emoji: '💸', label: { ko: '3만원 이하', en: 'Under ₩30k', ja: '3万W以下', zh: '3万韩元以下' }, short: { ko: '~3만원', en: '<₩30k', ja: '~3万W', zh: '~3万' } },
+  { key: 'mid',  emoji: '💳', label: { ko: '3~10만원', en: '₩30–100k', ja: '3~10万W', zh: '3~10万韩元' }, short: { ko: '3~10만', en: '₩30–100k', ja: '3~10万W', zh: '3~10万' } },
+  { key: 'any',  emoji: '💎', label: { ko: '상관없어요', en: 'No limit', ja: '指定なし', zh: '不限' }, short: { ko: '예산무관', en: 'Any budget', ja: '予算自由', zh: '不限预算' } },
+];
+const AI_QUIZ_STEPS = [
+  { title: { ko: '누구를 위한 제품을 찾으세요?', en: 'Who are you shopping for?', ja: 'どなたのための製品をお探しですか？', zh: '您在为谁挑选产品？' }, opts: AI_QUIZ_WHO, field: 'who' },
+  { title: { ko: '선택하신 분이 요즘 신경 쓰고 있는 부분은 어디인가요?', en: 'What are they focused on these days?', ja: '最近気にされているのはどの部分ですか？', zh: '这位最近关注哪些方面？' }, opts: AI_QUIZ_FOCUS, field: 'focus' },
+  { title: { ko: '어느 정도의 예산을 생각하세요?', en: 'What is your budget?', ja: 'ご予算はどのくらいですか？', zh: '您的预算大概是多少？' }, opts: AI_QUIZ_BUDGET, field: 'budget' },
+];
+function computeAiOrder({ who, focus, budget }) {
+  // 1) 관심사 기준 기본 순서
+  let order = focus === 'energy' ? ['today', 'rebuy', 'similar', 'chairman', 'trend', 'budget']
+    : focus === 'immunity' ? ['today', 'similar', 'rebuy', 'chairman', 'trend', 'budget']
+    : ['trend', 'similar', 'today', 'chairman', 'budget', 'rebuy'];
+  // 2) 대상 보정 — 가족: 재구매·회장 추천 / 선물: 인기·시그니처 세트 앞으로
+  if (who === 'family') {
+    const front = ['rebuy', 'chairman'];
+    order = [...front, ...order.filter(k => !front.includes(k))];
+  } else if (who === 'gift') {
+    const front = ['trend', 'chairman'];
+    order = [...front, ...order.filter(k => !front.includes(k))];
+  }
+  // 3) 예산 보정 — 3만원 이하: 가성비 맨 앞 / 상관없음: 가성비 맨 뒤
+  if (budget === 'low') {
+    order = ['budget', ...order.filter(k => k !== 'budget')];
+  } else if (budget === 'any') {
+    order = [...order.filter(k => k !== 'budget'), 'budget'];
+  }
+  return order;
+}
+function aiAnswerLabel({ who, focus, budget }) {
+  const pick = (arr, k) => { const o = arr.find(x => x.key === k); return o ? _ttl(o.short) : ''; };
+  const w = pick(AI_QUIZ_WHO, who);
+  const f = pick(AI_QUIZ_FOCUS, focus);
+  const b = pick(AI_QUIZ_BUDGET, budget);
+  return [w, f, b].filter(Boolean).join(' · ');
+}
+
+// 답변 기반으로 큐레이션 칸 자체를 재구성
+function buildPersonalRows({ who, focus, budget }, all, best) {
+  const uniq = arr => Array.from(new Map(arr.filter(Boolean).map(p => [p.id, p])).values());
+  const FOCUS_DEF = {
+    energy:   { label: '피로 · 활력',   test: p => p.category === '건강식품' },
+    immunity: { label: '면역 · 장 건강', test: p => p.category === '건강식품' || /유산균|프로바이오|면역|아연/.test(p.name) },
+    beauty:   { label: '피부 · 뷰티',   test: p => p.category === '뷰티' || p.category === '헤어&바디' },
+  };
+  const BUDGET_DEF = {
+    low: { label: '3만원 이하', test: p => p.price <= 30000 },
+    mid: { label: '3~10만원',  test: p => p.price > 30000 && p.price <= 100000 },
+    any: { label: '',          test: () => true },
+  };
+  const WHO_T = { me: '당신', family: '우리 가족', gift: '소중한 분' };
+  const f = FOCUS_DEF[focus] || FOCUS_DEF.energy;
+  const b = BUDGET_DEF[budget] || BUDGET_DEF.any;
+  const w = WHO_T[who] || '당신';
+
+  const focusItems = uniq(all.filter(f.test));
+  const mainItems = uniq([...focusItems.filter(b.test), ...focusItems]).slice(0, 6);
+  const budgetItems = uniq(all.filter(b.test).slice().sort((x, y) => (y.reviews || 0) - (x.reviews || 0))).slice(0, 6);
+  const giftItems = uniq(all.filter(p => p.badges && p.badges.includes('BEST'))).slice(0, 6);
+  const livingItems = uniq(all.filter(p => p.category === '리빙&홈데코' || p.category === '생활용품' || p.category === '식품')).slice(0, 6);
+
+  const rows = [
+    {
+      kind: 'p-main',
+      kicker: `✦ ${w}을 위한 맞춤`,
+      title: `${w}의 ${f.label} 케어`,
+      reason: '맞춤 진열 답변(대상·관심사·예산)을 반영한 추천이에요',
+      badge: 'AI 맞춤', tone: '#00B6F0',
+      items: mainItems,
+    },
+  ];
+  if (budget !== 'any') {
+    rows.push({
+      kind: 'p-budget',
+      kicker: '예산 맞춤',
+      title: `${b.label} 예산으로 준비하는 알뜰 픽`,
+      reason: '설정하신 예산 안에서 리뷰가 많은 순서예요',
+      badge: 'VALUE', tone: '#7B8597',
+      items: budgetItems,
+    });
+  }
+  if (who === 'gift') {
+    rows.push({
+      kind: 'p-gift',
+      kicker: '선물 추천',
+      title: '선물로 가장 많이 나가는 베스트',
+      reason: '선물 구매 회원들이 가장 많이 선택했어요',
+      badge: 'GIFT', tone: '#FF8A3D',
+      items: giftItems,
+    });
+  } else {
+    rows.push({
+      kind: 'p-life',
+      kicker: who === 'family' ? '가족 생활템' : '함께 보면 좋은',
+      title: who === 'family' ? '온 가족이 함께 쓰는 생활용품' : '지금 많이 담는 생활용품',
+      reason: '구매 패턴이 비슷한 회원들의 장바구니예요',
+      badge: 'LIVING', tone: '#16A34A',
+      items: livingItems,
+    });
+  }
+  return rows;
+}
+
+// 현재 언어 텍스트 선택 (React 컴포넌트용)
+const _ttl = (map) => { const l = (window.i18nStore && window.i18nStore.lang) || 'ko'; return map[l] != null ? map[l] : map.ko; };
+function useI18nLang() {
+  const [lang, setLang] = React.useState((window.i18nStore && window.i18nStore.lang) || 'ko');
+  React.useEffect(() => (window.i18nStore ? window.i18nStore.subscribe(setLang) : undefined), []);
+  return lang;
+}
+
+const aiKeyframesCss = `
+  @keyframes aiBriefUp { from { opacity: 0; transform: translateY(26px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes aiFadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes aiSpin { to { transform: rotate(360deg); } }
+  @keyframes aiCardIn { from { opacity: 0; transform: translateY(14px) scale(0.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+  @keyframes aiCtaShine {
+    0%   { transform: translateX(-130%) skewX(-18deg); }
+    55%  { transform: translateX(260%) skewX(-18deg); }
+    100% { transform: translateX(260%) skewX(-18deg); }
+  }
+  @keyframes aiCtaGlow {
+    0%, 100% { box-shadow: 0 0 20px rgba(0,136,184,0.3), 0 0 0 0 rgba(0,182,240,0.4); }
+    50%      { box-shadow: 0 0 26px rgba(0,136,184,0.45), 0 0 0 6px rgba(0,182,240,0); }
+  }
+`;
+
+// 오늘의 쇼핑 브리핑 카드 — 하단 플로팅
+function AIBriefCard({ onStartQuiz, onClose }) {
+  const _lang = useI18nLang();
+  const _m = (() => { try { return !!localStorage.getItem('quickMember'); } catch (_) { return false; } })();
+  const LINES = _m ? [
+    { ic: '🆕', tone: '#00B6F0', head: '신제품', body: "'앱솔루트 셀렉티브 스킨케어' 새로 입고됐어요" },
+    { ic: '⏰', tone: '#16A34A', head: '재구매', body: '헤모힘 소진 예상 D-3 · 지금 담아두면 맞춤' },
+    { ic: '🎁', tone: '#FF8A3D', head: '혜택', body: '오늘 전 상품 PV 5% 추가 적립 중' },
+  ] : [
+    { ic: '🆕', tone: '#00B6F0', head: '신제품', body: "'앱솔루트 셀렉티브 스킨케어' 새로 입고됐어요" },
+    { ic: '✦', tone: '#16A34A', head: '간편가입', body: '가입하면 재구매 시기·배송 알림을 받아요' },
+    { ic: '🎁', tone: '#FF8A3D', head: '혜택', body: '신규 가입 시 첫 구매 5% 적립' },
+  ];
+  return (
+    <div style={{
+      position: 'absolute', left: 12, right: 12, bottom: 84,
+      pointerEvents: 'auto',
+      background: '#fff', borderRadius: 16,
+      boxShadow: '0 18px 44px rgba(11,31,58,0.28), 0 0 0 1px rgba(0,182,240,0.18)',
+      animation: 'aiBriefUp 0.4s cubic-bezier(.2,.8,.3,1) both',
+      overflow: 'hidden', fontFamily: 'inherit',
+    }}>
+      <style>{aiKeyframesCss}</style>
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '12px 14px 10px', borderBottom: '1px solid rgba(11,31,58,0.06)',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+          <span style={{
+            width: 24, height: 24, borderRadius: 8, background: 'linear-gradient(135deg,#00B6F0,#0088B8)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 12,
+          }}>✦</span>
+          <span style={{ fontSize: 13.5, fontWeight: 900, color: '#0B1F3A' }}>{_ttl({ko:'오늘의 쇼핑 브리핑',en:'Today’s Shopping Brief',ja:'本日のショッピングブリーフ',zh:'今日购物简报'})}</span>
+        </div>
+        <button onClick={onClose} aria-label="닫기" style={{
+          width: 26, height: 26, borderRadius: 999, border: 'none', background: 'rgba(11,31,58,0.06)',
+          cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4A5568',
+        }}>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+        </button>
+      </div>
+      <div style={{ padding: '10px 14px 4px', display: 'flex', flexDirection: 'column', gap: 9 }}>
+        {LINES.map((l, i) => (
+          <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 9, animation: `aiFadeIn 0.4s ease ${200 + i * 160}ms both` }}>
+            <span style={{ fontSize: 14, lineHeight: '19px' }}>{l.ic}</span>
+            <div style={{ fontSize: 12.5, fontWeight: 600, color: '#2B3A52', lineHeight: 1.45 }}>
+              <span style={{ fontWeight: 900, color: l.tone, marginRight: 5 }}>{l.head}</span>{l.body}
+            </div>
+          </div>
+        ))}
+      </div>
+      <div style={{ display: 'flex', gap: 8, padding: '12px 14px 14px' }}>
+        <button onClick={onStartQuiz} style={{
+          flex: 1, padding: '11px 0', borderRadius: 10, border: 'none', cursor: 'pointer',
+          background: '#00B6F0', color: '#fff', fontSize: 13, fontWeight: 800, fontFamily: 'inherit',
+        }}>✦ {_ttl({ko:'AI 맞춤 진열 시작',en:'Start AI Custom Shelf',ja:'AIカスタム陳列を開始',zh:'开始AI定制陈列'})}</button>
+        <button onClick={onClose} style={{
+          flex: '0 0 auto', padding: '11px 16px', borderRadius: 10, cursor: 'pointer',
+          border: '1px solid rgba(11,31,58,0.14)', background: '#fff', color: '#6B7A90',
+          fontSize: 13, fontWeight: 700, fontFamily: 'inherit',
+        }}>{_ttl({ko:'닫기',en:'Close',ja:'閉じる',zh:'关闭'})}</button>
+      </div>
+    </div>
+  );
+}
+
+// AI 맞춤 진열 퀴즈 오버레이 — 질문 3개 → 재배열
+function AIQuizOverlay({ onDone, onClose }) {
+  const _lang = useI18nLang();
+  const [step, setStep] = React.useState(0); // 0~2: 질문, 3: loading
+  const answersRef = React.useRef({});
+
+  const pick = (key) => {
+    answersRef.current[AI_QUIZ_STEPS[step].field] = key;
+    if (step < AI_QUIZ_STEPS.length - 1) setStep(step + 1);
+    else {
+      setStep(AI_QUIZ_STEPS.length);
+      setTimeout(() => onDone({ ...answersRef.current }), 1100);
+    }
+  };
+  const q = AI_QUIZ_STEPS[Math.min(step, AI_QUIZ_STEPS.length - 1)];
+  const loading = step >= AI_QUIZ_STEPS.length;
+
+  return (
+    <div
+      onClick={onClose}
+      style={{
+        position: 'absolute', inset: 0, zIndex: 5, pointerEvents: 'auto',
+        background: 'rgba(11,31,58,0.5)', backdropFilter: 'blur(3px)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 22,
+        animation: 'aiFadeIn 0.22s ease both', fontFamily: 'inherit',
+      }}
+    >
+      <style>{aiKeyframesCss}</style>
+      <div onClick={(e) => e.stopPropagation()} style={{
+        width: '100%', maxWidth: 340, background: '#fff', borderRadius: 18,
+        padding: '20px 18px 18px', boxShadow: '0 24px 60px rgba(11,31,58,0.35)',
+        animation: 'aiCardIn 0.32s cubic-bezier(.2,.8,.3,1) both',
+      }}>
+        {!loading ? (
+          <React.Fragment>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 4 }}>
+              <span style={{
+                width: 22, height: 22, borderRadius: 7, background: 'linear-gradient(135deg,#00B6F0,#0088B8)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 11,
+              }}>✦</span>
+              <span style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: '0.1em', color: '#0088B8' }}>{_ttl({ko:'AI 맞춤 진열',en:'AI Custom Shelf',ja:'AIカスタム陳列',zh:'AI定制陈列'})} · {step + 1}/{AI_QUIZ_STEPS.length}</span>
+            </div>
+            <div key={step} style={{ animation: 'aiCardIn 0.3s ease both' }}>
+              <div style={{ fontSize: 17, fontWeight: 900, color: '#0B1F3A', margin: '8px 0 14px', letterSpacing: '-0.01em' }}>{_ttl(q.title)}</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {q.opts.map(o => (
+                  <button key={o.key} onClick={() => pick(o.key)} style={{
+                    display: 'flex', alignItems: 'center', gap: 10,
+                    padding: '13px 14px', borderRadius: 12, cursor: 'pointer',
+                    border: '1.5px solid rgba(11,31,58,0.1)', background: '#F8FAFC',
+                    fontSize: 14, fontWeight: 700, color: '#0B1F3A', fontFamily: 'inherit',
+                    textAlign: 'left', transition: 'border-color 0.15s, background 0.15s',
+                  }}
+                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#00B6F0'; e.currentTarget.style.background = 'rgba(0,182,240,0.06)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(11,31,58,0.1)'; e.currentTarget.style.background = '#F8FAFC'; }}
+                  >
+                    <span style={{ fontSize: 18 }}>{o.emoji}</span>{_ttl(o.label)}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <button onClick={onClose} style={{
+              marginTop: 12, width: '100%', padding: '9px 0', borderRadius: 9, border: 'none',
+              background: 'transparent', color: '#8A97AD', fontSize: 12, fontWeight: 700,
+              cursor: 'pointer', fontFamily: 'inherit',
+            }}>{_ttl({ko:'다음에 할게요',en:'Maybe later',ja:'また今度',zh:'下次再说'})}</button>
+          </React.Fragment>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '18px 0 14px' }}>
+            <div style={{
+              width: 40, height: 40, borderRadius: 999, border: '3px solid rgba(0,182,240,0.2)',
+              borderTopColor: '#00B6F0', animation: 'aiSpin 0.8s linear infinite',
+            }} />
+            <div style={{ marginTop: 14, fontSize: 14, fontWeight: 800, color: '#0B1F3A' }}>{_ttl({ko:'진열장을 다시 정리하고 있어요…',en:'Rearranging your shelf…',ja:'陳列棚を並べ替えています…',zh:'正在重新整理货架…'})}</div>
+            <div style={{ marginTop: 4, fontSize: 11.5, fontWeight: 600, color: '#8A97AD' }}>{_ttl({ko:'답변에 맞춰 추천 순서를 바꾸는 중',en:'Reordering picks to match your answers',ja:'回答に合わせて順序を変更中',zh:'正根据回答调整推荐顺序'})}</div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// =============================================================
 // 데스크탑용 AI 큐레이션 섹션
 // =============================================================
 function ShopAICurationDesktop({ isMobile = false, allProducts, bestProducts, promoProducts, onSelectProduct, onSeeAll }) {
+  const _lang = useI18nLang();
   const all = allProducts;
+  const _qm = (() => { try { return !!localStorage.getItem('quickMember'); } catch (_) { return false; } })();
   const isNewList = all.filter(p => p.badges?.includes('신제품'));
   const best = bestProducts.length ? bestProducts : all.filter(p => p.badges?.includes('BEST'));
+
+  // ===== S26 전용 — AI 브리핑 + 맞춤 진열 상태 =====
+  const curationRootRef = React.useRef(null);
+  const [s26AI, setS26AI] = React.useState(false);
+  const [portalHost, setPortalHost] = React.useState(null);
+  const [briefVisible, setBriefVisible] = React.useState(false);
+  const [quizOpen, setQuizOpen] = React.useState(false);
+  const [aiAnswers, setAiAnswers] = React.useState(null);
+  const [aiLabel, setAiLabel] = React.useState('');
+  const [orderVer, setOrderVer] = React.useState(0);
+
+  React.useEffect(() => {
+    const el = curationRootRef.current;
+    if (!el) return;
+    const scroll = el.closest('.phone-scroll');
+    // CTA(카테고리 아래)에서 보내는 퀴즈 오픈 이벤트 — 같은 기기 스코프
+    const onOpen = () => setQuizOpen(true);
+    if (scroll) scroll.addEventListener('ai-quiz-open', onOpen);
+    const parent = scroll ? scroll.parentElement : null;
+    // 포털 호스트 — 모든 기기 (퀴즈 오버레이용)
+    if (parent) {
+      if (getComputedStyle(parent).position === 'static') parent.style.position = 'relative';
+      let host = parent.querySelector(':scope > .__ai_brief_host');
+      if (!host) {
+        host = document.createElement('div');
+        host.className = '__ai_brief_host';
+        Object.assign(host.style, { position: 'absolute', inset: '0', zIndex: 80, pointerEvents: 'none' });
+        parent.appendChild(host);
+      }
+      setPortalHost(host);
+    }
+    // S26 감지 — 브리핑 자동 노출은 S26에만
+    if (!isMobile) return;
+    if (el.closest('.iphone-noto')) return;
+    if (!scroll || scroll.clientWidth >= 520) return () => { if (scroll) scroll.removeEventListener('ai-quiz-open', onOpen); };
+    setS26AI(true);
+    if (!window.__aiBriefShown) {
+      window.__aiBriefShown = true;
+      const t = setTimeout(() => setBriefVisible(true), 1400);
+      return () => clearTimeout(t);
+    }
+  }, [isMobile]);
+
+  const applyAiResult = (answers) => {
+    setAiAnswers(answers);
+    setAiLabel(aiAnswerLabel(answers));
+    setOrderVer(v => v + 1);
+    setQuizOpen(false);
+    setBriefVisible(false);
+    if (window.showToast) window.showToast(_ttl({ko:'✦ 맞춤 기준으로 진열을 정리했어요',en:'✦ Shelf rearranged for you',ja:'✦ カスタム基準で陳列を整理しました',zh:'✦ 已按您的偏好整理货架'}));
+    // 큐레이션 영역으로 부드럽게 스크롤
+    try {
+      const el = curationRootRef.current;
+      const scroll = el && el.closest('.phone-scroll');
+      if (el && scroll) {
+        const er = el.getBoundingClientRect(), sr = scroll.getBoundingClientRect();
+        scroll.scrollTo({ top: scroll.scrollTop + (er.top - sr.top) - 52, behavior: 'smooth' });
+      }
+    } catch (_) {}
+  };
 
   const ROWS = [
     {
       kind: 'today',
       kicker: '오늘의 추천 · FOR YOU',
       title: '오늘의 컨디션을 위한 한 가지',
-      reason: '전날 활동 패턴과 비슷한 회원의 선호를 반영했어요',
+      reason: _qm ? '전날 활동 패턴과 비슷한 회원의 선호를 반영했어요' : '요즘 가장 사랑받는 제품을 모았어요',
       badge: 'AI 큐레이션', tone: '#00B6F0',
       items: Array.from(new Map([best[0], best[2], best[1], best[3], all[5], all[6]].filter(Boolean).map(p => [p.id, p])).values()).slice(0, 6),
     },
@@ -1030,8 +1819,8 @@ function ShopAICurationDesktop({ isMobile = false, allProducts, bestProducts, pr
     {
       kind: 'rebuy',
       kicker: '재구매 추천',
-      title: '곧 떨어질 제품을 미리 챙기세요',
-      reason: '평균 32일 사용 기준 · 마지막 구매로부터 28일 경과',
+      title: _qm ? '곧 떨어질 제품을 미리 챙기세요' : '꾸준히 재구매되는 스테디셀러',
+      reason: _qm ? '평균 32일 사용 기준 · 마지막 구매로부터 28일 경과' : '회원들이 반복 구매하는 제품이에요',
       badge: '리오더', tone: '#16A34A',
       items: Array.from(new Map([best[3], best[1], best[0], all[2], all[4], all[8]].filter(Boolean).map(p => [p.id, p])).values()).slice(0, 6),
     },
@@ -1055,14 +1844,19 @@ function ShopAICurationDesktop({ isMobile = false, allProducts, bestProducts, pr
       kind: 'budget',
       kicker: '가성비 픽',
       title: '2만원 이하로 시작하는 케어',
-      reason: '기존 구매 패턴과 가격대를 분석',
+      reason: _qm ? '기존 구매 패턴과 가격대를 분석' : '부담 없는 가격대의 베스트',
       badge: 'VALUE', tone: '#7B8597',
       items: all.filter(p => p.price <= 20000).slice(0, 6),
     },
   ];
 
+  const orderedRows = aiAnswers
+    ? buildPersonalRows(aiAnswers, all, best)
+        .concat(ROWS.filter(r => r.kind === 'chairman' || r.kind === 'trend'))
+    : ROWS;
+
   return (
-    <div className="shop-curation-body" style={{ width: '100%', background: '#F5F7FA' }}>
+    <div ref={curationRootRef} className="shop-curation-body" style={{ width: '100%', background: '#F5F7FA' }}>
       {/* AI 헤더 배너 */}
       <div style={{
         maxWidth: 1280, margin: '0 auto', width: '100%',
@@ -1098,14 +1892,37 @@ function ShopAICurationDesktop({ isMobile = false, allProducts, bestProducts, pr
 
       {/* 큐레이션 행 */}
       <div style={{ maxWidth: 1280, margin: '0 auto', width: '100%', padding: isMobile ? '4px 16px 24px' : '12px 36px 40px', boxSizing: 'border-box' }}>
-        {ROWS.map((row) => (
-          <DesktopCurationRow
-            key={row.kind}
-            row={row}
-            isMobile={isMobile}
-            isChairman={row.kind === 'chairman'}
-            onSelect={onSelectProduct}
-          />
+        {/* AI 맞춤 진열 — 상태 칩 (설정 후 재설정용) */}
+        <style>{aiKeyframesCss}</style>
+        {aiAnswers && (
+          <div style={{ display: 'flex', justifyContent: 'center', gap: 8, margin: '14px 0 4px', flexWrap: 'wrap' }}>
+            <button onClick={() => setQuizOpen(true)} style={{
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+              padding: isMobile ? '9px 16px' : '10px 20px', borderRadius: 999, cursor: 'pointer',
+              border: 'none', background: 'linear-gradient(120deg, #0088B8, #00B6F0)',
+              color: '#fff', fontSize: isMobile ? 12 : 13, fontWeight: 800, fontFamily: 'inherit',
+              boxShadow: '0 6px 18px rgba(0,136,184,0.35)',
+            }}>✦ {aiLabel} {_ttl({ko:'맞춤 진열 중 · 다시 설정',en:'custom shelf on · Edit',ja:'カスタム陳列中・再設定',zh:'定制陈列中 · 重新设置'})}</button>
+            <button onClick={() => { setAiAnswers(null); setAiLabel(''); setOrderVer(v => v + 1); if (window.showToast) window.showToast(_ttl({ko:'기본 진열로 돌아왔어요',en:'Back to default shelf',ja:'基本陳列に戻りました',zh:'已恢复默认陈列'})); }} style={{
+              display: 'inline-flex', alignItems: 'center', gap: 5,
+              padding: isMobile ? '9px 14px' : '10px 18px', borderRadius: 999, cursor: 'pointer',
+              border: '1px solid rgba(11,31,58,0.16)', background: '#fff',
+              color: '#6B7A90', fontSize: isMobile ? 12 : 13, fontWeight: 800, fontFamily: 'inherit',
+            }}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+              {_ttl({ko:'맞춤 해제',en:'Reset',ja:'解除',zh:'取消定制'})}
+            </button>
+          </div>
+        )}
+        {orderedRows.map((row, i) => (
+          <div key={row.kind + '-v' + orderVer} style={orderVer > 0 ? { animation: `cardFadeUp 0.55s cubic-bezier(.2,.7,.3,1) ${i * 90}ms both` } : undefined}>
+            <DesktopCurationRow
+              row={row}
+              isMobile={isMobile}
+              isChairman={row.kind === 'chairman'}
+              onSelect={onSelectProduct}
+            />
+          </div>
         ))}
 
         {/* 전체상품 보기 CTA */}
@@ -1121,6 +1938,22 @@ function ShopAICurationDesktop({ isMobile = false, allProducts, bestProducts, pr
       </div>
 
       <ShopFooter isMobile={isMobile} />
+
+      {/* AI 브리핑(S26)/맞춤 진열 퀴즈(전체 기기) 포털 */}
+      {portalHost && ReactDOM.createPortal(
+        <React.Fragment>
+          {briefVisible && !quizOpen && (
+            <AIBriefCard
+              onStartQuiz={() => setQuizOpen(true)}
+              onClose={() => setBriefVisible(false)}
+            />
+          )}
+          {quizOpen && (
+            <AIQuizOverlay onDone={applyAiResult} onClose={() => setQuizOpen(false)} />
+          )}
+        </React.Fragment>,
+        portalHost
+      )}
     </div>
   );
 }
@@ -1623,6 +2456,45 @@ function HeroBannerCard({ slide, isMobile, onSelectProduct, animKey, gs, active,
           }}
         />
       </div>
+    </div>
+  );
+}
+
+// 카테고리 아래 AI 맞춤 진열 CTA — 클릭 시 큐레이션 섹션의 퀴즈 오픈 (같은 기기 스코프)
+function AIShelfCta({ isMobile }) {
+  const _lang = useI18nLang();
+  const open = (e) => {
+    const sc = e.currentTarget.closest('.phone-scroll');
+    if (sc) sc.dispatchEvent(new CustomEvent('ai-quiz-open'));
+  };
+  return (
+    <div style={{ maxWidth: 1280, margin: '0 auto', width: '100%', padding: isMobile ? '8px 16px' : '11px 36px', boxSizing: 'border-box' }}>
+      <style>{aiKeyframesCss}</style>
+      <button onClick={open} style={{
+        display: 'flex', alignItems: 'center', gap: 12, width: '100%',
+        padding: isMobile ? '15px 16px' : '17px 22px',
+        borderRadius: 16, border: 'none', cursor: 'pointer', textAlign: 'left',
+        background: 'linear-gradient(120deg, #0B1F3A 0%, #0E5F86 55%, #00B6F0 130%)',
+        color: '#fff', fontFamily: 'inherit', position: 'relative', overflow: 'hidden',
+        animation: 'aiCtaGlow 2.6s ease-in-out infinite',
+      }}>
+        <span aria-hidden="true" style={{
+          position: 'absolute', top: 0, bottom: 0, left: 0, width: '34%',
+          background: 'linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.22) 50%, rgba(255,255,255,0) 100%)',
+          animation: 'aiCtaShine 3.2s ease-in-out 1s infinite', pointerEvents: 'none',
+        }} />
+        <span style={{
+          flex: '0 0 auto', width: isMobile ? 40 : 46, height: isMobile ? 40 : 46, borderRadius: 13,
+          background: 'rgba(255,255,255,0.14)', backdropFilter: 'blur(4px)',
+          border: '1px solid rgba(255,255,255,0.25)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: isMobile ? 18 : 21,
+        }}>✦</span>
+        <span style={{ flex: 1, minWidth: 0 }}>
+          <span style={{ display: 'block', fontSize: isMobile ? 15 : 17, fontWeight: 900, letterSpacing: '-0.01em' }}>{_ttl({ko:'AI 맞춤 진열 시작하기',en:'Start AI Custom Shelf',ja:'AIカスタム陳列を開始',zh:'开始AI定制陈列'})}</span>
+          <span style={{ display: 'block', marginTop: 3, fontSize: isMobile ? 11.5 : 12.5, fontWeight: 600, color: 'rgba(255,255,255,0.82)' }}>{_ttl({ko:'소중한 당신만을 위한 진열장을 준비할게요. 여기를 클릭해보세요.',en:'A shelf curated just for you — tap to begin.',ja:'あなただけの陳列棚をご用意します。タップしてみてください。',zh:'为您专属打造的货架，点击开始。'})}</span>
+        </span>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><polyline points="9 18 15 12 9 6" /></svg>
+      </button>
     </div>
   );
 }

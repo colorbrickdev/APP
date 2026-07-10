@@ -819,33 +819,49 @@ function SnsIconLink({ item }) {
 
 function BottomNav({ activeKey = 'home', onNavClick = () => {} }) {
   const { t } = (typeof useTranslation === 'function') ? useTranslation() : { t: (k) => k };
+  const navRef = React.useRef(null);
+  const [myOpen, setMyOpen] = React.useState(false);
+  // 주문내역 시트가 열려있는 동안 '주문내역' 탭 하이라이트
+  React.useEffect(() => {
+    const nav = navRef.current;
+    if (!nav) return;
+    const sc = nav.closest('.phone-scroll');
+    const hostEl = sc ? sc.parentElement : null;
+    if (!hostEl) return;
+    const check = () => setMyOpen(!!hostEl.querySelector('.__order_hist, .__quick_signup, .__quick_login'));
+    const mo = new MutationObserver(check);
+    mo.observe(hostEl, { childList: true });
+    check();
+    return () => mo.disconnect();
+  }, []);
   const tabs = [
     { key: 'shop',    label: t('nav.shop'),    render: NavIcon.shop   },
     { key: 'shorts',  label: t('nav.shorts'),  render: NavIcon.shorts },
     { key: 'life',    label: t('nav.life'),    render: NavIcon.dharma },
     { key: 'about',   label: t('nav.about'),   render: NavIcon.info   },
+    { key: 'my',      label: t('nav.orders'),    render: NavIcon.person },
   ];
 
   return (
-    <nav style={{
+    <nav ref={navRef} style={{
       position: 'sticky', bottom: 0, left: 0, right: 0,
       background: 'rgba(255,255,255,0.96)',
       backdropFilter: 'blur(14px)',
       borderTop: '1px solid rgba(11,31,58,0.08)',
       boxShadow: '0 -4px 16px rgba(11,31,58,0.06)',
       display: 'grid',
-      gridTemplateColumns: 'repeat(4, 1fr)',
+      gridTemplateColumns: 'repeat(5, 1fr)',
       padding: '8px 4px 10px',
       zIndex: 20,
     }}>
       {tabs.map(t => {
-        const isActive = t.key === activeKey;
+        const isActive = t.key === 'my' ? myOpen : (t.key === activeKey && !myOpen);
         const color = isActive ? '#0B1F3A' : '#8A97AD';
         const stroke = isActive ? 2 : 1.7;
         return (
           <button
             key={t.key}
-            onClick={() => onNavClick(t.key)}
+            onClick={(e) => { if (t.key === 'my') { window.openOrderHistory && window.openOrderHistory(e.currentTarget); } else onNavClick(t.key); }}
             style={{
               background: 'transparent', border: 'none', cursor: 'pointer',
               padding: '6px 0 4px',
@@ -2563,6 +2579,141 @@ function ActionButton({ type, color = '#fff', label = '', filled = false, onClic
   );
 }
 
+// 글로벌 검색 오버레이 — 제품 + 석세스클립 통합 검색
+function GlobalSearchOverlay({ anchorEl, onClose, onProduct, onClips }) {
+  const { t } = (typeof useTranslation === 'function') ? useTranslation() : { t: (k) => k };
+  const [q, setQ] = React.useState('');
+  const [host, setHost] = React.useState(null);
+  React.useEffect(() => {
+    if (!anchorEl) return;
+    const sc = anchorEl.closest('.phone-scroll');
+    const parent = sc ? sc.parentElement : null;
+    if (!parent) return;
+    if (getComputedStyle(parent).position === 'static') parent.style.position = 'relative';
+    let h = parent.querySelector(':scope > .__search_host');
+    if (!h) {
+      h = document.createElement('div');
+      h.className = '__search_host';
+      Object.assign(h.style, { position: 'absolute', inset: '0', zIndex: 85, pointerEvents: 'none' });
+      parent.appendChild(h);
+    }
+    setHost(h);
+  }, [anchorEl]);
+
+  const qq = q.trim().toLowerCase();
+  const prods = qq ? (window.SHOP_PRODUCTS || []).filter(p => (p.name || '').toLowerCase().includes(qq)).slice(0, 8) : [];
+  const clipN = qq ? (window.SHORTS || []).filter(s => ((s.title || '') + ' ' + (s.product || '')).toLowerCase().includes(qq)).length : 0;
+  const HOT = ['헤모힘', '유산균', '칫솔', '화장지 4D', '앱솔루트'];
+  const krw = n => (n || 0).toLocaleString('ko-KR');
+  const isWide = (() => {
+    try {
+      const sc = anchorEl && anchorEl.closest('.phone-scroll');
+      return sc ? sc.clientWidth >= 700 : false;
+    } catch (_) { return false; }
+  })();
+  // 데스크톱: 검색 필드 바로 아래 앵커 위치 계산
+  const anchorPos = (() => {
+    if (!isWide || !host || !anchorEl) return null;
+    try {
+      const hr = host.getBoundingClientRect();
+      const ar = (anchorEl.closest('div') || anchorEl).getBoundingClientRect();
+      return { top: ar.bottom - hr.top + 8, left: Math.max(12, ar.left - hr.left), width: Math.max(ar.width, 420) };
+    } catch (_) { return null; }
+  })();
+  if (!host) return null;
+  return ReactDOM.createPortal(
+    <div onClick={onClose} style={{
+      position: 'absolute', inset: 0, pointerEvents: 'auto',
+      background: 'rgba(11,31,58,0.45)', backdropFilter: 'blur(2px)',
+      display: 'flex', flexDirection: 'column',
+      animation: 'shortsFadeIn 0.18s ease both',
+    }}>
+      <div onClick={(e) => e.stopPropagation()} style={{
+        background: '#fff',
+        borderRadius: isWide ? 18 : '0 0 18px 18px',
+        padding: '13px 14px 15px',
+        boxShadow: '0 18px 44px rgba(11,31,58,0.25)',
+        animation: 'notifSlideDown 0.24s ease both',
+        maxHeight: '72%', display: 'flex', flexDirection: 'column',
+        ...(anchorPos
+          ? { position: 'absolute', top: anchorPos.top, left: anchorPos.left, width: anchorPos.width, margin: 0, alignSelf: 'auto' }
+          : (isWide ? { width: 480, alignSelf: 'flex-end', margin: '64px 28px 0 0' } : {})),
+      }}>
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 8,
+          padding: '10px 13px', borderRadius: 999, background: '#F1F4F9',
+          border: '1.5px solid rgba(0,182,240,0.45)',
+        }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8A97AD" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="7" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
+          <input
+            autoFocus
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Escape') onClose(); }}
+            placeholder={t('gs.placeholder')}
+            style={{ flex: 1, border: 'none', outline: 'none', background: 'transparent', fontFamily: 'inherit', fontSize: 14, fontWeight: 700, color: '#0B1F3A' }}
+          />
+          <button onClick={onClose} aria-label="닫기" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, lineHeight: 0, color: '#8A97AD' }}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+          </button>
+        </div>
+
+        <div className="filter-scroll" style={{ flex: 1, overflowY: 'auto', marginTop: 6 }}>
+          {!qq ? (
+            <div style={{ padding: '10px 2px 2px' }}>
+              <div style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: '0.08em', color: '#8A97AD', marginBottom: 8 }}>{t('gs.hot')}</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                {HOT.map(h => (
+                  <button key={h} onClick={() => setQ(h)} style={{
+                    padding: '7px 12px', borderRadius: 999, cursor: 'pointer',
+                    border: '1px solid rgba(11,31,58,0.12)', background: '#fff',
+                    fontSize: 12, fontWeight: 700, color: '#2B3A52', fontFamily: 'inherit',
+                  }}>{h}</button>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div style={{ paddingTop: 4 }}>
+              {prods.map(p => (
+                <button key={p.id} onClick={() => onProduct(p)} style={{
+                  display: 'flex', alignItems: 'center', gap: 10, width: '100%',
+                  padding: '9px 4px', border: 'none', borderBottom: '1px solid rgba(11,31,58,0.05)',
+                  background: 'none', cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit',
+                }}>
+                  <div style={{ flex: '0 0 auto', width: 40, height: 40, borderRadius: 9, overflow: 'hidden', background: '#F1F4F9' }}>
+                    {p.image && <img src={p.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 12.5, fontWeight: 700, color: '#0B1F3A', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</div>
+                    <div style={{ marginTop: 1, fontSize: 11, fontWeight: 800, color: '#0088B8' }}>{krw(p.price)}원 · {krw(p.pv)} PV</div>
+                  </div>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C0C8D4" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><polyline points="9 18 15 12 9 6" /></svg>
+                </button>
+              ))}
+              {clipN > 0 && (
+                <button onClick={() => onClips(q.trim())} style={{
+                  display: 'flex', alignItems: 'center', gap: 8, width: '100%',
+                  padding: '11px 4px', border: 'none', background: 'none', cursor: 'pointer',
+                  textAlign: 'left', fontFamily: 'inherit', fontSize: 12.5, fontWeight: 800, color: '#0088B8',
+                }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3" /></svg>
+                  {t('gs.clips')} · “{q.trim()}” ({clipN})
+                </button>
+              )}
+              {prods.length === 0 && clipN === 0 && (
+                <div style={{ padding: '18px 4px', textAlign: 'center', fontSize: 12.5, fontWeight: 600, color: '#8A97AD' }}>“{q.trim()}” — {t('gs.none')}</div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>,
+    host
+  );
+}
+
+window.GlobalSearchOverlay = GlobalSearchOverlay;
+
 function VariationClassic({ shopVariant = 'default', onPageChange } = {}) {
   const _onPageChangeRef = React.useRef(onPageChange);
   React.useEffect(() => { _onPageChangeRef.current = onPageChange; });
@@ -2580,8 +2731,10 @@ function VariationClassic({ shopVariant = 'default', onPageChange } = {}) {
   const [viewerIdx, setViewerIdx] = React.useState(null);
   const [clipTab, setClipTab] = React.useState('all');
   const [clipSearch, setClipSearch] = React.useState('');
+  const [searchOpen, setSearchOpen] = React.useState(null); // 클릭된 앵커 엘리먼트
   const [notifOpen, setNotifOpen] = React.useState(false);
   const [flagFilter, setFlagFilter] = React.useState('all'); // 'all' | 'official' | 'personal'
+  const [clipSort, setClipSort] = React.useState('reco'); // 'reco' | 'new' | 'views' | 'likes'
 
   // 알림 미읽음 카운트 — notifStore 구독
   const [notifUnread, setNotifUnread] = React.useState(() => (window.notifStore ? window.notifStore.unreadCount() : 3));
@@ -2649,8 +2802,12 @@ function VariationClassic({ shopVariant = 'default', onPageChange } = {}) {
     let r = filterShorts(SHORTS, clipTab, flagFilter);
     const q = clipSearch.trim().toLowerCase();
     if (q) r = r.filter(s => (s.title || '').toLowerCase().includes(q) || (s.product || '').toLowerCase().includes(q));
+    const num = (v) => { const s = String(v || '0'); return s.endsWith('K') ? parseFloat(s) * 1000 : parseFloat(s) || 0; };
+    if (clipSort === 'new') r = r.slice().sort((a, b) => (parseInt(b.id, 10) || 0) - (parseInt(a.id, 10) || 0));
+    else if (clipSort === 'views') r = r.slice().sort((a, b) => num(b.views) - num(a.views));
+    else if (clipSort === 'likes') r = r.slice().sort((a, b) => num(b.likes) - num(a.likes));
     return r;
-  }, [clipTab, flagFilter, clipSearch]);
+  }, [clipTab, flagFilter, clipSearch, clipSort]);
   // 이어보기 — 마지막으로 본 클립
   const resumeIdx = React.useMemo(() => {
     let id; try { id = localStorage.getItem('clipResumeId'); } catch (_) {}
@@ -2689,7 +2846,7 @@ function VariationClassic({ shopVariant = 'default', onPageChange } = {}) {
           <LanguageSwitcher size="mobile" />
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-          <button aria-label="검색" style={{
+          <button aria-label="검색" onClick={(e) => setSearchOpen(e.currentTarget)} style={{
             background: 'transparent', border: 'none', cursor: 'pointer', padding: 4, lineHeight: 0,
           }}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0B1F3A"
@@ -2744,7 +2901,7 @@ function VariationClassic({ shopVariant = 'default', onPageChange } = {}) {
               fontSize: 9.5, fontWeight: 800,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontVariantNumeric: 'tabular-nums',
-            }}><span data-cart-count>2</span></span>
+            }}><span data-cart-count>{(() => { try { return localStorage.getItem('quickMember') ? '2' : '0'; } catch (_) { return '0'; } })()}</span></span>
           </button>
         </div>
 
@@ -2756,6 +2913,15 @@ function VariationClassic({ shopVariant = 'default', onPageChange } = {}) {
           anchorTop={52}
           isMobile={true}
         />
+        {/* 글로벌 검색 오버레이 */}
+        {searchOpen && (
+          <GlobalSearchOverlay
+            anchorEl={searchOpen}
+            onClose={() => setSearchOpen(null)}
+            onProduct={(p) => { setSearchOpen(null); setCurrentPage('shop'); setShopProduct(p); }}
+            onClips={(kw) => { setSearchOpen(null); setClipSearch(kw); setCurrentPage('shorts'); }}
+          />
+        )}
       </div>
 
       {/* 라우팅된 콘텐츠 — currentPage가 shorts가 아니면 다른 페이지 렌더 후 종료 */}
@@ -2923,8 +3089,8 @@ function VariationClassic({ shopVariant = 'default', onPageChange } = {}) {
         }}>{t('shorts.tab_all') === 'All' ? 'Channel' : '채널'}</span>
         {[
           { key: 'all',      label: t('shorts.tab_all'),   icon: null },
-          { key: 'official', label: t('shorts.tab_business'), icon: 'shield' },
-          { key: 'personal', label: t('shorts.tab_routine'), icon: 'person' },
+          { key: 'official', label: t('shorts.ch_official'), icon: 'shield' },
+          { key: 'personal', label: t('shorts.ch_personal'), icon: 'person' },
         ].map(f => {
           const isActive = flagFilter === f.key;
           const isOfficial = f.key === 'official';
@@ -2951,6 +3117,30 @@ function VariationClassic({ shopVariant = 'default', onPageChange } = {}) {
             </button>
           );
         })}
+        {/* 정렬 — 우측 끝 */}
+        <div style={{ marginLeft: 'auto', position: 'relative' }}>
+          <select
+            value={clipSort}
+            onChange={(e) => setClipSort(e.target.value)}
+            aria-label="정렬"
+            style={{
+              appearance: 'none', WebkitAppearance: 'none',
+              padding: '5px 22px 5px 10px', borderRadius: 999,
+              border: '1px solid rgba(11,31,58,0.12)', background: '#fff',
+              fontSize: 11, fontWeight: 700, color: '#4A5568',
+              fontFamily: 'inherit', cursor: 'pointer', outline: 'none',
+            }}
+          >
+            <option value="reco">{t('sort.reco')}</option>
+            <option value="new">{t('sort.new')}</option>
+            <option value="views">{t('sort.views')}</option>
+            <option value="likes">{t('sort.likes')}</option>
+          </select>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#8A97AD" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"
+               style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </div>
         </div>
       </div>
 
