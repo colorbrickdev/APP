@@ -1,0 +1,1210 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ATOMY — Desktop</title>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" onerror="this.remove()">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800;900&family=Noto+Sans:wght@300;400;500;600;700;800;900&display=swap">
+<style>
+  html, body { margin: 0; padding: 0; background: #fff; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Pretendard', 'Noto Sans KR', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  /* iPhone 17만 Noto Sans 적용 */
+  .iphone-noto, .iphone-noto * {
+    font-family: 'Noto Sans KR', 'Noto Sans', system-ui, sans-serif !important;
+  }
+
+  /* iPhone 17 전용 — 프리미엄 부티크 진열장 (다크 월넛 + 골드 + 스포트라이트) */
+  .iphone-noto .shop-curation-body {
+    background:
+      radial-gradient(120% 60% at 50% 0%, rgba(70,58,44,0.55) 0%, rgba(0,0,0,0) 60%),
+      linear-gradient(180deg, #2A2420 0%, #1E1A16 100%) !important;
+    padding: 0 0 6px !important;
+    perspective: 1200px;
+    perspective-origin: 50% 20%;
+  }
+  /* 각 큐레이션 행 = 캐비닛에 파인 유리 진열칸 — 살짝 뒤로 눕혀 원근감 */
+  .iphone-noto .shop-curation-row {
+    transform: none;
+    transform-origin: center top;
+  }
+  /* 각 큐레이션 행 = 캐비닛에 파인 유리 진열칸 */
+  .iphone-noto .shop-curation-row {
+    position: relative;
+    margin: 0 14px 16px;
+    padding: 18px 16px 24px !important;
+    border: none;
+    border-radius: 5px;
+    /* 안쪽: 위는 어둑한 유리, 아래는 스포트라이트 받은 받침 */
+    background:
+      radial-gradient(140% 80% at 50% 118%, rgba(255,250,240,0.92) 0%, rgba(245,240,232,0.6) 26%, rgba(60,52,44,0.12) 55%, rgba(20,16,12,0.30) 100%),
+      linear-gradient(180deg, rgba(20,16,12,0.42) 0%, rgba(60,54,48,0.16) 45%, rgba(245,243,238,0.5) 100%);
+    box-shadow:
+      inset 0 2px 7px rgba(0,0,0,0.6),
+      inset 0 0 0 1px rgba(198,164,107,0.45),
+      inset 0 0 0 2.5px rgba(20,16,12,0.5),
+      0 3px 0 rgba(140,120,90,0.35),
+      0 10px 24px rgba(0,0,0,0.4);
+    overflow: hidden;
+  }
+  .iphone-noto .shop-curation-row:first-of-type { margin-top: 16px; }
+  /* 천장 LED 스포트라이트 — 칸 상단 중앙에서 떨어지는 빛 + 유리 대각선 반사 */
+  .iphone-noto .shop-curation-row::before {
+    content: "";
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(60% 50% at 50% -8%, rgba(255,245,225,0.5) 0%, rgba(255,245,225,0) 70%),
+      linear-gradient(116deg, rgba(255,255,255,0) 34%, rgba(255,255,255,0.18) 44%, rgba(255,255,255,0) 50%),
+      linear-gradient(116deg, rgba(255,255,255,0) 64%, rgba(255,255,255,0.08) 70%, rgba(255,255,255,0) 75%);
+    pointer-events: none;
+    z-index: 3;
+  }
+  /* 상단 골드 모서리 하이라이트 */
+  .iphone-noto .shop-curation-row::after {
+    content: "";
+    position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, rgba(198,164,107,0.2), rgba(240,215,160,0.9) 50%, rgba(198,164,107,0.2));
+    pointer-events: none; z-index: 4;
+  }
+  /* 섹션 제목 등 텍스트는 어두운 유리 위에서도 보이도록 */
+  .iphone-noto .shop-curation-row h2,
+  .iphone-noto .shop-curation-row [class] { }
+  /* 진열된 제품 카드 — 각 제품이 개별로 바닥에 놓인 듯, 카드 아래 단독 그림자 */
+  .iphone-noto .shop-curation-row button {
+    border: 1px solid rgba(198,164,107,0.30) !important;
+    box-shadow:
+      0 2px 4px -2px rgba(0,0,0,0.3),
+      0 1px 0 rgba(255,255,255,0.5) inset !important;
+  }
+  /* 카드 아래 타원형 진한 그림자 (개별 제품 느낌) */
+  .iphone-noto .aicard-wrap { position: relative; }
+  .iphone-noto .aicard-oval-shadow {
+    display: block;
+    position: absolute;
+    left: 2%; right: 2%;
+    bottom: -11px; height: 24px;
+    background: radial-gradient(50% 50% at 50% 50%, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.5) 42%, rgba(0,0,0,0.18) 68%, rgba(0,0,0,0) 82%);
+    border-radius: 50%;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  /* 제품 꺼내기 액션 — 클릭 시 진열칸에서 앞으로 들어올려지는 느낌 */
+  @keyframes productPullOut {
+    0%   { transform: translateY(0) scale(1); }
+    35%  { transform: translateY(-10px) scale(1.06); }
+    100% { transform: translateY(-26px) scale(1.16); opacity: 0; }
+  }
+  .product-pulling {
+    animation: productPullOut 0.42s cubic-bezier(.3,.8,.4,1) forwards;
+    box-shadow: 0 22px 36px rgba(0,0,0,0.4) !important;
+  }
+  .iphone-noto .aicard-wrap.is-pulling .aicard-oval-shadow {
+    animation: ovalShadowFade 0.42s ease forwards;
+  }
+  @keyframes ovalShadowFade {
+    0% { opacity: 1; transform: scale(1); }
+    100% { opacity: 0; transform: scale(1.3); }
+  }
+
+  /* 다크 진열장 위 헤더 텍스트 — 밝게 */
+  .iphone-noto .shop-curation-row .cr-title { color: #FCF7EE !important; text-shadow: 0 1px 3px rgba(0,0,0,0.45); }
+  .iphone-noto .shop-curation-row .cr-reason { color: rgba(255,250,240,0.78) !important; }
+  .iphone-noto .shop-curation-row .cr-reason svg { stroke: rgba(255,250,240,0.7) !important; }
+
+  /* 칸 상단 조명 */
+  .iphone-noto .case-lamp {
+    display: block;
+    position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+    width: 60%; height: 40px; z-index: 5; pointer-events: none;
+  }
+  /* 천장에 매달린 LED 바 형태의 조명 기구 */
+  .iphone-noto .case-lamp-fixture {
+    position: absolute; top: 4px; left: 50%; transform: translateX(-50%);
+    width: 46%; height: 7px; border-radius: 0 0 6px 6px;
+    background: linear-gradient(180deg, #3a322a 0%, #20191300 100%),
+                linear-gradient(180deg, #cda96a 0%, #8a6f44 100%);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.5), 0 0 10px rgba(255,238,200,0.45);
+  }
+  /* 조명 기구에서 퍼지는 빛 (삼각형 글로우) */
+  .iphone-noto .case-lamp-glow {
+    position: absolute; top: 9px; left: 50%; transform: translateX(-50%);
+    width: 0; height: 0;
+    border-left: 70px solid transparent;
+    border-right: 70px solid transparent;
+    border-top: 34px solid rgba(255,240,210,0.28);
+    filter: blur(6px);
+  }
+  /* 헤더 배너는 캐비닛 위 사이니지처럼 (골드 하단 라인) */
+  .iphone-noto .shop-curation-body > div:first-child {
+    border-radius: 0 !important;
+    border-bottom: 1.5px solid rgba(198,164,107,0.55) !important;
+  }
+  /* hide scrollbars inside device */
+  .phone-scroll::-webkit-scrollbar { width: 0; height: 0; }
+  .drag-scroll-x { scrollbar-width: none; -ms-overflow-style: none; cursor: grab; scroll-behavior: auto; }
+  .drag-scroll-x::-webkit-scrollbar { width: 0; height: 0; display: none; }
+  .drag-scroll-x.is-dragging { cursor: grabbing; scroll-snap-type: none !important; }
+  .drag-scroll-x.is-dragging * { pointer-events: none; }
+
+  /* 영상 재생 중 — 우측 하단 애터미 어시스턴트(채팅 플로팅) 숨김 */
+  body.in-video-playback .chat-floating-host { display: none !important; }
+
+  @keyframes filterSlideIn {
+    from { transform: translateX(100%); }
+    to   { transform: translateX(0); }
+  }
+  /* 필터 본문 — 우측 스크롤바 표시 */
+  .filter-scroll { scrollbar-width: thin; scrollbar-color: #C6C0B4 transparent; }
+  .filter-scroll::-webkit-scrollbar { width: 7px; }
+  .filter-scroll::-webkit-scrollbar-thumb { background: rgba(11,31,58,0.28); border-radius: 7px; }
+  .filter-scroll::-webkit-scrollbar-track { background: transparent; }
+  /* 듀얼 레인지 슬라이더 — 트랙은 투명, 썸만 클릭 가능 */
+  .dual-range { -webkit-appearance: none; appearance: none; }
+  .dual-range::-webkit-slider-runnable-track { background: transparent; height: 22px; }
+  .dual-range::-moz-range-track { background: transparent; height: 22px; }
+  .dual-range::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 20px; height: 20px; border-radius: 50%;
+    background: #fff; border: 2px solid #00B6F0;
+    box-shadow: 0 2px 6px rgba(11,31,58,0.3); cursor: pointer;
+    pointer-events: auto; margin-top: 1px;
+  }
+  .dual-range::-moz-range-thumb {
+    width: 20px; height: 20px; border-radius: 50%;
+    background: #fff; border: 2px solid #00B6F0;
+    box-shadow: 0 2px 6px rgba(11,31,58,0.3); cursor: pointer;
+    pointer-events: auto;
+  }
+
+  /* 숏폼 썸네일 호버 — 이미지 살짝 확대 */
+  .shorts-cell .shorts-img {
+    transform: scale(1);
+  }
+  .shorts-cell:hover .shorts-img {
+    transform: scale(1.08);
+  }
+  .shorts-cell:active .shorts-img {
+    transform: scale(1.04);
+    transition-duration: 0.18s;
+  }
+
+  /* PC 카드 호버 미리보기 영상 페이드 인 */
+  @keyframes previewFadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+  /* PREVIEW 라이브 도트 펄스 */
+  @keyframes pulseDot {
+    0%, 100% { opacity: 1;   transform: scale(1); }
+    50%      { opacity: 0.5; transform: scale(0.7); }
+  }
+
+  /* 챗 플로팅 — 메시지 펑 등장 (스케일 + 페이드) */
+  @keyframes chatPopIn {
+    0%   { opacity: 0; transform: translateY(14px) scale(0.85); }
+    60%  { opacity: 1; transform: translateY(-3px) scale(1.04); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  /* 백조 idle — 3초 주기 가벼운 부유감 */
+  @keyframes swanIdle {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50%      { transform: translateY(-6px) rotate(-1.5deg); }
+  }
+
+  /* 알림 도트 펄스 링 */
+  @keyframes notifPulse {
+    0%   { transform: scale(1);   opacity: 0.6; }
+    100% { transform: scale(2.2); opacity: 0; }
+  }
+
+  /* 챗 패널 슬라이드 인 (우측에서) */
+  @keyframes chatPanelIn {
+    from { opacity: 0; transform: translateX(20px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+
+  /* 알림 드롭다운 슬라이드 다운 */
+  @keyframes notifSlideDown {
+    from { opacity: 0; transform: translateY(-8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* 애터미소개 페이지 슬라이드 인 */
+  @keyframes aboutSlideIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  /* 인생시나리오 항목 패널 — 우측에서 슬라이드 인 */
+  @keyframes goalSlideLeft {
+    from { transform: translateX(100%); }
+    to   { transform: translateX(0); }
+  }
+  /* 음성 챗 — 파형 막대 들썩임 */
+  @keyframes voiceBar {
+    0%, 100% { transform: scaleY(0.4); }
+    50%      { transform: scaleY(1); }
+  }
+  /* 제품 히어로 — 보틀 부유 */
+  @keyframes heroFloat {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50%      { transform: translateY(-8px) rotate(-1deg); }
+  }
+  @keyframes heroSlideIn {
+    from { opacity: 0; transform: translateX(20px) scale(0.96); }
+    to   { opacity: 1; transform: translateX(0) scale(1); }
+  }
+  /* GS 배너 켄번즈 — 활성 슬라이드 이미지가 천천히 확대/이동 */
+  @keyframes gsKenBurns {
+    0%   { transform: scale(1.08) translate(2%, 1%); }
+    100% { transform: scale(1.18) translate(-2%, -2%); }
+  }
+  @keyframes gsFadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+  /* 썸네일 켄번즈 — 방향별 (동/서/남/북 등) */
+  @keyframes gsKB_e { 0% { transform: scale(1.13) translate(-3%, 0); } 100% { transform: scale(1.13) translate(3%, 0); } }
+  @keyframes gsKB_w { 0% { transform: scale(1.13) translate(3%, 0); } 100% { transform: scale(1.13) translate(-3%, 0); } }
+  @keyframes gsKB_s { 0% { transform: scale(1.13) translate(0, -3%); } 100% { transform: scale(1.13) translate(0, 3%); } }
+  @keyframes gsKB_n { 0% { transform: scale(1.13) translate(0, 3%); } 100% { transform: scale(1.13) translate(0, -3%); } }
+  @keyframes gsKB_ne { 0% { transform: scale(1.13) translate(-2.5%, 2.5%); } 100% { transform: scale(1.13) translate(2.5%, -2.5%); } }
+  @keyframes gsKB_sw { 0% { transform: scale(1.13) translate(2.5%, -2.5%); } 100% { transform: scale(1.13) translate(-2.5%, 2.5%); } }
+  @keyframes gsKB_nw { 0% { transform: scale(1.13) translate(2.5%, 2.5%); } 100% { transform: scale(1.13) translate(-2.5%, -2.5%); } }
+  @keyframes gsKB_se { 0% { transform: scale(1.13) translate(-2.5%, -2.5%); } 100% { transform: scale(1.13) translate(2.5%, 2.5%); } }
+
+  /* 숏폼 카드 stagger fade-in */
+  @keyframes cardFadeUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  /* 좋아요 하트 폭발 파티클 */
+  @keyframes heartBurst {
+    0%   { opacity: 0; transform: translate(0, 0) scale(0.4) rotate(var(--rot, 0deg)); }
+    20%  { opacity: 1; }
+    100% { opacity: 0; transform: translate(var(--dx, 0px), var(--dy, -60px)) scale(1.3) rotate(var(--rot, 0deg)); }
+  }
+  @keyframes heartPulse {
+    0%, 100% { transform: scale(1); }
+    40%      { transform: scale(1.45); }
+    70%      { transform: scale(0.95); }
+  }
+
+
+  /* 영상 위 떠다니는 제품 광고 — 부드러운 부유 (좌우 + 상하 + 살짝 회전) */
+  @keyframes adFloat {
+    0%   { transform: translateY(0)   translateX(0)  rotate(-3deg); }
+    25%  { transform: translateY(-10px) translateX(-4px) rotate(2deg); }
+    50%  { transform: translateY(-4px)  translateX(2px)  rotate(-2deg); }
+    75%  { transform: translateY(-12px) translateX(-2px) rotate(3deg); }
+    100% { transform: translateY(0)   translateX(0)  rotate(-3deg); }
+  }
+  /* 광고 등장 — 우측에서 살짝 미끄러져 들어오며 페이드 인 */
+  @keyframes adSlideIn {
+    from { opacity: 0; transform: translateX(40px) scale(0.9); }
+    to   { opacity: 1; transform: translateX(0) scale(1); }
+  }
+  /* 라벨 칩 펄스 — '이 제품이 궁금하시다면?' 미세 글로우 */
+  @keyframes adLabelPulse {
+    0%, 100% { box-shadow: 0 4px 16px rgba(0,182,240,0.35); }
+    50%      { box-shadow: 0 4px 22px rgba(0,182,240,0.6); }
+  }
+
+  /* 챗 플로팅 — 백조 캐릭터의 흰 배경을 화면에 자연스럽게 녹이기 위한 부모 클래스 */
+  .chat-swan-host {
+    isolation: isolate;
+  }
+
+  /* 상품 상세페이지 진입 시 어시스턴트 플로팅 숨김 */
+  body.in-product-detail .chat-floating-host,
+  body.in-video-playback .chat-floating-host {
+    display: none !important;
+  }
+
+  /* CTA 펄스 링 — 버튼 외곽에 시안/레드 링이 천천히 퍼짐 */
+  @keyframes ctaPulseRing {
+    0%   { transform: scale(1);    opacity: 0.55; }
+    70%  { transform: scale(1.18); opacity: 0; }
+    100% { transform: scale(1.18); opacity: 0; }
+  }
+  .cta-pulse {
+    position: relative;
+    isolation: isolate;
+  }
+  .cta-pulse::before,
+  .cta-pulse::after {
+    content: '';
+    position: absolute; inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    z-index: -1;
+    box-shadow: 0 0 0 2px var(--cta-pulse-color, rgba(0,182,240,0.55));
+    animation: ctaPulseRing 2s ease-out infinite;
+  }
+  .cta-pulse::after {
+    animation-delay: 1s;
+  }
+
+  /* fly-to-cart — 클론 이미지가 우상단 장바구니로 포물선 이동
+     CSS로는 easing만 정의, 좌표는 JS에서 인라인으로 set. */
+  @keyframes cartBounce {
+    0%, 100% { transform: scale(1); }
+    35%      { transform: scale(1.35); }
+    65%      { transform: scale(0.92); }
+  }
+  .cart-bounce {
+    animation: cartBounce 0.55s cubic-bezier(.2,.7,.3,1.4);
+  }
+  /* 우상단 장바구니 카운트 ping — fly 도착 직후 시안 링이 펑 */
+  @keyframes cartPing {
+    0%   { transform: scale(0.6); opacity: 0.7; }
+    100% { transform: scale(2.4); opacity: 0; }
+  }
+
+  /* ========== #1 CHAIRMAN 뱃지 골드 샤인 ==========
+     1초 주기로 스윕(diagonal) 라이트 한 번. */
+  @keyframes badgeShine {
+    0%   { transform: translateX(-120%) skewX(-20deg); }
+    60%  { transform: translateX(220%)  skewX(-20deg); }
+    100% { transform: translateX(220%)  skewX(-20deg); }
+  }
+  .chairman-badge {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+  }
+  .chairman-badge::after {
+    content: '';
+    position: absolute;
+    top: -2px; bottom: -2px; left: 0;
+    width: 35%;
+    background: linear-gradient(90deg,
+      rgba(255,255,255,0) 0%,
+      rgba(255,235,170,0.55) 35%,
+      rgba(255,255,255,0.95) 50%,
+      rgba(255,235,170,0.55) 65%,
+      rgba(255,255,255,0) 100%);
+    transform: translateX(-120%) skewX(-20deg);
+    animation: badgeShine 2.6s ease-in-out infinite;
+    animation-delay: 1.2s;
+    pointer-events: none;
+    mix-blend-mode: overlay;
+  }
+
+  /* ========== #10 알림 종 흔들림 ==========
+     8초마다 한 번씩 종이 wobble — 새 알림이 왔다는 시각 신호. */
+  @keyframes bellWobble {
+    0%, 60%, 100% { transform: rotate(0deg); }
+    62%  { transform: rotate(14deg); }
+    65%  { transform: rotate(-12deg); }
+    68%  { transform: rotate(10deg); }
+    71%  { transform: rotate(-8deg); }
+    74%  { transform: rotate(5deg); }
+    77%  { transform: rotate(-3deg); }
+    80%  { transform: rotate(0deg); }
+  }
+  .bell-wobble {
+    transform-origin: 50% 18%;
+    animation: bellWobble 6s ease-in-out infinite;
+  }
+
+  /* ========== #3 풀스크린 숏폼 — 더블탭 큰 하트 ========== */
+  @keyframes bigHeartPop {
+    0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.3) rotate(-12deg); }
+    25%  { opacity: 1; transform: translate(-50%, -50%) scale(1.25) rotate(-12deg); }
+    60%  { opacity: 1; transform: translate(-50%, -50%) scale(1.05) rotate(-12deg); }
+    100% { opacity: 0; transform: translate(-50%, -50%) scale(1.4)  rotate(-12deg); }
+  }
+
+  /* ========== #5 콘페티 — 인생 수레바퀴 100% 항목 ========== */
+  @keyframes confettiFall {
+    0%   { opacity: 0; transform: translate(0,0) rotate(0deg); }
+    8%   { opacity: 1; }
+    100% { opacity: 0;
+           transform: translate(var(--cdx, 0px), var(--cdy, 200px)) rotate(var(--crot, 720deg)); }
+  }
+
+  /* ========== #2 사회적 증명 토스트 — 하단 좌측에서 슬라이드 인 ========== */
+  @keyframes proofIn {
+    from { opacity: 0; transform: translateX(-20px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes proofOut {
+    from { opacity: 1; transform: translateX(0); }
+    to   { opacity: 0; transform: translateX(-20px); }
+  }
+</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" src="android_frame.jsx"></script>
+<script type="text/babel" src="ios-frame.jsx"></script>
+<script type="text/babel" src="browser_window.jsx"></script>
+<script type="text/babel" src="components/Icons.jsx"></script>
+<script type="text/babel" src="components/AtomyLogo.jsx"></script>
+<script type="text/babel" src="components/i18n.jsx"></script>
+<script type="text/babel" src="components/Data.jsx"></script>
+<script type="text/babel" src="components/ShortsThumbnail.jsx"></script>
+<script type="text/babel" src="components/AtomyGuideKnowledge.jsx"></script>
+<script type="text/babel" src="components/ChatFloating.jsx"></script>
+<script type="text/babel" src="components/NotificationPopup.jsx"></script>
+<script type="text/babel" src="components/LanguageSwitcher.jsx"></script>
+<script type="text/babel">
+// =====================================================================
+// 글로벌 토스트 — window.showToast(message, opts?)
+// 우상단(또는 중앙 하단)에 슬라이드 인 알림. 자동 사라짐.
+// =====================================================================
+(function() {
+  let host = null;
+  function ensureHost() {
+    if (host && document.body.contains(host)) return host;
+    host = document.createElement('div');
+    Object.assign(host.style, {
+      position: 'fixed', top: '20px', left: '50%',
+      transform: 'translateX(-50%)',
+      zIndex: 99999, pointerEvents: 'none',
+      display: 'flex', flexDirection: 'column', gap: '8px',
+      alignItems: 'center',
+    });
+    document.body.appendChild(host);
+    return host;
+  }
+
+  if (!document.getElementById('__toast_kf')) {
+    const st = document.createElement('style');
+    st.id = '__toast_kf';
+    st.textContent = `
+      @keyframes toastIn {
+        from { opacity: 0; transform: translateY(-12px) scale(0.96); }
+        to   { opacity: 1; transform: translateY(0) scale(1); }
+      }
+      @keyframes toastOut {
+        from { opacity: 1; transform: translateY(0) scale(1); }
+        to   { opacity: 0; transform: translateY(-8px) scale(0.96); }
+      }
+    `;
+    document.head.appendChild(st);
+  }
+
+  window.showToast = function(message, opts = {}) {
+    const h = ensureHost();
+    const el = document.createElement('div');
+    Object.assign(el.style, {
+      pointerEvents: 'auto',
+      display: 'inline-flex', alignItems: 'center', gap: '10px',
+      padding: '12px 18px',
+      borderRadius: '999px',
+      background: '#0B1F3A',
+      color: '#fff',
+      fontSize: '13px', fontWeight: '700',
+      letterSpacing: '-0.01em',
+      fontFamily: 'inherit',
+      boxShadow: '0 12px 30px rgba(11,31,58,0.25), 0 0 0 1px rgba(0,182,240,0.25)',
+      animation: 'toastIn 0.32s cubic-bezier(.2,.7,.3,1.2) forwards',
+    });
+    // 시안 도트
+    const dot = document.createElement('span');
+    Object.assign(dot.style, {
+      width: '8px', height: '8px', borderRadius: '999px',
+      background: '#00B6F0', boxShadow: '0 0 0 3px rgba(0,182,240,0.25)',
+    });
+    el.appendChild(dot);
+    const txt = document.createElement('span');
+    txt.textContent = message;
+    el.appendChild(txt);
+    h.appendChild(el);
+
+    const dur = opts.duration ?? 2200;
+    setTimeout(() => {
+      el.style.animation = 'toastOut 0.28s ease forwards';
+      setTimeout(() => el.remove(), 300);
+    }, dur);
+  };
+})();
+</script>
+
+<script type="text/babel" src="components/AtomyShopVariants.jsx"></script>
+<script type="text/babel" src="components/VariationClassic.jsx"></script>
+<script type="text/babel" src="components/VariationDesktop.jsx"></script>
+<script type="text/babel" src="components/AtomyAbout.jsx"></script>
+<script type="text/babel" src="components/AtomyLife.jsx"></script>
+<script type="text/babel" src="components/AtomyShop.jsx"></script>
+<script type="text/babel" src="components/AtomyProductDetail.jsx"></script>
+<script type="text/babel" src="components/AtomyProductDetailVariants.jsx"></script>
+
+<script type="text/babel">
+// =====================================================================
+// 글로벌 fly-to-cart — 제품 이미지 클론을 우상단 장바구니로 포물선 이동
+// 사용: window.flyToCart(imgSrc, sourceRect)
+// 가장 가까운 [data-cart-icon] 요소를 타겟으로 잡고 상대 좌표로 이동
+
+// 글로벌 제품 꺼내기 → 화면 채우기 전환
+// cardEl(클릭한 카드)에서 이미지를 복제해 디바이스 화면 전체로 확대 후 콜백
+window.productPullToScreen = function(cardEl, onDone) {
+  try {
+    const img = cardEl && cardEl.querySelector('img');
+    // 디바이스 화면 컨테이너 = 가장 가까운 .phone-scroll 의 부모
+    const scroller = cardEl && cardEl.closest('.phone-scroll');
+    const host = scroller ? scroller.parentElement : document.body;
+    if (!img || !host) { onDone && onDone(); return; }
+    const cs = getComputedStyle(host);
+    if (cs.position === 'static') host.style.position = 'relative';
+    const hostRect = host.getBoundingClientRect();
+    const cardRect = cardEl.getBoundingClientRect();
+
+    // 어둡게 깔리는 배경
+    const veil = document.createElement('div');
+    Object.assign(veil.style, {
+      position: 'absolute', inset: '0', zIndex: 9998,
+      background: 'rgba(15,12,10,0)', transition: 'background 0.42s ease',
+      pointerEvents: 'none', borderRadius: getComputedStyle(host).borderRadius || '0',
+      overflow: 'hidden',
+    });
+    host.appendChild(veil);
+
+    // 이미지 클론
+    const clone = document.createElement('div');
+    Object.assign(clone.style, {
+      position: 'absolute', zIndex: 9999, pointerEvents: 'none',
+      left: (cardRect.left - hostRect.left) + 'px',
+      top: (cardRect.top - hostRect.top) + 'px',
+      width: cardRect.width + 'px', height: cardRect.height + 'px',
+      backgroundImage: `url(${img.src})`,
+      backgroundSize: 'contain', backgroundPosition: 'center', backgroundRepeat: 'no-repeat',
+      backgroundColor: '#fff',
+      borderRadius: '14px',
+      boxShadow: '0 20px 50px rgba(0,0,0,0.45)',
+      transition: 'all 0.46s cubic-bezier(.5,.05,.2,1)',
+      willChange: 'left,top,width,height,border-radius',
+    });
+    host.appendChild(clone);
+
+    // 강제 reflow 후 풀스크린으로 확대
+    void clone.offsetWidth;
+    veil.style.background = 'rgba(15,12,10,0.55)';
+    clone.style.left = '0px';
+    clone.style.top = '0px';
+    clone.style.width = hostRect.width + 'px';
+    clone.style.height = hostRect.height + 'px';
+    clone.style.borderRadius = '0px';
+
+    // 확대 거의 끝나는 시점에 상세 진입
+    setTimeout(() => { onDone && onDone(); }, 380);
+    // 상세가 렌더된 뒤 클론/베일 페이드 제거
+    setTimeout(() => {
+      clone.style.transition = 'opacity 0.25s ease';
+      veil.style.transition = 'opacity 0.25s ease';
+      clone.style.opacity = '0';
+      veil.style.opacity = '0';
+      setTimeout(() => { clone.remove(); veil.remove(); }, 280);
+    }, 520);
+  } catch (e) {
+    onDone && onDone();
+  }
+};
+
+// 글로벌 제품 넣기 — 상세에서 목록으로 돌아갈 때 썸네일로 축소
+window.productShrinkToList = function(triggerEl, imgSrc, onDone) {
+  try {
+    const scroller = triggerEl && triggerEl.closest('.phone-scroll');
+    const host = scroller ? scroller.parentElement : document.body;
+    if (!host || !imgSrc) { onDone && onDone(); return; }
+    const cs = getComputedStyle(host);
+    if (cs.position === 'static') host.style.position = 'relative';
+    const hostRect = host.getBoundingClientRect();
+
+    const veil = document.createElement('div');
+    Object.assign(veil.style, {
+      position: 'absolute', inset: '0', zIndex: 9998,
+      background: 'rgba(15,12,10,0.5)', transition: 'background 0.4s ease',
+      pointerEvents: 'none', overflow: 'hidden',
+    });
+    host.appendChild(veil);
+
+    const clone = document.createElement('div');
+    Object.assign(clone.style, {
+      position: 'absolute', zIndex: 9999, pointerEvents: 'none',
+      left: '0px', top: '0px',
+      width: hostRect.width + 'px', height: hostRect.height + 'px',
+      backgroundImage: `url(${imgSrc})`,
+      backgroundSize: 'cover', backgroundPosition: 'center',
+      borderRadius: '0px',
+      transition: 'all 0.44s cubic-bezier(.5,.05,.2,1)',
+      willChange: 'left,top,width,height,border-radius,opacity',
+    });
+    host.appendChild(clone);
+
+    // 목록은 즉시 렌더
+    onDone && onDone();
+
+    // 다음 프레임에 썸네일 크기로 축소 (상단 중앙으로)
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      const w = hostRect.width * 0.42, h = w;
+      veil.style.background = 'rgba(15,12,10,0)';
+      clone.style.left = (hostRect.width / 2 - w / 2) + 'px';
+      clone.style.top = (hostRect.height * 0.30) + 'px';
+      clone.style.width = w + 'px';
+      clone.style.height = h + 'px';
+      clone.style.borderRadius = '14px';
+      clone.style.opacity = '0';
+    }));
+    setTimeout(() => { clone.remove(); veil.remove(); }, 480);
+  } catch (e) {
+    onDone && onDone();
+  }
+};
+
+// 장바구니 추천 팝업 — 4개 이상 담으면 노출
+window.atomyCartTotal = 0;
+window.atomyCartBump = function() {
+  window.atomyCartTotal = (window.atomyCartTotal || 0) + 1;
+  if (window.atomyCartTotal < 4) return;
+  if (document.querySelector('.__cart_rec_modal')) return;
+  showCartRecModal();
+};
+function showCartRecModal() {
+  const scrolls = Array.from(document.querySelectorAll('.phone-scroll'))
+    .filter(sc => !sc.parentElement.closest('.phone-scroll') && !sc.closest('.chat-floating-host') && !sc.closest('.chat-panel-root'));
+  // 현재 제품구매 활성 디바이스 우선, 없으면 첫 디바이스
+  let host = null;
+  for (const sc of scrolls) { if (document.body.classList.contains('atomy-shop-active')) { host = sc.parentElement; break; } }
+  if (!host && scrolls[0]) host = scrolls[0].parentElement;
+  if (!host) return;
+  if (getComputedStyle(host).position === 'static') host.style.position = 'relative';
+  const items = (window.SHOP_PRODUCTS || []).filter(p => p.id !== '000017').slice(0, 6);
+  const krw = (n) => (n||0).toLocaleString('ko-KR');
+  const overlay = document.createElement('div');
+  overlay.className = '__cart_rec_modal';
+  Object.assign(overlay.style, {
+    position: 'absolute', inset: '0', zIndex: 10000,
+    background: 'rgba(11,31,58,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+    padding: '14px', animation: 'shortsFadeIn 0.2s ease both',
+  });
+  const cards = items.map(p => `
+    <div class="__rec_card" style="border:1px solid rgba(11,31,58,0.1);border-radius:12px;overflow:hidden;background:#fff;display:flex;flex-direction:column;">
+      <div style="position:relative;aspect-ratio:1/1;background:#F5F7FA;overflow:hidden;">
+        <img src="${p.image}" style="width:100%;height:100%;object-fit:cover;display:block;"/>
+        <button class="__rec_add" aria-label="장바구니 담기" style="position:absolute;bottom:7px;right:7px;width:30px;height:30px;border-radius:8px;border:none;background:rgba(255,255,255,0.95);backdrop-filter:blur(6px);cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(11,31,58,0.18);padding:0;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00B6F0" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h14l-1 12.2a1.5 1.5 0 01-1.5 1.3h-9A1.5 1.5 0 016 20.2L5 8z"/><path d="M9 11V7a3 3 0 016 0v4"/></svg>
+          <span class="__rec_cnt" style="display:none;position:absolute;top:-6px;right:-6px;min-width:17px;height:17px;padding:0 4px;border-radius:999px;border:1.5px solid #fff;background:#00B6F0;color:#fff;font-size:10px;font-weight:800;align-items:center;justify-content:center;font-variant-numeric:tabular-nums;">0</span>
+        </button>
+      </div>
+      <div style="padding:10px 11px 12px;">
+        <div style="font-size:12px;font-weight:700;color:#0B1F3A;line-height:1.3;min-height:31px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${p.name}</div>
+        <div style="font-size:14px;font-weight:900;color:#0B1F3A;margin-top:5px;">${krw(p.price)}<span style="font-size:11px;">원</span></div>
+        <div style="font-size:11px;font-weight:800;color:#0088B8;margin-top:1px;">${krw(p.pv)} PV</div>
+      </div>
+    </div>`).join('');
+  overlay.innerHTML = `
+    <div class="__cart_rec_box" style="width:100%;max-width:560px;max-height:100%;background:#fff;border-radius:16px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 64px rgba(11,31,58,0.3);font-family:'Pretendard','Noto Sans KR',system-ui,sans-serif;">
+      <div style="padding:16px 18px;border-bottom:1px solid rgba(11,31,58,0.08);display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-shrink:0;">
+        <div>
+          <div style="display:flex;align-items:center;gap:8px;font-size:16px;font-weight:900;color:#0B1F3A;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0B1F3A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h14l-1 12.2a1.5 1.5 0 01-1.5 1.3h-9A1.5 1.5 0 016 20.2L5 8z"/><path d="M9 11V7a3 3 0 016 0v4"/></svg>
+            함께 구매하면 좋은 상품
+          </div>
+        </div>
+        <button class="__rec_close" aria-label="닫기" style="flex-shrink:0;width:30px;height:30px;border-radius:999px;border:none;background:#F1F4F9;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#4A5568;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+      <div class="filter-scroll" style="flex:1;overflow-y:auto;padding:16px 18px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">${cards}</div>
+      <div style="border-top:1px solid rgba(11,31,58,0.08);padding:12px 18px;flex-shrink:0;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <button class="__rec_viewcart" style="padding:13px;border:1px solid #00B6F0;border-radius:10px;background:#fff;color:#0088B8;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;">장바구니 보기</button>
+          <button class="__rec_continue" style="padding:13px;border:none;border-radius:10px;background:#00B6F0;color:#fff;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;">계속 쇼핑</button>
+        </div>
+      </div>
+    </div>`;
+  host.appendChild(overlay);
+  const close = () => {
+    overlay.remove();
+  };
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+  overlay.querySelector('.__rec_close').addEventListener('click', close);
+  overlay.querySelector('.__rec_continue').addEventListener('click', close);
+  overlay.querySelector('.__rec_viewcart').addEventListener('click', close);
+  overlay.querySelectorAll('.__rec_add').forEach(btn => btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const card = btn.closest('.__rec_card');
+    const img = card && card.querySelector('img');
+    if (img && window.flyToCart) window.flyToCart(img.src, img.getBoundingClientRect());
+    else {
+      document.querySelectorAll('[data-cart-count]').forEach(b => {
+        b.textContent = String((parseInt(b.textContent, 10) || 0) + 1);
+      });
+    }
+    // 카드 장바구니 아이콘 자체의 카운트 배지 +1
+    const cnt = btn.querySelector('.__rec_cnt');
+    if (cnt) {
+      const next = (parseInt(cnt.textContent, 10) || 0) + 1;
+      cnt.textContent = String(next);
+      cnt.style.display = 'flex';
+    }
+    if (window.atomyCartBump) window.atomyCartBump();
+    if (window.showToast) window.showToast('장바구니에 담았습니다.');
+  }));
+}
+
+window.flyToCart = function(imgSrc, sourceRect) {
+  // 가시 상태인 cart-icon 모두 찾기 (모바일/PC 동시 노출 시 가까운 것 선택)
+  const carts = Array.from(document.querySelectorAll('[data-cart-icon]'))
+    .filter(el => {
+      const r = el.getBoundingClientRect();
+      return r.width > 0 && r.height > 0;
+    });
+  if (carts.length === 0 || !sourceRect) return;
+
+  // sourceRect와 가장 가까운 카트 선택
+  const cx = sourceRect.left + sourceRect.width / 2;
+  const cy = sourceRect.top + sourceRect.height / 2;
+  let nearest = carts[0], minD = Infinity;
+  carts.forEach(el => {
+    const r = el.getBoundingClientRect();
+    const d = Math.hypot((r.left + r.width/2) - cx, (r.top + r.height/2) - cy);
+    if (d < minD) { minD = d; nearest = el; }
+  });
+  const targetRect = nearest.getBoundingClientRect();
+
+  // 클론 이미지 생성
+  const clone = document.createElement('img');
+  clone.src = imgSrc;
+  const startSize = Math.min(sourceRect.width, sourceRect.height, 120);
+  Object.assign(clone.style, {
+    position: 'fixed',
+    left: (sourceRect.left + sourceRect.width/2 - startSize/2) + 'px',
+    top: (sourceRect.top + sourceRect.height/2 - startSize/2) + 'px',
+    width: startSize + 'px', height: startSize + 'px',
+    borderRadius: '14px', objectFit: 'cover',
+    zIndex: 100001, pointerEvents: 'none',
+    boxShadow: '0 12px 30px rgba(0,182,240,0.35)',
+    transition: 'transform 0.75s cubic-bezier(.55,-0.2,.4,1.4), opacity 0.75s, width 0.75s, height 0.75s',
+    transform: 'translate(0, 0) rotate(0deg) scale(1)',
+    opacity: '1',
+  });
+  document.body.appendChild(clone);
+
+  // 강제 reflow 후 트랜지션
+  void clone.offsetWidth;
+  const dx = (targetRect.left + targetRect.width/2) - (sourceRect.left + sourceRect.width/2);
+  const dy = (targetRect.top + targetRect.height/2) - (sourceRect.top + sourceRect.height/2);
+  clone.style.width = '24px';
+  clone.style.height = '24px';
+  // 시작점/도착점 기준 보정
+  const adjDx = dx + (startSize - 24) / 2;
+  const adjDy = dy + (startSize - 24) / 2;
+  clone.style.transform = `translate(${adjDx}px, ${adjDy}px) rotate(180deg) scale(0.5)`;
+  clone.style.opacity = '0.4';
+
+  // 도착 시 카트 bounce + ping + 카운트 증가
+  setTimeout(() => {
+    clone.remove();
+    nearest.classList.remove('cart-bounce');
+    void nearest.offsetWidth;
+    nearest.classList.add('cart-bounce');
+
+    // 카운트 배지 증가
+    const badge = nearest.querySelector('[data-cart-count]');
+    if (badge) {
+      const cur = parseInt(badge.textContent, 10) || 0;
+      badge.textContent = String(cur + 1);
+    }
+    // ping 링
+    const ping = document.createElement('span');
+    Object.assign(ping.style, {
+      position: 'absolute', inset: '0',
+      borderRadius: '999px',
+      boxShadow: '0 0 0 2px rgba(0,182,240,0.7)',
+      animation: 'cartPing 0.7s ease-out forwards',
+      pointerEvents: 'none',
+    });
+    nearest.style.position = 'relative';
+    nearest.appendChild(ping);
+    setTimeout(() => ping.remove(), 750);
+
+    setTimeout(() => nearest.classList.remove('cart-bounce'), 600);
+  }, 760);
+};
+</script>
+
+<script type="text/babel">
+// PC — 프레임 없이 전체 화면
+function App() {
+  return (
+    <div data-screen-label="PC" style={{
+      position: 'relative', width: '100vw', height: '100dvh',
+      overflow: 'hidden', background: '#fff',
+      display: 'flex', flexDirection: 'column',
+    }}>
+      <div className="phone-scroll" style={{ width: '100%', height: '100%', overflowY: 'auto', overflowX: 'hidden' }}>
+            <VariationDesktop />
+          </div>
+          <ChatFloating size="desktop" />
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+<script type="text/babel">
+// =====================================================================
+// 글로벌 헬퍼 — 사회적 증명 토스트 / 콘페티 / useCountUp 훅
+// =====================================================================
+(function() {
+  // ---------- 사회적 증명 토스트 (좌하단) ----------
+  // id: NotificationPopup의 NOTIFICATIONS와 매칭 — 읽음 상태 동기화
+  const PROOFS = [
+    { id: 1, eyebrow: '구매 10회 달성', title: '구매 10회 달성! 🎉', body: '만약 애터미 사업자로 가입한다면?', accent: '#00B6F0', icon: 'trophy' },
+    { id: 2, eyebrow: '배송 출고',       title: '주문하신 헤모힘이 출고됐어요', body: '내일 오후 도착 예정 · 운송장 12345-67890', accent: '#22C28C', icon: 'package' },
+    { id: 3, eyebrow: '신규 회원 혜택',   title: '신규 회원 한정 — 첫 구매 5% 적립', body: '오늘 가입하면 헤모힘 · 앱솔루트 라인 5% 추가 적립', accent: '#FF8A3D', icon: 'gift' },
+    { id: 4, eyebrow: '새 콘텐츠',        title: '박한길 회장 인터뷰 영상 업로드', body: '"몽상의 균형 잡힌 삶" 강연 풀버전이 공개됐어요.', accent: '#8A97AD', icon: 'megaphone' },
+    { id: 5, eyebrow: '리뷰 적립',        title: '리뷰 작성 시 1,000원 적립',     body: '최근 구매하신 제품 4건의 리뷰가 비어있어요.', accent: '#8A97AD', icon: 'heart' },
+  ];
+  const PROOF_ICONS = {
+    trophy:    '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4h8v4a4 4 0 11-8 0V4z"/><path d="M8 6H5a3 3 0 003 3M16 6h3a3 3 0 01-3 3"/><path d="M10 14h4l1 6H9l1-6z"/></svg>',
+    package:   '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9-4 9 4-9 4-9-4z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/></svg>',
+    gift:      '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M5 12v9h14v-9M12 8v13"/><path d="M12 8C9 8 7.5 5 9 4s4 1 3 4M12 8c3 0 4.5-3 3-4s-4 1-3 4"/></svg>',
+    megaphone: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11v2a1 1 0 001 1h3l5 4V6L7 10H4a1 1 0 00-1 1z"/><path d="M16 8a5 5 0 010 8"/></svg>',
+    heart:     '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-4.5-9.5-9A5.5 5.5 0 0112 5a5.5 5.5 0 019.5 7c-2.5 4.5-9.5 9-9.5 9z"/></svg>',
+  };
+  function ensureProofHostsForDevices() {
+    // 각 기기(.phone-scroll) 부모 안에 토스트 호스트를 배치 → 기기 화면 안에서 노출
+    // 중첩된 .phone-scroll은 무시 (가장 바깥쪽만 사용)
+    const all = Array.from(document.querySelectorAll('.phone-scroll'));
+    const scrolls = all.filter(sc => !sc.parentElement.closest('.phone-scroll')
+      && !sc.closest('.chat-floating-host')
+      && !sc.closest('.chat-panel-root'));
+    const hosts = [];
+    scrolls.forEach(sc => {
+      const parent = sc.parentElement;
+      if (!parent) return;
+      let host = parent.querySelector(':scope > .__proof_host');
+      if (!host) {
+        host = document.createElement('div');
+        host.className = '__proof_host';
+        Object.assign(host.style, {
+          position: 'absolute', left: '12px', bottom: '80px',
+          zIndex: 60, pointerEvents: 'none',
+          display: 'flex', flexDirection: 'column', gap: '8px',
+          maxWidth: 'calc(100% - 24px)',
+        });
+        // 부모가 absolute 자식을 받을 수 있도록 보장
+        const cs = getComputedStyle(parent);
+        if (cs.position === 'static') parent.style.position = 'relative';
+        parent.appendChild(host);
+      }
+      hosts.push(host);
+    });
+    return hosts;
+  }
+  // 사용자가 X로 닫으면 세션 동안 토스트 비활성화 (새로고침 시 초기화)
+  let proofDismissed = false;
+  function dismissAllProofs() {
+    proofDismissed = true;
+    document.querySelectorAll('.__proof_host > .__proof_toast').forEach(el => {
+      el.style.animation = 'proofOut 0.3s ease forwards';
+      setTimeout(() => el.remove(), 320);
+    });
+  }
+  function showProof(p) {
+    if (proofDismissed) return;
+    if (!document.body.classList.contains('atomy-shop-active')) return;
+    const hosts = ensureProofHostsForDevices();
+    if (!hosts.length) return;
+    hosts.forEach(h => mountProofInto(h, p));
+  }
+  function mountProofInto(h, p) {
+    const el = document.createElement('div');
+    el.className = '__proof_toast';
+    Object.assign(el.style, {
+      position: 'relative',
+      pointerEvents: 'auto',
+      display: 'flex', alignItems: 'flex-start', gap: '10px',
+      padding: '12px 28px 12px 12px',
+      borderRadius: '14px',
+      background: '#fff',
+      color: '#0B1F3A',
+      fontSize: '12px', fontWeight: '600',
+      letterSpacing: '-0.01em', fontFamily: 'inherit',
+      boxShadow: '0 12px 30px rgba(11,31,58,0.15), 0 0 0 1px rgba(11,31,58,0.06)',
+      animation: 'proofIn 0.36s cubic-bezier(.2,.7,.3,1.1) forwards',
+      maxWidth: '320px',
+      borderLeft: `3px solid ${p.accent}`,
+    });
+    const ic = document.createElement('div');
+    Object.assign(ic.style, {
+      width: '34px', height: '34px', borderRadius: '10px',
+      background: p.accent,
+      flex: '0 0 auto',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      color: '#fff',
+    });
+    ic.innerHTML = PROOF_ICONS[p.icon] || '';
+    el.appendChild(ic);
+    const txt = document.createElement('div');
+    txt.style.minWidth = '0';
+    txt.innerHTML = `
+      <div style="font-weight:800;font-size:10.5px;letter-spacing:0.08em;color:${p.accent};margin-bottom:3px;text-transform:uppercase;">${p.eyebrow}</div>
+      <div style="font-weight:800;font-size:13px;line-height:1.3;color:#0B1F3A;margin-bottom:3px;">${p.title}</div>
+      <div style="font-weight:600;font-size:11.5px;line-height:1.4;color:#6B7A90;">${p.body}</div>
+    `;
+    el.appendChild(txt);
+
+    // X 닫기 버튼 — 클릭 시 세션 동안 모든 토스트 비활성화 (새로고침 전까지)
+    const closeBtn = document.createElement('button');
+    closeBtn.setAttribute('aria-label', '토스트 닫기');
+    Object.assign(closeBtn.style, {
+      position: 'absolute', top: '6px', right: '6px',
+      width: '20px', height: '20px',
+      border: '0', background: 'transparent', padding: '0',
+      cursor: 'pointer',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      color: '#9AA7BD', borderRadius: '6px',
+    });
+    closeBtn.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg>';
+    closeBtn.addEventListener('mouseenter', () => { closeBtn.style.background = '#F1F4F9'; closeBtn.style.color = '#0B1F3A'; });
+    closeBtn.addEventListener('mouseleave', () => { closeBtn.style.background = 'transparent'; closeBtn.style.color = '#9AA7BD'; });
+    closeBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      dismissAllProofs();
+    });
+    el.appendChild(closeBtn);
+
+    h.appendChild(el);
+    setTimeout(() => {
+      el.style.animation = 'proofOut 0.3s ease forwards';
+      setTimeout(() => el.remove(), 320);
+    }, 4500);
+  }
+  // 페이지 로드 6초 후 시작, 그 후 안 읽은 알림만 순서대로 9~13초 간격
+  // 모두 읽음 처리되면 토스트 중단 (notifStore에서 미읽음 건이 다시 생기면 재개)
+  let proofIdx = 0;
+  setTimeout(function loop() {
+    if (proofDismissed) { setTimeout(loop, 180000); return; }
+    const store = window.notifStore;
+    // 미읽음 건만 필터 (스토어 미사용 시에는 전체 노출 — 폴백)
+    const queue = store
+      ? PROOFS.filter(p => store.isUnread(p.id))
+      : PROOFS;
+    if (queue.length > 0) {
+      const p = queue[proofIdx % queue.length];
+      showProof(p);
+      proofIdx++;
+    }
+    setTimeout(loop, 180000);
+  }, 180000);
+
+  // ---------- 콘페티 ----------
+  window.fireConfetti = function(originEl) {
+    const rect = originEl ? originEl.getBoundingClientRect() : null;
+    const cx = rect ? rect.left + rect.width/2 : window.innerWidth/2;
+    const cy = rect ? rect.top + rect.height/2 : window.innerHeight/2;
+    const colors = ['#00B6F0', '#5CD3F7', '#FFE45A', '#FFB800', '#FF3B6A', '#0B2D58'];
+    const N = 60;
+    for (let i = 0; i < N; i++) {
+      const piece = document.createElement('div');
+      const sz = 6 + Math.random()*6;
+      const dx = (Math.random() - 0.5) * 360;
+      const dy = -120 - Math.random() * 180;
+      const rot = (Math.random() - 0.5) * 1440;
+      const col = colors[i % colors.length];
+      const round = Math.random() > 0.6;
+      Object.assign(piece.style, {
+        position: 'fixed',
+        left: cx + 'px', top: cy + 'px',
+        width: sz + 'px', height: (round ? sz : sz*0.5) + 'px',
+        background: col,
+        borderRadius: round ? '999px' : '2px',
+        zIndex: 99997, pointerEvents: 'none',
+        animation: `confettiFall ${1.2 + Math.random()*0.8}s cubic-bezier(.2,.7,.3,1) forwards`,
+      });
+      piece.style.setProperty('--cdx', dx + 'px');
+      piece.style.setProperty('--cdy', (dy + 320) + 'px');
+      piece.style.setProperty('--crot', rot + 'deg');
+      document.body.appendChild(piece);
+      setTimeout(() => piece.remove(), 2200);
+    }
+  };
+
+  // ---------- useCountUp 훅 (이미 통계용으로 있을 수 있음 — 별점 전용 버전) ----------
+  window.useStarCountUp = function(target, duration) {
+    target = Number(target) || 0;
+    duration = duration || 1200;
+    const [v, setV] = React.useState(0);
+    const [done, setDone] = React.useState(false);
+    const ref = React.useRef(null);
+    React.useEffect(() => {
+      if (!ref.current) return;
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach(e => {
+          if (e.isIntersecting && !done) {
+            setDone(true);
+            const start = performance.now();
+            function tick(t) {
+              const p = Math.min(1, (t - start) / duration);
+              const eased = 1 - Math.pow(1 - p, 3);
+              setV(target * eased);
+              if (p < 1) requestAnimationFrame(tick);
+            }
+            requestAnimationFrame(tick);
+            io.disconnect();
+          }
+        });
+      }, { threshold: 0.4 });
+      io.observe(ref.current);
+      return () => io.disconnect();
+    }, [target, duration, done]);
+    return [ref, v, done];
+  };
+})();
+</script>
+<script>
+/* scroll parallax — [data-parallax] 요소를 스크롤 위치에 따라 살짝 상하 이동 (S26 전용 태깅) */
+(function() {
+  let ticking = false;
+  function update(sc) {
+    const items = sc.querySelectorAll('[data-parallax]');
+    if (!items.length) return;
+    const cr = sc.getBoundingClientRect();
+    const mid = cr.top + cr.height / 2;
+    items.forEach((el) => {
+      const r = el.getBoundingClientRect();
+      const c = r.top + r.height / 2;
+      // 컨테이너 중앙에서 벗어난 정도(-1~1)에 진폭을 곱함
+      const off = Math.max(-1, Math.min(1, (c - mid) / (cr.height / 2 + 1)));
+      el.style.transform = `translateY(${(off * 12).toFixed(1)}px)`;
+    });
+  }
+  document.addEventListener('scroll', (e) => {
+    const sc = e.target;
+    if (!(sc instanceof HTMLElement) || !sc.classList || !sc.classList.contains('phone-scroll')) return;
+    if (!sc.querySelector('[data-parallax]')) return;
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(() => { update(sc); ticking = false; });
+  }, true);
+})();
+</script>
+<script>
+/* drag-scroll-x — enable mouse click+drag to scroll horizontally on .drag-scroll-x containers */
+(function() {
+  let dragging = null;
+  let rafId = 0;
+  let pendingScroll = null;
+  // 관성(velocity) — 마우스 업 후 부드럽게 감속
+  let velocity = 0;
+  let lastX = 0;
+  let lastT = 0;
+  let inertiaId = 0;
+
+  function findTrack(t) {
+    return t && (t.closest ? t.closest('.drag-scroll-x') : null);
+  }
+  function applyScroll() {
+    rafId = 0;
+    if (!dragging || pendingScroll == null) return;
+    dragging.el.scrollLeft = pendingScroll;
+  }
+  function stopInertia() {
+    if (inertiaId) cancelAnimationFrame(inertiaId);
+    inertiaId = 0;
+    velocity = 0;
+  }
+  function startInertia(el) {
+    if (Math.abs(velocity) < 0.05) return;
+    const step = () => {
+      el.scrollLeft -= velocity;
+      // 감속 계수 (0.92 ≒ 약 60프레임에 자연 정지)
+      velocity *= 0.92;
+      if (Math.abs(velocity) > 0.1) {
+        inertiaId = requestAnimationFrame(step);
+      } else {
+        inertiaId = 0;
+      }
+    };
+    inertiaId = requestAnimationFrame(step);
+  }
+
+  document.addEventListener('mousedown', (e) => {
+    if (e.button !== 0) return;
+    const tr = findTrack(e.target);
+    if (!tr) return;
+    // 인터랙티브 타겟(버튼/링크/입력) 위에서는 클릭을 막지 않도록 preventDefault 생략 — 드래그 시작 시 mousemove에서 처리
+    const interactive = e.target && e.target.closest && e.target.closest('button, a, input, textarea, select, [role="button"], [data-no-drag]');
+    stopInertia();
+    dragging = {
+      el: tr,
+      startX: e.clientX,
+      startScroll: tr.scrollLeft,
+      moved: false,
+      interactive: !!interactive,
+    };
+    lastX = e.clientX;
+    lastT = performance.now();
+    velocity = 0;
+    // userSelect / preventDefault 는 실제 드래그가 시작된 뒤에만 적용 (클릭을 죽이지 않도록)
+  });
+  document.addEventListener('mousemove', (e) => {
+    if (!dragging) return;
+    const dx = e.clientX - dragging.startX;
+    if (Math.abs(dx) > 6 && !dragging.moved) {
+      dragging.moved = true;
+      dragging.el.classList.add('is-dragging');
+      dragging.el.style.userSelect = 'none';
+    }
+    if (!dragging.moved) return;
+    // 실제 드래그가 진행 중일 때만 기본동작 차단 (텍스트 선택 방지)
+    if (e.cancelable) e.preventDefault();
+    // 속도 계산 (px/ms) — 음수: 우→좌
+    const now = performance.now();
+    const dt = Math.max(1, now - lastT);
+    const instDx = e.clientX - lastX;
+    // 가중 평균으로 부드럽게
+    velocity = velocity * 0.6 + (instDx / dt) * 16 * 0.4;
+    lastX = e.clientX;
+    lastT = now;
+    pendingScroll = dragging.startScroll - dx;
+    if (!rafId) rafId = requestAnimationFrame(applyScroll);
+  });
+  document.addEventListener('mouseup', () => {
+    if (!dragging) return;
+    const el = dragging.el;
+    const moved = dragging.moved;
+    el.classList.remove('is-dragging');
+    el.style.userSelect = '';
+    if (rafId) { cancelAnimationFrame(rafId); rafId = 0; applyScroll(); }
+    pendingScroll = null;
+    // 드래그 종료 후 관성 스크롤
+    if (moved && Math.abs(velocity) > 0.5) {
+      startInertia(el);
+    }
+    dragging = null;
+    // suppress click after a real drag
+    if (moved) {
+      const blocker = (ev) => { ev.stopPropagation(); ev.preventDefault(); };
+      window.addEventListener('click', blocker, { capture: true, once: true });
+    }
+  });
+  document.addEventListener('mouseleave', () => {
+    if (!dragging) return;
+    dragging.el.classList.remove('is-dragging');
+    dragging.el.style.userSelect = '';
+    if (rafId) { cancelAnimationFrame(rafId); rafId = 0; }
+    pendingScroll = null;
+    dragging = null;
+  });
+})();
+</script>
+<script src="components/app-intro.js"></script>
+</body>
+</html>
