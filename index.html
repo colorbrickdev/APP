@@ -1237,6 +1237,33 @@ ReactDOM.createRoot(document.getElementById('root')).render(<App />);
 })();
 </script>
 <script>
+/* scroll parallax — [data-parallax] 요소를 스크롤 위치에 따라 살짝 상하 이동 (S26 전용 태깅) */
+(function() {
+  let ticking = false;
+  function update(sc) {
+    const items = sc.querySelectorAll('[data-parallax]');
+    if (!items.length) return;
+    const cr = sc.getBoundingClientRect();
+    const mid = cr.top + cr.height / 2;
+    items.forEach((el) => {
+      const r = el.getBoundingClientRect();
+      const c = r.top + r.height / 2;
+      // 컨테이너 중앙에서 벗어난 정도(-1~1)에 진폭을 곱함
+      const off = Math.max(-1, Math.min(1, (c - mid) / (cr.height / 2 + 1)));
+      el.style.transform = `translateY(${(off * 12).toFixed(1)}px)`;
+    });
+  }
+  document.addEventListener('scroll', (e) => {
+    const sc = e.target;
+    if (!(sc instanceof HTMLElement) || !sc.classList || !sc.classList.contains('phone-scroll')) return;
+    if (!sc.querySelector('[data-parallax]')) return;
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(() => { update(sc); ticking = false; });
+  }, true);
+})();
+</script>
+<script>
 /* drag-scroll-x — enable mouse click+drag to scroll horizontally on .drag-scroll-x containers */
 (function() {
   let dragging = null;
@@ -1346,5 +1373,6 @@ ReactDOM.createRoot(document.getElementById('root')).render(<App />);
   });
 })();
 </script>
+<script src="components/app-intro.js"></script>
 </body>
 </html>

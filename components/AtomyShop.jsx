@@ -241,18 +241,17 @@ function ProductCard({ product, isMobile = false, onSelect, large = false }) {
       }}
       onMouseEnter={() => setHover(true)}
       onMouseMove={(e) => {
-        if (!isIphone) return;
         const el = e.currentTarget;
         const r = el.getBoundingClientRect();
         const px = (e.clientX - r.left) / r.width - 0.5;   // -0.5 ~ 0.5
         const py = (e.clientY - r.top) / r.height - 0.5;
-        const ry = px * 16;   // 좌우 기울기
-        const rx = -py * 16;  // 상하 기울기
-        el.style.transform = `perspective(620px) rotateX(${rx}deg) rotateY(${ry}deg) translateY(-4px) scale(1.03)`;
+        const ry = px * 15;   // 좌우 기울기
+        const rx = -py * 15;  // 상하 기울기
+        el.style.transform = `perspective(620px) rotateX(${rx.toFixed(2)}deg) rotateY(${ry.toFixed(2)}deg) translateY(-5px)`;
       }}
       onMouseLeave={(e) => {
         setHover(false);
-        if (isIphone) e.currentTarget.style.transform = '';
+        e.currentTarget.style.transform = '';
       }}
       style={{
         position: 'relative',
@@ -263,12 +262,10 @@ function ProductCard({ product, isMobile = false, onSelect, large = false }) {
         textAlign: 'left',
         cursor: 'pointer',
         overflow: 'hidden',
-        transition: isIphone
-          ? 'transform 0.12s ease-out, box-shadow 0.2s, border-color 0.2s'
-          : 'transform 0.2s, box-shadow 0.2s, border-color 0.2s',
+        transition: 'transform 0.12s ease-out, box-shadow 0.2s, border-color 0.2s',
         transformStyle: 'preserve-3d',
         transform: hover ? 'translateY(-3px)' : 'translateY(0)',
-        boxShadow: hover ? '0 14px 36px rgba(11,31,58,0.12)' : '0 2px 6px rgba(11,31,58,0.04)',
+        boxShadow: hover ? '0 18px 40px rgba(11,31,58,0.18)' : '0 2px 6px rgba(11,31,58,0.04)',
         borderColor: hover ? 'rgba(0,182,240,0.3)' : 'rgba(11,31,58,0.06)',
         fontFamily: 'inherit',
         width: '100%',
@@ -280,6 +277,9 @@ function ProductCard({ product, isMobile = false, onSelect, large = false }) {
         aspectRatio: '1/1',
         background: '#F5F7FA',
         overflow: 'hidden',
+        transition: 'transform 0.28s cubic-bezier(.2,.7,.3,1)',
+        transform: hover ? 'translateZ(18px)' : 'translateZ(0)',
+        backfaceVisibility: 'hidden',
       }}>
         {showVideo ? (
           <video
@@ -1303,7 +1303,7 @@ function DesktopAICard({ product, insight, onSelect, kb }) {
     });
   };
   return (
-    <div ref={wrapRef} className={"aicard-wrap" + (pulling ? " is-pulling" : "")} style={{ position: 'relative' }}>
+    <div ref={wrapRef} data-parallax={isS26 ? '1' : undefined} className={"aicard-wrap" + (pulling ? " is-pulling" : "")} style={{ position: 'relative' }}>
     <span className="aicard-oval-shadow" aria-hidden="true" />
     <button
       onClick={handleOpen}
@@ -1317,23 +1317,33 @@ function DesktopAICard({ product, insight, onSelect, kb }) {
         cursor: 'pointer', overflow: 'hidden',
         fontFamily: 'inherit',
         width: '100%',
-        transition: 'transform 0.2s, box-shadow 0.2s',
+        transformStyle: 'preserve-3d',
+        transition: 'transform 0.12s ease-out, box-shadow 0.2s',
         boxShadow: '0 2px 6px rgba(11,31,58,0.04)',
       }}
       onMouseEnter={(e) => {
         setKbHover(true);
-        e.currentTarget.style.transform = 'translateY(-2px)';
-        e.currentTarget.style.boxShadow = '0 12px 28px rgba(11,31,58,0.10)';
+        e.currentTarget.style.boxShadow = '0 18px 40px rgba(11,31,58,0.18)';
+      }}
+      onMouseMove={(e) => {
+        const el = e.currentTarget;
+        const r = el.getBoundingClientRect();
+        const px = (e.clientX - r.left) / r.width - 0.5;
+        const py = (e.clientY - r.top) / r.height - 0.5;
+        el.style.transform = `perspective(600px) rotateX(${(-py * 15).toFixed(2)}deg) rotateY(${(px * 15).toFixed(2)}deg) translateY(-5px)`;
       }}
       onMouseLeave={(e) => {
         setKbHover(false);
-        e.currentTarget.style.transform = 'translateY(0)';
+        e.currentTarget.style.transform = '';
         e.currentTarget.style.boxShadow = '0 2px 6px rgba(11,31,58,0.04)';
       }}
     >
       <div style={{
         position: 'relative', width: '100%',
         aspectRatio: '1/1', background: '#F5F7FA', overflow: 'hidden',
+        transition: 'transform 0.28s cubic-bezier(.2,.7,.3,1)',
+        transform: kbHover ? 'translateZ(18px)' : 'translateZ(0)',
+        backfaceVisibility: 'hidden',
       }}>
         <img src={p.image} alt={p.name} style={{
           width: '100%', height: '100%', objectFit: 'cover', display: 'block',
@@ -1462,10 +1472,10 @@ const HERO_SLIDES = [
   },
 ];
 
-function HeroBannerCard({ slide, isMobile, onSelectProduct, animKey, gs, active }) {
+function HeroBannerCard({ slide, isMobile, onSelectProduct, animKey, gs, active, aspect }) {
   const product = SHOP_PRODUCTS.find(p => p.id === slide.id) || SHOP_PRODUCTS[0];
   if (gs) {
-    // GS Shop 스타일 — 1:1 풀블리드 배너 (배경 미디어 + 하단 텍스트 오버레이 + 투명 클릭 레이어)
+    // GS Shop 스타일 — 풀블리드 배너 (배경 미디어 + 하단 텍스트 오버레이 + 투명 클릭 레이어)
     return (
       <div
         onClick={() => onSelectProduct && onSelectProduct(product)}
@@ -1474,7 +1484,7 @@ function HeroBannerCard({ slide, isMobile, onSelectProduct, animKey, gs, active 
         style={{
           flex: 1, minWidth: 0,
           position: 'relative', overflow: 'hidden',
-          aspectRatio: '1 / 1', background: slide.bg,
+          aspectRatio: aspect || '1 / 1', background: slide.bg,
           cursor: 'pointer',
         }}
       >
@@ -1635,11 +1645,31 @@ const CATEGORY_ICONS = [
 function ShopCategoryIcons({ isMobile, onSelectCategory }) {
   const iconSize = isMobile ? 48 : 64;
   const [hoverKey, setHoverKey] = React.useState(null);
+  const [stuck, setStuck] = React.useState(false);
+  const sentinelRef = React.useRef(null);
+
+  // 상단 sticky 상태 감지 — 센티넬이 뷰포트 위로 사라지면 stuck
+  React.useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      ([e]) => setStuck(!e.isIntersecting),
+      { threshold: [0, 1] }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
   return (
+    <React.Fragment>
+      <div ref={sentinelRef} aria-hidden="true" style={{ height: 1 }} />
     <section style={{
       background: '#fff',
-      padding: isMobile ? '22px 12px 22px' : '32px 36px 30px',
+      padding: isMobile ? (stuck ? '10px 12px' : '22px 12px 22px') : '32px 36px 30px',
       borderBottom: '1px solid rgba(11,31,58,0.05)',
+      position: 'sticky', top: 0, zIndex: 15,
+      boxShadow: stuck ? '0 6px 16px rgba(11,31,58,0.08)' : 'none',
+      transition: 'padding 0.2s ease, box-shadow 0.2s ease',
     }}>
       <div
         className="phone-scroll drag-scroll-x"
@@ -1703,6 +1733,7 @@ function ShopCategoryIcons({ isMobile, onSelectCategory }) {
         })}
       </div>
     </section>
+    </React.Fragment>
   );
 }
 
@@ -1730,6 +1761,8 @@ function ShopHero({ isMobile, onSelectProduct }) {
   const visibleCount = 1;
   // GS Shop 스타일 풀블리드 히어로 — 전체 기기 적용
   const gsMode = true;
+  // Fold7·데스크톱(넓은 화면)은 배너 높이를 절반으로 (2:1), 좁은 모바일은 1:1
+  const bannerAspect = (!isMobile || wideMobile) ? '2 / 1' : '1 / 1';
   const [idx, setIdx] = React.useState(0);
   const [animOn, setAnimOn] = React.useState(true);
   const [paused, setPaused] = React.useState(false);
@@ -1877,7 +1910,7 @@ function ShopHero({ isMobile, onSelectProduct }) {
       }}>
         {gsMode ? (
           // GS 페이드 + 켄번즈 스택 — 활성 슬라이드만 노출, 이미지가 천천히 움직임
-          <div style={{ position: 'relative', width: '100%', aspectRatio: '1 / 1' }}>
+          <div style={{ position: 'relative', width: '100%', aspectRatio: bannerAspect }}>
             {HERO_SLIDES.map((slide, i) => (
               <div
                 key={slide.id}
@@ -1889,7 +1922,7 @@ function ShopHero({ isMobile, onSelectProduct }) {
                   zIndex: i === displayIdx ? 1 : 0,
                 }}
               >
-                <HeroBannerCard slide={slide} isMobile={isMobile} onSelectProduct={onSelectProduct} gs={true} active={i === displayIdx} />
+                <HeroBannerCard slide={slide} isMobile={isMobile} onSelectProduct={onSelectProduct} gs={true} active={i === displayIdx} aspect={bannerAspect} />
               </div>
             ))}
           </div>

@@ -13,14 +13,26 @@ const HEMOHIM_DETAIL = {
   price: 59800,
   pv: 30000,
   rating: 4.6,
-  reviewsCount: 41,
+  reviewsCount: 43,
 
   // 넛지 (kr.atomy.com 공식)
   nudges: {
-    likes: 606,
-    orders: 10151,
-    carts: 14930,
+    likes: 672,
+    orders: 6093,
+    carts: 9613,
   },
+  // 브레드크럼 (kr.atomy.com)
+  breadcrumb: ['홈', '건강식품', '헤모힘', '헤모힘'],
+  // 배송/브랜드 태그
+  brand: '헤모힘',
+  shipTags: ['무료배송', '개별배송'],
+  // 상세 정보 행
+  infoRows: [
+    { h: '제조년월일', v: '2025-09-25 이후' },
+    { h: '총 중량 및 크기', v: '2,400g / 245*200*150*2mm' },
+    { h: '결제혜택', v: '애터미 하나카드 1.7% 청구할인', accent: true },
+    { h: '배송정보', v: '무료 개별 배송 (합포 불가)' },
+  ],
 
   // 갤러리 이미지 — kr.atomy.com 공식 CDN
   images: [
@@ -106,16 +118,46 @@ const HEMOHIM_DETAIL = {
     dailyIntake: '1일 섭취기준량 : 헤모힘 당귀등혼합추출물로서 20g',
   },
 
+  // 성분 및 필수 고시정보 — kr.atomy.com 상품고시 원문
+  notice: [
+    { tit: '원재료명 및 함량(농수산물의 원산지 표시에 관한 법률에 따른 원산지 표시 포함)', cont: '정제수, 헤모힘 당귀등 혼합추출물(제2006-17호)(당귀/국내산, 천궁/국내산, 백작약/국내산), 에리스리톨(감미료), 파인애플농축액(인도네시아산), 자일리톨(감미료), 시클로덱스트린시럽, 파인애플향(천연향료), γ-시클로덱스트린, 타우린, 구연산, 구연산삼나트륨, 레몬향(천연향료), 과라나추출물분말(미국산), 효소처리스테비아(감미료), DL-사과산' },
+    { tit: '제조연월일, 유통기간 또는 품질 유지기한', cont: '제조일로부터 24개월' },
+    { tit: '영양성분(식품등의 표시 광고에 관한 법률에 따른 영양성분 표시대상 식품에 한함)', cont: '1회 제공량 (100 mL) 열량 45kcal 나트륨 45mg 2%, 탄수화물 16g 5%, 당류 3g 3%, 에리스리톨 5g, 지방 0g 0%, 트랜스지방 0g, 포화지방0g 0%, 콜레스테롤 0mg 0%, 단백질 1g 미만 0%\n기능성 성분 함량 (100 mL 당) : 헤모힘 당귀등 혼합추출물로서 6g (Chlorogenic acid 2.1mg, Nodakenin 6.6mg, Paeoniflorin 18mg )\n1일 섭취기준량 : 헤모힘 당귀등혼합추출물로서 20g' },
+    { tit: '포장단위별 내용물의 용량(중량), 수량', cont: '{1,000 mL (100 mL X 10병)} X 2박스' },
+    { tit: '유전자변형식품에 해당하는 경우의 표시', cont: '해당사항 없음' },
+    { tit: '소비자안전을 위한 주의사항', cont: '제품 별도 표기 또는 제품 내 설명서 참고' },
+    { tit: '생산자 및 소재지(수입품의 경우 생산자, 수입자 및 제조국)', cont: '제조원 : 퓨어플러스(주) 경상남도 함양군 수동면 수동농공길 11 연구개발 / 기술제공 : 콜마비앤에이치(주)' },
+    { tit: '판매원 및 소재지', cont: '판매원 : 애터미㈜ 충청남도 공주시 백제문화로 2148-21 (웅진동)' },
+    { tit: '식품의 유형', cont: '혼합음료 / 기능성표시식품' },
+    { tit: '수입식품에 해당하는 경우 "수입식품안전관리특별법에 따른 수입신고를 필함"의 문구', cont: '해당사항 없음' },
+    { tit: '표시광고 사전심의필', cont: '심의 필(심의번호 : 2511F082)' },
+    { tit: '소비자상담 관련 전화번호', cont: '애터미㈜ 고객행복센터 : 1544-8580' },
+  ],
+
   // 가짜 리뷰 (실제로는 백엔드에서)
   reviews: [
-    { id: 1, author: '김**', rating: 5, date: '2025.10.18', verified: true,
-      text: '아침마다 한 병씩 마시는데 정말 활력이 생겨요. 커피보다 부담 없고, 파인애플 맛이 청량해서 입에도 잘 맞아요.' },
-    { id: 2, author: '박**', rating: 5, date: '2025.10.15', verified: true,
-      text: '헤모힘 분말은 꾸준히 먹기 어려웠는데, 샷은 휴대가 간편해서 출장 갈 때마다 챙겨 갑니다. 피로감이 확실히 덜해요.' },
-    { id: 3, author: '이**', rating: 4, date: '2025.10.10', verified: true,
-      text: '맛은 호불호 갈릴 수 있지만 저는 좋아요. 운동 전 한 병 마시고 가면 후반에도 힘이 남아있는 느낌!' },
-    { id: 4, author: '최**', rating: 5, date: '2025.10.07', verified: true,
-      text: '직장에서 오후 3시 졸음이 사라졌어요. 카페인 음료보다 속도 편하고, 헤모힘이라는 안정감도 있어서 매일 마시고 있습니다.' },
+    { id: 1, maskedId: '467***94', rating: 5, date: '2026-06-02', like: 0,
+      text: '나이가 들어 일상에서 쉽게 피로를 느끼는 생활에 살다가 애터미 헤모힘 샷을 구입하여 마셨더니 효과 만점입니다. 생활에 활력을 주고 피곤한 줄로 모르고 지내게 됩니다. 흡수가 빠르고 기력을 높이는데 좋은 샷입니다. 추천합니다.' },
+    { id: 2, maskedId: '479***02', rating: 5, date: '2026-05-12', like: 0,
+      text: '요즘 일이 바쁘고 피곤해서 헤모힘 샷을 마셨어요. 아침에 일어날때 부담이 없고 피로감이 덜해 기분이 좋았어요. 힘이납니다' },
+    { id: 3, maskedId: '462***88', rating: 5, date: '2026-01-05', like: 0,
+      text: '여행중에 휴대하다가 오실오실 춥고 몸살 걸리려고 할때 마시면 필요한 영양분을 공급해 감기나 몸살을 멈추게 합니다. 소화불량인 내가 이럴 정도이면 밥 잘 먹는 사람은 바로 효과이니 저는 부러울 뿐 입니다' },
+    { id: 4, maskedId: '457***89', rating: 5, date: '2025-12-18', like: 1,
+      text: '헤모힘은 한약향기가 나서 먹기에 불편하다는 분. 헤모힘샷은 향기에 부담없이 먹을 수 있어서 좋다고 하네요^^' },
+    { id: 5, maskedId: '466***32', rating: 5, date: '2025-12-17', like: 1,
+      text: '역시 헤모힘입니다. 요근래 너무 피곤해서 주문하고 일주일 섭취했는데 확실히 덜 피곤합니다. 꾸준히 먹으면 피로가 뭐야 하겠죠 ㅋㅋㅋ' },
+    { id: 6, maskedId: '467***35', rating: 5, date: '2025-12-13', like: 4,
+      text: '박스가 터져서 땅에 떨어지면서 발 다쳤어요. 빨간 박스 튼튼히 만들어 주세요' },
+    { id: 7, maskedId: 'S12***01', rating: 5, date: '2025-12-06', like: 0,
+      text: '헤모힘 샷 먹기 참 좋아요 선물하기에 더욱더 좋아요 감사합니다' },
+    { id: 8, maskedId: '461***72', rating: 5, date: '2025-11-30', like: 2,
+      text: '헤모힘 샷!! 헤모힘보다 맛이 훨씬 덜 써서 먹기가 생각보다 진짜 수월하더라구요. 마시고 나면 입안이 깔끔해지고, 뭔가 몸이 정리되는 느낌? 그런 건강한 뒷맛이 있어요. 우리 집은 가족들도 다 같이 먹고 있는데, 쓴맛이 약하니까 아이도 거부감 없이 먹는 것 같아요. 에너지 올릴 때 부담 없이 먹을 수 있는 건강한 샷이라 추천합니다.' },
+    { id: 9, maskedId: '442***46', rating: 5, date: '2025-11-27', like: 5,
+      text: '7년전 남편이 뇌출혈로 쓰러져 왼쪽편마비 환자입니다. 저녁식사후 갑자기 식은땀이 나고 컨디션이 안좋다해서 헤모힘샷을 줬는데 거짓말처럼 10분정도후 괜찮아졌다고 하네요. 그뒤로 남편은 컨디션 안좋을때 저한테 헤모힘샷을 달라고 합니다. 정말 대단합니다!!!' },
+    { id: 10, maskedId: '431***60', rating: 5, date: '2025-11-13', like: 2,
+      text: '50대 입니다. 헤모힘샷을 지인으로부터 소개받고 주문해서 먹게 되었어요. 과라나추출물이라는 천연 카페인 성분이 들어 있어서 목넘김은 좋았어요. 20대 아들에게 주었는데 맛이 나쁘지 않다고 했어요. 남편이 술 먹기전과 다음날 먹더니 숙취 해소에 도움이 된다고 하더라구요. 피로회복에도 도움이 되는 것 같아요' },
+    { id: 11, maskedId: '461***05', rating: 5, date: '2025-11-08', like: 0,
+      text: '회사 잔업이 많아서 피곤했는데 요거 꾸준히 먹으니깐 덜 피곤해요. 많이 피곤할때는 아침저녁 2번 먹으니깐 좋네요' },
   ],
 };
 
@@ -357,9 +399,120 @@ function Pseudo360Image({ src, alt }) {
   );
 }
 
+// 연관상품 캐러셀 — 함께 보면 좋은
+function RelatedProductsCarousel({ isMobile, onSelectProduct, currentId }) {
+  const all = (typeof window !== 'undefined' && window.SHOP_PRODUCTS) ? window.SHOP_PRODUCTS : [];
+  const items = all.filter(p => p.id !== currentId).slice(0, 10);
+  if (!items.length) return null;
+  const cardW = isMobile ? 150 : 200;
+  const krw = (n) => (n || 0).toLocaleString('ko-KR');
+  return (
+    <section style={{ padding: isMobile ? '24px 0 8px' : '40px 0 16px', background: '#fff' }}>
+      <div style={{ maxWidth: 1280, margin: '0 auto', padding: isMobile ? '0 16px' : '0 36px' }}>
+        <div style={{ marginBottom: isMobile ? 14 : 18 }}>
+          <div style={{ fontSize: isMobile ? 17 : 22, fontWeight: 900, color: '#0B1F3A', letterSpacing: '-0.02em' }}>함께 보면 좋은 연관상품이에요</div>
+          <div style={{ fontSize: isMobile ? 12 : 13, color: '#8A97AD', fontWeight: 500, marginTop: 4 }}>함께 사용하면 더 좋은 제품들을 추천드려요</div>
+        </div>
+      </div>
+      <div className="drag-scroll-x" style={{
+        display: 'flex', gap: isMobile ? 10 : 14,
+        overflowX: 'auto', WebkitOverflowScrolling: 'touch',
+        padding: isMobile ? '2px 16px 8px' : '2px 36px 8px',
+        cursor: 'grab',
+      }}>
+        {items.map(p => (
+          <div key={p.id} style={{ flex: `0 0 ${cardW}px`, minWidth: 0 }}>
+            <button
+              onClick={() => onSelectProduct && onSelectProduct(p)}
+              style={{
+                width: '100%', background: '#fff', border: '1px solid rgba(11,31,58,0.08)',
+                borderRadius: 12, overflow: 'hidden', padding: 0, textAlign: 'left',
+                cursor: 'pointer', fontFamily: 'inherit',
+              }}
+            >
+              <div style={{ position: 'relative', width: '100%', aspectRatio: '1/1', background: '#F5F7FA' }}>
+                <img src={p.image} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                <span
+                  role="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const img = e.currentTarget.parentElement.querySelector('img');
+                    if (img && window.flyToCart) window.flyToCart(img.src, img.getBoundingClientRect());
+                    if (window.showToast) window.showToast('장바구니에 담았습니다.');
+                  }}
+                  aria-label="장바구니 담기"
+                  style={{
+                    position: 'absolute', bottom: 8, right: 8,
+                    width: 30, height: 30, borderRadius: 8,
+                    background: 'rgba(255,255,255,0.95)', boxShadow: '0 2px 8px rgba(11,31,58,0.14)',
+                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#00B6F0" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M5 8h14l-1 12.2a1.5 1.5 0 01-1.5 1.3h-9A1.5 1.5 0 016 20.2L5 8z" /><path d="M9 11V7a3 3 0 016 0v4" />
+                  </svg>
+                </span>
+              </div>
+              <div style={{ padding: '10px 11px 12px' }}>
+                <div style={{
+                  fontSize: 12.5, fontWeight: 700, color: '#0B1F3A', lineHeight: 1.35,
+                  display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
+                  minHeight: 34, marginBottom: 6,
+                }}>{p.name}</div>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
+                  <span style={{ fontSize: 15, fontWeight: 900, color: '#0B1F3A' }}>{krw(p.price)}</span>
+                  <span style={{ fontSize: 11, fontWeight: 700 }}>원</span>
+                </div>
+                <div style={{ fontSize: 10.5, fontWeight: 800, color: '#0088B8', marginTop: 2 }}>PV {krw(p.pv)}</div>
+              </div>
+            </button>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+// 상품 도구 — 프린트 / 찜 / 공유
+function ProductTools({ productId }) {
+  const [wished, setWished] = React.useState(false);
+  const btn = {
+    width: 38, height: 38, borderRadius: 999,
+    border: '1px solid rgba(11,31,58,0.12)', background: '#fff',
+    cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+    padding: 0, flexShrink: 0,
+  };
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      <button aria-label="프린트하기" title="프린트" style={btn} onClick={() => window.print && window.print()}>
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#4A5568" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="6 9 6 2 18 2 18 9" /><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2" /><rect x="6" y="14" width="12" height="8" />
+        </svg>
+      </button>
+      <button aria-label="찜하기" aria-pressed={wished} title="찜하기"
+        onClick={() => {
+          setWished(w => !w);
+          if (window.showToast) window.showToast(wished ? '찜을 해제했습니다.' : '찜한 상품에 추가되었습니다.');
+        }}
+        style={{ ...btn, borderColor: wished ? '#FF3B6A' : 'rgba(11,31,58,0.12)', background: wished ? 'rgba(255,59,106,0.08)' : '#fff' }}>
+        <svg width="17" height="17" viewBox="0 0 24 24" fill={wished ? '#FF3B6A' : 'none'} stroke={wished ? '#FF3B6A' : '#4A5568'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+        </svg>
+      </button>
+      <button aria-label="공유하기" title="공유"
+        onClick={() => { if (window.showToast) window.showToast('상품 링크가 복사되었습니다.'); }}
+        style={btn}>
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#4A5568" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" />
+          <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+        </svg>
+      </button>
+    </div>
+  );
+}
+
 // 메인 상세 페이지
 // =============================================================
-function AtomyProductDetail({ product, isMobile = false, onClose, onPlayVideo, embedded = false, heroMedia = null }) {
+function AtomyProductDetail({ product, isMobile = false, onClose, onPlayVideo, embedded = false, heroMedia = null, onSelectProduct }) {
   const _raw = product || HEMOHIM_DETAIL;
   // 상세 전용 필드가 없는 일반 상품도 안전하게 렌더되도록 기본값 보강
   const p = React.useMemo(() => ({
@@ -376,6 +529,7 @@ function AtomyProductDetail({ product, isMobile = false, onClose, onPlayVideo, e
     recommendFor: _raw.recommendFor || [],
     specs: _raw.specs || [],
     nutrition: _raw.nutrition || [],
+    notice: _raw.notice || [],
     reviews: _raw.reviews && Array.isArray(_raw.reviews) ? _raw.reviews : [],
   }), [_raw]);
   const [qty, setQty] = React.useState(1);
@@ -431,6 +585,25 @@ function AtomyProductDetail({ product, isMobile = false, onClose, onPlayVideo, e
         </div>
       </div>)}
 
+      {/* 브레드크럼 — kr.atomy.com */}
+      {p.breadcrumb && (
+        <nav style={{
+          maxWidth: 1280, margin: '0 auto', width: '100%', boxSizing: 'border-box',
+          padding: isMobile ? '10px 16px 0' : '16px 36px 0',
+          display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap',
+          fontSize: isMobile ? 11 : 12, color: '#8A97AD', fontWeight: 600,
+        }}>
+          {p.breadcrumb.map((c, i) => (
+            <React.Fragment key={i}>
+              {i > 0 && (
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#C3CBD6" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
+              )}
+              <span style={{ color: i === p.breadcrumb.length - 1 ? '#0B1F3A' : '#8A97AD' }}>{c}</span>
+            </React.Fragment>
+          ))}
+        </nav>
+      )}
+
       {/* 1. 갤러리 + 구매 영역 */}
       <section style={{
         padding: isMobile ? '20px 16px' : '40px 36px',
@@ -477,121 +650,180 @@ function AtomyProductDetail({ product, isMobile = false, onClose, onPlayVideo, e
 
           {/* 우 — 정보 + 구매 */}
           <div>
-            {/* 카테고리 + 영문명 */}
+            {/* 평점 · 리뷰 + 도구(프린트/찜/공유) */}
             <div style={{
-              fontSize: 11, fontWeight: 700, letterSpacing: '0.04em',
-              color: '#8A97AD', marginBottom: 6,
-            }}>{p.category} · {p.englishName}</div>
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10,
+              marginBottom: 12,
+            }}>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 15, fontWeight: 900, color: '#0B1F3A', fontVariantNumeric: 'tabular-nums' }}>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="#0B1F3A"><polygon points="12 2 15 9 22 10 17 15 18 22 12 18 6 22 7 15 2 10 9 9" /></svg>
+                  {p.rating}
+                </span>
+                <span style={{ color: '#D2D8E0' }}>|</span>
+                <button
+                  onClick={() => { setTab('reviews'); }}
+                  style={{
+                    background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+                    fontSize: 13, fontWeight: 600, color: '#6B7A90', fontFamily: 'inherit',
+                    textDecoration: 'underline', textUnderlineOffset: 2,
+                  }}>{p.reviewsCount.toLocaleString()}건 리뷰보기</button>
+              </div>
+              <ProductTools productId={p.id} />
+            </div>
+
+            {/* 브랜드 + 배송 태그 */}
+            {(p.brand || (p.shipTags && p.shipTags.length)) && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10, flexWrap: 'wrap' }}>
+                {p.brand && (
+                  <span style={{
+                    fontSize: 12, fontWeight: 800, color: '#fff',
+                    padding: '4px 10px', borderRadius: 4, background: '#2E3338',
+                  }}>{p.brand}</span>
+                )}
+                {(p.shipTags || []).map(t => (
+                  <span key={t} style={{
+                    fontSize: 11.5, fontWeight: 600, letterSpacing: '-0.01em',
+                    padding: '3px 9px', borderRadius: 4,
+                    color: '#8A97AD', background: '#fff',
+                    border: '1px solid rgba(11,31,58,0.15)',
+                  }}>{t}</span>
+                ))}
+              </div>
+            )}
 
             {/* 이름 */}
             <h1 style={{
-              margin: 0, fontSize: isMobile ? 24 : 32, fontWeight: 900,
-              color: '#0B1F3A', letterSpacing: '-0.025em', lineHeight: 1.2,
+              margin: 0, fontSize: isMobile ? 23 : 30, fontWeight: 800,
+              color: '#0B1F3A', letterSpacing: '-0.025em', lineHeight: 1.25,
             }}>{p.name}</h1>
 
-            {/* 태그라인 */}
-            <p style={{
-              margin: '8px 0 0', fontSize: isMobile ? 13 : 14.5,
-              color: '#4A5568', fontWeight: 600, lineHeight: 1.5,
-              textWrap: 'pretty',
-            }}>{p.tagline}</p>
-
-            {/* 별점 */}
-            <div style={{
-              marginTop: 16, display: 'flex', alignItems: 'center', gap: 8,
-              padding: '10px 14px', borderRadius: 10,
-              background: 'rgba(255,184,0,0.08)',
-              border: '1px solid rgba(255,184,0,0.25)',
-            }}>
-              <StarRating rating={p.rating} size={15} />
-              <span style={{
-                fontSize: 14, fontWeight: 800, color: '#0B1F3A',
-                fontVariantNumeric: 'tabular-nums',
-              }}>{p.rating}</span>
-              <span style={{ fontSize: 12, color: '#6B7A90', fontWeight: 600 }}>
-                후기 {p.reviewsCount.toLocaleString()}건
+            {/* 가격 + PV */}
+            <div style={{ marginTop: 16, display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
+              <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: 2 }}>
+                <span style={{
+                  fontSize: isMobile ? 30 : 38, fontWeight: 900, color: '#0B1F3A',
+                  letterSpacing: '-0.03em', fontVariantNumeric: 'tabular-nums', lineHeight: 1,
+                }}>{fmt(p.price)}</span>
+                <span style={{ fontSize: 15, fontWeight: 700, color: '#0B1F3A' }}>원</span>
+              </span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                <span style={{ fontSize: isMobile ? 18 : 22, fontWeight: 800, color: '#00B6F0', fontVariantNumeric: 'tabular-nums' }}>{fmt(p.pv)}</span>
+                <span style={{ fontSize: 13, fontWeight: 800, color: '#00B6F0' }}>PV</span>
+                <span aria-hidden="true" style={{
+                  width: 15, height: 15, borderRadius: 999, background: '#C3CBD6', color: '#fff',
+                  fontSize: 10, fontWeight: 800, display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                }}>i</span>
               </span>
             </div>
 
-            {/* 가격 */}
-            <div style={{
-              marginTop: 24, paddingTop: 24,
-              borderTop: '1px solid rgba(11,31,58,0.08)',
-            }}>
-              <div style={{ fontSize: 11.5, color: '#6B7A90', fontWeight: 700, marginBottom: 4 }}>
-                판매가
-              </div>
-              <div style={{
-                display: 'flex', alignItems: 'baseline', gap: 6,
-              }}>
-                <span style={{
-                  fontSize: isMobile ? 32 : 42, fontWeight: 900,
-                  color: '#0B1F3A', letterSpacing: '-0.025em',
-                  fontVariantNumeric: 'tabular-nums', lineHeight: 1,
-                }}>{fmt(p.price)}</span>
-                <span style={{ fontSize: 16, fontWeight: 800, color: '#0B1F3A' }}>원</span>
-                <span style={{
-                  marginLeft: 10, padding: '3px 9px', borderRadius: 4,
-                  background: 'rgba(0,182,240,0.12)',
-                  color: '#0088B8', fontSize: 12, fontWeight: 800,
-                  fontVariantNumeric: 'tabular-nums',
-                }}>PV {fmt(p.pv)}</span>
-              </div>
+            {/* 상품번호 */}
+            <div style={{ marginTop: 12, fontSize: 12.5, color: '#6B7A90', fontWeight: 600 }}>
+              상품번호 <span style={{ color: '#2B3A52', fontWeight: 700, marginLeft: 4 }}>{p.id}</span>
             </div>
 
-            {/* 수량 선택 */}
-            <div style={{
-              marginTop: 20, display: 'flex',
-              alignItems: 'center', justifyContent: 'space-between',
-              padding: '12px 16px', borderRadius: 10,
-              background: '#F5F7FA',
-            }}>
-              <span style={{ fontSize: 13, fontWeight: 700, color: '#0B1F3A' }}>수량</span>
-              <div style={{
-                display: 'flex', alignItems: 'center', gap: 0,
-                border: '1px solid rgba(11,31,58,0.1)', borderRadius: 8,
-                background: '#fff',
-              }}>
-                <button onClick={() => setQty(q => Math.max(1, q - 1))}
-                  style={qtyBtnStyle()}>−</button>
-                <span style={{
-                  minWidth: 36, textAlign: 'center',
-                  fontSize: 14, fontWeight: 800, color: '#0B1F3A',
-                  fontVariantNumeric: 'tabular-nums',
-                }}>{qty}</span>
-                <button onClick={() => setQty(q => Math.min(99, q + 1))}
-                  style={qtyBtnStyle()}>+</button>
-              </div>
-            </div>
+            {/* 구분선 */}
+            <div style={{ margin: '18px 0', height: 1, background: 'rgba(11,31,58,0.08)' }} />
 
-            {/* 합계 */}
+            {/* 넛지 — 찜/주문/장바구니 */}
+            {p.nudges && (
+              <div style={{
+                display: 'flex', flexDirection: 'column', gap: 10,
+                fontSize: 13, color: '#4A5568', fontWeight: 600,
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#00B6F0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" /></svg>
+                  <span><b style={{ color: '#0B1F3A', fontWeight: 800 }}>{fmt(p.nudges.likes)}</b>명이 찜한 상품입니다.</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#00B6F0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="9" y1="13" x2="15" y2="13" /><line x1="9" y1="17" x2="13" y2="17" /></svg>
+                  <span>최근 <b style={{ color: '#0B1F3A', fontWeight: 800 }}>{fmt(p.nudges.orders)}</b>건의 주문이 발생했어요.</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#00B6F0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 8h14l-1 12.2a1.5 1.5 0 01-1.5 1.3h-9A1.5 1.5 0 016 20.2L5 8z" /><path d="M9 11V7a3 3 0 016 0v4" /></svg>
+                  <span>현재 <b style={{ color: '#0B1F3A', fontWeight: 800 }}>{fmt(p.nudges.carts)}</b>명의 장바구니에 담겨 있는 제품이에요.</span>
+                </div>
+              </div>
+            )}
+
+            {/* 상세 정보 행 — 제조년월일/총중량/결제혜택/배송정보 */}
+            {p.infoRows && p.infoRows.length > 0 && (
+              <div style={{ marginTop: 18, borderTop: '1px solid rgba(11,31,58,0.08)' }}>
+                {p.infoRows.map((r, i) => (
+                  <div key={i} style={{
+                    display: 'flex', alignItems: 'flex-start', gap: 12,
+                    padding: '16px 2px',
+                    borderBottom: '1px solid rgba(11,31,58,0.08)',
+                    fontSize: 13,
+                  }}>
+                    <div style={{ flex: '0 0 84px', color: '#0B1F3A', fontWeight: 700 }}>{r.h}</div>
+                    <div style={{ flex: 1, color: '#6B7A90', fontWeight: 600, lineHeight: 1.5 }}>
+                      {r.h === '배송정보' ? (
+                        <span><span style={{ color: '#8A97AD', marginRight: 10 }}>배송비</span><b style={{ color: '#0B1F3A', fontWeight: 800 }}>무료 개별 배송</b> <span style={{ color: '#8A97AD', fontWeight: 600 }}>(합포 불가)</span></span>
+                      ) : r.accent ? (
+                        <span>애터미 하나카드 <b style={{ color: '#00B6F0', fontWeight: 800 }}>1.7% 청구할인</b></span>
+                      ) : r.v}
+                    </div>
+                    {r.h === '결제혜택' && (
+                      <button style={{
+                        background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+                        fontSize: 12.5, color: '#6B7A90', fontWeight: 600, fontFamily: 'inherit',
+                        textDecoration: 'underline', textUnderlineOffset: 2, flexShrink: 0, whiteSpace: 'nowrap',
+                      }}>혜택보기</button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* 수량 */}
+            <div style={{ marginTop: 22, fontSize: 15, fontWeight: 800, color: '#0B1F3A', marginBottom: 10 }}>수량</div>
             <div style={{
-              marginTop: 14, padding: '14px 16px', borderRadius: 10,
-              background: 'linear-gradient(135deg, rgba(0,182,240,0.06), rgba(92,211,247,0.08))',
-              border: '1px solid rgba(0,182,240,0.2)',
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              padding: '14px 16px', borderRadius: 10, background: '#F5F7FA',
+              border: '1px solid rgba(11,31,58,0.06)',
             }}>
-              <div>
-                <div style={{ fontSize: 11.5, color: '#0088B8', fontWeight: 800, letterSpacing: '0.04em' }}>총 결제 금액</div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: '#4A5568', marginBottom: 12, lineHeight: 1.4 }}>{p.name}</div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
                 <div style={{
-                  fontSize: 22, fontWeight: 900, color: '#0B1F3A',
-                  fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.02em',
-                  marginTop: 2,
-                }}>{fmt(totalPrice)}<span style={{ fontSize: 14, marginLeft: 2 }}>원</span></div>
+                  display: 'flex', alignItems: 'center',
+                  border: '1px solid rgba(11,31,58,0.15)', borderRadius: 8, background: '#fff',
+                }}>
+                  <button onClick={() => setQty(q => Math.max(1, q - 1))} style={qtyBtnStyle()}>−</button>
+                  <span style={{
+                    minWidth: 40, textAlign: 'center', fontSize: 14, fontWeight: 800, color: '#0B1F3A',
+                    fontVariantNumeric: 'tabular-nums',
+                  }}>{qty}</span>
+                  <button onClick={() => setQty(q => Math.min(99, q + 1))} style={qtyBtnStyle()}>+</button>
+                </div>
+                <div style={{ display: 'inline-flex', alignItems: 'baseline', gap: 6 }}>
+                  <span style={{ fontSize: 16, fontWeight: 900, color: '#0B1F3A', fontVariantNumeric: 'tabular-nums' }}>{fmt(totalPrice)}<span style={{ fontSize: 12, fontWeight: 700, marginLeft: 1 }}>원</span></span>
+                  <span style={{ fontSize: 13, fontWeight: 800, color: '#00B6F0', fontVariantNumeric: 'tabular-nums' }}>{fmt(totalPv)}<span style={{ fontSize: 11, marginLeft: 1 }}>PV</span></span>
+                </div>
               </div>
-              <div style={{
-                fontSize: 13, fontWeight: 800, color: '#0088B8',
-                fontVariantNumeric: 'tabular-nums',
-              }}>PV {fmt(totalPv)}</div>
+            </div>
+
+            {/* 총 상품금액 / 적립예상 PV */}
+            <div style={{ marginTop: 18, paddingTop: 16, borderTop: '1px solid rgba(11,31,58,0.08)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                <span style={{ fontSize: 13.5, color: '#6B7A90', fontWeight: 600 }}>총 상품금액</span>
+                <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: 8 }}>
+                  <span style={{ fontSize: 13, color: '#8A97AD', fontWeight: 600 }}>{qty}개</span>
+                  <span style={{ color: '#D2D8E0' }}>|</span>
+                  <span style={{ fontSize: 22, fontWeight: 900, color: '#0B1F3A', fontVariantNumeric: 'tabular-nums' }}>{fmt(totalPrice)}<span style={{ fontSize: 14, fontWeight: 700, marginLeft: 1 }}>원</span></span>
+                </span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: 13.5, color: '#6B7A90', fontWeight: 600 }}>적립예상 PV</span>
+                <span style={{ fontSize: 18, fontWeight: 800, color: '#00B6F0', fontVariantNumeric: 'tabular-nums' }}>{fmt(totalPv)}<span style={{ fontSize: 12, marginLeft: 1 }}>PV</span></span>
+              </div>
             </div>
 
             {/* CTA 버튼 — embedded 모드에서는 sticky bar로 이동되므로 숨김 */}
             {!embedded && (
             <div style={{
-              marginTop: 16, display: 'grid',
-              gridTemplateColumns: '48px 1fr 1.4fr', gap: 8,
+              marginTop: 18, display: 'grid',
+              gridTemplateColumns: '52px 1fr 1.4fr', gap: 8,
             }}>
-              {/* 선물하기 */}
               <button aria-label="선물하기" style={{
                 padding: 0, borderRadius: 8,
                 background: '#fff', border: '1.5px solid #00B6F0',
@@ -607,41 +839,22 @@ function AtomyProductDetail({ product, isMobile = false, onClose, onPlayVideo, e
                   <path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z" />
                 </svg>
               </button>
-              {/* 장바구니 */}
               <button style={{
-                padding: '14px', borderRadius: 8,
+                padding: '15px', borderRadius: 8,
                 background: '#2E3338', border: 'none',
-                color: '#fff', fontSize: 14, fontWeight: 800,
+                color: '#fff', fontSize: 15, fontWeight: 800,
                 letterSpacing: '-0.01em', cursor: 'pointer',
-              }}>
-                장바구니
-              </button>
-              {/* 바로구매 */}
-              <button
-                className="cta-pulse"
-                style={{
-                padding: '14px', borderRadius: 8,
+              }}>장바구니</button>
+              <button className="cta-pulse" style={{
+                padding: '15px', borderRadius: 8,
                 background: '#00B6F0',
-                border: 'none', color: '#fff', fontSize: 14, fontWeight: 800,
+                border: 'none', color: '#fff', fontSize: 15, fontWeight: 800,
                 letterSpacing: '-0.01em', cursor: 'pointer',
                 boxShadow: '0 6px 18px rgba(0,182,240,0.32)',
-                transition: 'transform 0.18s, box-shadow 0.18s',
                 ['--cta-pulse-color']: 'rgba(0,182,240,0.55)',
-              }}
-              >
-                바로구매
-              </button>
+              }}>바로구매</button>
             </div>
             )}
-
-            {/* 안전 표시 */}
-            <div style={{
-              marginTop: 16, padding: '10px 12px', borderRadius: 8,
-              background: 'rgba(11,31,58,0.04)',
-              fontSize: 11.5, color: '#6B7A90', fontWeight: 600, lineHeight: 1.6,
-            }}>
-              {p.warning}
-            </div>
           </div>
         </div>
       </section>
@@ -814,8 +1027,8 @@ function AtomyProductDetail({ product, isMobile = false, onClose, onPlayVideo, e
       }}>
         <div style={{ maxWidth: 1280, margin: '0 auto', display: 'flex', gap: 0, minWidth: 'max-content' }}>
           {[
-            { k: 'info', ko: '상세 정보' },
-            { k: 'reviews', ko: `리뷰 ${p.reviewsCount.toLocaleString()}` },
+            { k: 'info', ko: '상품정보' },
+            { k: 'reviews', ko: `리뷰(${p.reviewsCount.toLocaleString()})` },
             { k: 'shipping', ko: '배송/결제' },
             { k: 'return', ko: '반품/교환' },
           ].map(t => (
@@ -823,14 +1036,14 @@ function AtomyProductDetail({ product, isMobile = false, onClose, onPlayVideo, e
               flex: isMobile ? '0 0 auto' : 1,
               padding: isMobile ? '14px 14px 12px' : '18px 10px 14px',
               background: 'transparent', border: 'none',
-              borderBottom: tab === t.k ? '2.5px solid #E84141' : '2.5px solid transparent',
+              borderBottom: tab === t.k ? '2.5px solid #00B6F0' : '2.5px solid transparent',
               cursor: 'pointer',
               transition: 'border-color 0.2s',
               whiteSpace: 'nowrap',
             }}>
               <div style={{
                 fontSize: isMobile ? 13 : 14, fontWeight: 700,
-                color: tab === t.k ? '#0B1F3A' : '#6B7A90',
+                color: tab === t.k ? '#00B6F0' : '#6B7A90',
                 letterSpacing: '-0.01em',
               }}>{t.ko}</div>
             </button>
@@ -1054,87 +1267,156 @@ function AtomyProductDetail({ product, isMobile = false, onClose, onPlayVideo, e
         </div>
       </section>)}
 
+      {/* 5.5 성분 및 필수 고시정보 — kr.atomy.com 상품고시 */}
+      {tab === 'info' && p.notice.length > 0 && (<section style={{
+        padding: isMobile ? '4px 16px 32px' : '4px 36px 50px',
+        background: '#F5F7FA',
+      }}>
+        <div style={{ maxWidth: 1280, margin: '0 auto' }}>
+          <NoticeAccordion notice={p.notice} isMobile={isMobile} />
+        </div>
+      </section>)}
+
       {/* 6. 리뷰 */}
       {tab === 'reviews' && (<section style={{
-        padding: isMobile ? '32px 16px' : '50px 36px 60px',
+        padding: isMobile ? '28px 16px' : '44px 36px 60px',
         background: '#fff',
       }}>
         <div style={{ maxWidth: 1280, margin: '0 auto' }}>
-          {/* 리뷰 헤더 */}
+          {/* 상품 만족도 + 평점 비율 차트 */}
           <div style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            marginBottom: isMobile ? 16 : 22,
+            display: 'grid',
+            gridTemplateColumns: isMobile ? '1fr' : '260px 1fr',
+            gap: isMobile ? 20 : 40,
+            alignItems: 'center',
+            padding: isMobile ? '20px' : '28px 32px',
+            background: '#F8FAFC', borderRadius: 16,
+            border: '1px solid rgba(11,31,58,0.06)',
+            marginBottom: isMobile ? 28 : 36,
           }}>
-            <ShopSectionTitle
-              title={`고객 후기 ${p.reviewsCount.toLocaleString()}건`}
-              isMobile={isMobile}
-            />
-            <div style={{
-              display: 'flex', alignItems: 'center', gap: 10,
-              padding: '12px 18px', borderRadius: 12,
-              background: 'linear-gradient(135deg, #FFF8E1, #FFE45A22)',
-              border: '1px solid rgba(255,184,0,0.35)',
-            }}>
-              <StarRating rating={p.rating} size={18} />
-              <div>
-                <div style={{
-                  fontSize: 22, fontWeight: 900, color: '#0B1F3A',
-                  fontVariantNumeric: 'tabular-nums', lineHeight: 1,
-                }}>{p.rating}</div>
-                <div style={{ fontSize: 10.5, color: '#6B7A90', fontWeight: 700, marginTop: 2 }}>5점 만점</div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: 12.5, fontWeight: 700, color: '#6B7A90', marginBottom: 6 }}>상품 만족도</div>
+              <div style={{ fontSize: isMobile ? 46 : 56, fontWeight: 900, color: '#0B1F3A', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>{p.rating}</div>
+              <div style={{ marginTop: 8 }}><StarRating rating={p.rating} size={18} /></div>
+              <div style={{ fontSize: 11.5, color: '#8A97AD', fontWeight: 600, marginTop: 6 }}>총 {p.reviewsCount.toLocaleString()}건의 후기</div>
+            </div>
+            <div>
+              <div style={{ fontSize: 12.5, fontWeight: 700, color: '#6B7A90', marginBottom: 14, textAlign: isMobile ? 'center' : 'left' }}>평점 비율</div>
+              <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: isMobile ? 10 : 16, height: 128 }}>
+                {[{ s: 5, n: 37 }, { s: 4, n: 2 }, { s: 3, n: 0 }, { s: 2, n: 2 }, { s: 1, n: 2 }].map(row => {
+                  const max = 37;
+                  return (
+                    <div key={row.s} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%' }}>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: '#0B1F3A', fontVariantNumeric: 'tabular-nums', marginBottom: 6 }}>{row.n}</span>
+                      <div style={{ flex: 1, width: isMobile ? 22 : 30, borderRadius: 6, background: 'rgba(11,31,58,0.06)', display: 'flex', alignItems: 'flex-end', overflow: 'hidden' }}>
+                        <div style={{ width: '100%', height: `${(row.n / max) * 100}%`, minHeight: row.n > 0 ? 4 : 0, background: row.s === 5 ? '#00B6F0' : 'rgba(0,182,240,0.4)', borderRadius: 6 }} />
+                      </div>
+                      <span style={{ fontSize: 11.5, fontWeight: 600, color: '#8A97AD', marginTop: 8 }}>{row.s}점</span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>
 
-          {/* 리뷰 카드 */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)',
-            gap: isMobile ? 12 : 16,
-          }}>
-            {p.reviews.map(r => (
-              <div key={r.id} style={{
-                background: '#fff', borderRadius: 12,
-                padding: isMobile ? '16px 16px' : '20px 22px',
-                border: '1px solid rgba(11,31,58,0.06)',
-              }}>
-                <div style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  marginBottom: 10,
+          {/* 사진·영상 리뷰 */}
+          <div style={{ marginBottom: isMobile ? 24 : 32 }}>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 12 }}>
+              <span style={{ fontSize: isMobile ? 15 : 16, fontWeight: 800, color: '#0B1F3A' }}>사진·영상 리뷰</span>
+              <span style={{ fontSize: 13, fontWeight: 700, color: '#00B6F0' }}>15건</span>
+            </div>
+            <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
+              {[p.images[0], p.images[1], p.images[2], p.images[0], p.images[1]].map((src, i) => (
+                <div key={i} style={{
+                  position: 'relative', flex: '0 0 auto',
+                  width: isMobile ? 92 : 116, height: isMobile ? 92 : 116,
+                  borderRadius: 10, overflow: 'hidden', cursor: 'pointer',
+                  border: '1px solid rgba(11,31,58,0.06)',
                 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <img src={src} alt={`리뷰 사진 ${i + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                       onError={(e) => { e.currentTarget.style.background = '#E8EDF3'; e.currentTarget.style.opacity = 0; }} />
+                  {i === 4 && (
                     <div style={{
-                      width: 32, height: 32, borderRadius: 999,
-                      background: 'linear-gradient(135deg, #00B6F0, #5CD3F7)',
-                      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                      color: '#0B1F3A', fontSize: 12, fontWeight: 900,
-                    }}>{r.author[0]}</div>
-                    <div>
-                      <div style={{
-                        fontSize: 12.5, fontWeight: 800, color: '#0B1F3A',
-                        display: 'flex', alignItems: 'center', gap: 5,
-                      }}>
-                        {r.author}
-                        {r.verified && (
-                          <span style={{
-                            display: 'inline-flex', alignItems: 'center', gap: 2,
-                            padding: '1px 5px', borderRadius: 3,
-                            background: 'rgba(0,182,240,0.12)',
-                            color: '#0088B8', fontSize: 9, fontWeight: 800,
-                          }}>✓ 구매확인</span>
-                        )}
-                      </div>
-                      <div style={{ fontSize: 10.5, color: '#8A97AD', marginTop: 1, fontWeight: 600 }}>{r.date}</div>
+                      position: 'absolute', inset: 0, background: 'rgba(11,31,58,0.55)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      color: '#fff', fontSize: 13, fontWeight: 800,
+                    }}>+11</div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* 정렬 · 필터 바 */}
+          <div style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
+            padding: '14px 0', borderTop: '1px solid rgba(11,31,58,0.1)', borderBottom: '1px solid rgba(11,31,58,0.1)',
+            marginBottom: 20, flexWrap: 'wrap',
+          }}>
+            <span style={{ fontSize: 13.5, fontWeight: 700, color: '#0B1F3A' }}>전체 <span style={{ color: '#00B6F0' }}>{p.reviewsCount}</span>건</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <button style={{
+                display: 'inline-flex', alignItems: 'center', gap: 5,
+                padding: '7px 12px', borderRadius: 8, background: '#fff',
+                border: '1px solid rgba(11,31,58,0.15)', cursor: 'pointer', fontFamily: 'inherit',
+                fontSize: 12, fontWeight: 700, color: '#6B7A90',
+              }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><path d="M2 12h20M12 2a15 15 0 010 20M12 2a15 15 0 000 20" /></svg>
+                번역
+              </button>
+              <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
+                <select style={{
+                  appearance: 'none', WebkitAppearance: 'none',
+                  padding: '7px 30px 7px 12px', borderRadius: 8, background: '#fff',
+                  border: '1px solid rgba(11,31,58,0.15)', cursor: 'pointer', fontFamily: 'inherit',
+                  fontSize: 12, fontWeight: 700, color: '#0B1F3A',
+                }}>
+                  <option>AI 추천순</option>
+                  <option>평점 높은순</option>
+                  <option>추천순</option>
+                  <option>최신순</option>
+                </select>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8A97AD" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ position: 'absolute', right: 10, pointerEvents: 'none' }}><polyline points="6 9 12 15 18 9" /></svg>
+              </div>
+              <button aria-label="필터" style={{
+                width: 34, height: 34, borderRadius: 8, background: '#fff',
+                border: '1px solid rgba(11,31,58,0.15)', cursor: 'pointer',
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: '#6B7A90',
+              }}>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="4" y1="6" x2="20" y2="6" /><line x1="7" y1="12" x2="17" y2="12" /><line x1="10" y1="18" x2="14" y2="18" /></svg>
+              </button>
+            </div>
+          </div>
+
+          {/* 리뷰 카드 */}
+          <div style={{ display: 'grid', gap: isMobile ? 0 : 0 }}>
+            {p.reviews.map((r, ri) => {
+              const maskedId = r.maskedId || `${400 + r.id * 17}***${(10 + r.id * 7) % 100}`;
+              const helpful = r.like != null ? r.like : (12 - r.id * 2 > 0 ? 12 - r.id * 2 : r.id);
+              return (
+                <div key={r.id} style={{
+                  padding: isMobile ? '18px 2px' : '22px 4px',
+                  borderBottom: '1px solid rgba(11,31,58,0.08)',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, gap: 10 }}>
+                    <StarRating rating={r.rating} size={14} />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11.5, color: '#8A97AD', fontWeight: 600 }}>
+                      <span style={{ color: '#4A5568', fontWeight: 700 }}>{maskedId}</span>
+                      <span style={{ color: '#D2D8E0' }}>|</span>
+                      <span>{r.date}</span>
                     </div>
                   </div>
-                  <StarRating rating={r.rating} size={13} />
+                  <p style={{ margin: 0, fontSize: isMobile ? 13 : 13.5, lineHeight: 1.7, color: '#2B3A52', fontWeight: 500, textWrap: 'pretty' }}>{r.text}</p>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginTop: 12 }}>
+                    <button style={{
+                      background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'inherit',
+                      fontSize: 12, fontWeight: 600, color: '#8A97AD', textDecoration: 'underline', textUnderlineOffset: 2,
+                    }}>상세리뷰 보기</button>
+                    <HelpfulButton count={helpful} />
+                  </div>
                 </div>
-                <p style={{
-                  margin: 0, fontSize: 12.5, lineHeight: 1.65, color: '#2B3A52',
-                  fontWeight: 500, textWrap: 'pretty',
-                }}>{r.text}</p>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'center', marginTop: 24 }}>
@@ -1144,7 +1426,7 @@ function AtomyProductDetail({ product, isMobile = false, onClose, onPlayVideo, e
               color: '#0B1F3A', fontSize: 13, fontWeight: 800, cursor: 'pointer',
               letterSpacing: '-0.01em',
             }}>
-              모든 후기 보기 ({p.reviewsCount.toLocaleString()}) →
+              후기 더보기 ({p.reviewsCount.toLocaleString()}) →
             </button>
           </div>
         </div>
@@ -1156,28 +1438,54 @@ function AtomyProductDetail({ product, isMobile = false, onClose, onPlayVideo, e
         background: '#fff',
       }}>
         <div style={{ maxWidth: 1280, margin: '0 auto' }}>
-          <ShopSectionTitle title="배송 및 결제 안내" isMobile={isMobile} />
-          <div style={{ display: 'grid', gap: isMobile ? 16 : 20, marginTop: isMobile ? 18 : 24 }}>
-            {[
-              { h: '배송 방법', items: ['택배 (CJ대한통운)', '주문 후 평균 1~3일 이내 출고', '오후 2시 이전 결제 완료 시 당일 출고 (영업일 기준)'] },
-              { h: '배송 지역 및 비용', items: ['전국 배송 (제주/도서산간 별도 배송비 추가)', '50,000원 이상 무료배송', '50,000원 미만: 3,000원'] },
-              { h: '결제 방법', items: ['신용카드 / 체크카드', '실시간 계좌이체 / 무통장 입금', '카카오페이 / 네이버페이 / 토스'] },
-              { h: '영수증/세금계산서', items: ['주문 시 현금영수증 발행 가능', '사업자 세금계산서는 마이페이지 > 영수증 신청'] },
-            ].map((b, i) => (
-              <div key={i} style={{
-                padding: isMobile ? '16px' : '20px 24px',
-                background: '#F8FAFC', borderRadius: 12,
-                border: '1px solid rgba(11,31,58,0.06)',
-              }}>
-                <div style={{ fontSize: isMobile ? 14 : 16, fontWeight: 800, color: '#0B1F3A', marginBottom: 10 }}>{b.h}</div>
-                <ul style={{ margin: 0, paddingLeft: 18, display: 'grid', gap: 6 }}>
-                  {b.items.map((it, j) => (
-                    <li key={j} style={{ fontSize: isMobile ? 12.5 : 13.5, color: '#4A5668', lineHeight: 1.6 }}>{it}</li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
+          <InfoAccordion isMobile={isMobile} items={[
+            { title: '주문취소', defaultOpen: true, faq: true, blocks: [
+              { head: '주문취소 신청', lines: [
+                { t: '- 인터넷 : "쇼핑몰 > 마이애터미 > 주문/배송" 에서 신청' },
+                { t: '(애터미 회원)', i: true },
+                { t: '- 상담원 : 고객행복센터(1544-8580)번으로 신청' },
+                { t: '(애터미 회원/간편구매 사용자)', i: true },
+                { t: '- 주문완료/입금대기 중 상태에만 주문취소가 가능합니다.' },
+                { t: '- 상품의 부분취소는 불가능합니다.' },
+                { t: '(카드결제 시 주문취소 처리 결과는 카드사의 사정에 의해 다소 차이가 발생할 수 있습니다.)', i: true },
+              ] },
+            ] },
+            { title: '배송 가이드', faq: true, blocks: [
+              { head: '배송기간', lines: [
+                { t: '- 국내배송 : 결제일로부터 1 ~ 3일 소요됩니다.' },
+                { t: '배송지역에 따라 다소 지연될 수 있습니다.', i: true },
+                { t: '- 주말 / 공휴일은 배송기간에서 제외됩니다.' },
+                { t: '* 도서, 산간 등 지역에 따라 배송이 다소 지연될 수 있으며 자연재해, 불가항력(일시품절, 수취인불명, 우편번호 오입력)등 사유로 배송이 지연되는 경우도 있음을 양해해 주시길 바랍니다.', i: true },
+              ] },
+              { head: '배송가능 지역', lines: [
+                { t: '- 전국' },
+              ] },
+              { head: '배송비', lines: [
+                { t: '- 총 결제금액이 5만원 미만인 경우 : 배송비 2,900원 (도서산간지역(제주도포함)의 경우 착불비가 상이할 수 있습니다.)' },
+                { t: '- 총 결제금액이 5만원 이상인 경우 : 무료배송' },
+                { t: '(합포 불가 개별 배송 상품 금액 제외)', i: true },
+                { t: '- 배송지를 본인이 소속된 교육센터로 지정하는 경우 : 무료배송' },
+                { t: '* 개별 배송 되는 상품은 무료 배송으로 애터미 홈페이지 쇼핑몰 상품 상세에서 확인 가능 합니다.', i: true },
+                { t: '* 센터로 배송되는 경우 다른 상품과 함께 포장되어 배송되므로 방문수령 전까지 분실에 유의하시기 바랍니다.', i: true },
+              ] },
+              { head: '배송조회', lines: [
+                { t: '- 회원 : "쇼핑몰 > 마이애터미 > 배송조회" 에서 확인 가능합니다.' },
+                { t: '- 간편구매 사용자 : 간편구매 URL로 접근 시 확인 가능합니다.' },
+              ] },
+              { head: '배송지 변경', lines: [
+                { t: '- 상품포장 단계 이전' },
+                { t: '* 애터미 회원 : "쇼핑몰 > 마이애터미 > 주문/배송" 에서 변경. 애터미㈜ 고객행복센터(1544-8580)으로 신청', i: true },
+                { t: '* 간편구매 사용자 : 애터미㈜ 고객행복센터(1544-8580) 신청', i: true },
+                { t: '- 상품포장 단계 이후 : 변경불가' },
+              ] },
+            ] },
+            { title: '결제', faq: true, blocks: [
+              { head: '결제수단', lines: [
+                { t: '- 실시간 계좌이체, 가상계좌, 무통장 입금 / 신용카드, ARS결제(1644-8732), ARS결제 + 무통장 입금입니다.' },
+                { t: '* 간편구매의 경우 신용카드 결제만 가능합니다.', i: true },
+              ] },
+            ] },
+          ]} />
         </div>
       </section>)}
 
@@ -1187,41 +1495,58 @@ function AtomyProductDetail({ product, isMobile = false, onClose, onPlayVideo, e
         background: '#fff',
       }}>
         <div style={{ maxWidth: 1280, margin: '0 auto' }}>
-          <ShopSectionTitle title="반품 및 교환 안내" isMobile={isMobile} />
-          <div style={{ display: 'grid', gap: isMobile ? 16 : 20, marginTop: isMobile ? 18 : 24 }}>
-            {[
-              { h: '반품/교환 신청 기간', items: ['상품 수령 후 7일 이내 (단순 변심)', '상품 하자/오배송: 수령 후 30일 이내', '식품 등 변질 우려 상품: 수령 즉시 확인 후 신청'] },
-              { h: '반품/교환 불가 사유', items: ['포장 개봉 또는 사용 흔적이 있는 경우', '소비자 부주의로 상품 가치가 훼손된 경우', '시간 경과로 재판매가 어려운 경우', '복제 가능한 상품의 포장을 훼손한 경우'] },
-              { h: '반품 배송비', items: ['단순 변심: 왕복 배송비 6,000원 (소비자 부담)', '상품 하자/오배송: 무료 (애터미 부담)', '교환 시: 차액만 결제 또는 환불'] },
-              { h: '환불 절차', items: ['반품 상품 회수 → 검수 (영업일 2~3일)', '검수 완료 후 3영업일 이내 환불 처리', '카드 결제: 카드사 사정에 따라 5~7일 소요'] },
-            ].map((b, i) => (
-              <div key={i} style={{
-                padding: isMobile ? '16px' : '20px 24px',
-                background: '#F8FAFC', borderRadius: 12,
-                border: '1px solid rgba(11,31,58,0.06)',
-              }}>
-                <div style={{ fontSize: isMobile ? 14 : 16, fontWeight: 800, color: '#0B1F3A', marginBottom: 10 }}>{b.h}</div>
-                <ul style={{ margin: 0, paddingLeft: 18, display: 'grid', gap: 6 }}>
-                  {b.items.map((it, j) => (
-                    <li key={j} style={{ fontSize: isMobile ? 12.5 : 13.5, color: '#4A5668', lineHeight: 1.6 }}>{it}</li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-          <div style={{
-            marginTop: 18, padding: isMobile ? '14px 16px' : '18px 24px',
-            background: 'rgba(232,65,65,0.06)', borderRadius: 10,
-            border: '1px solid rgba(232,65,65,0.18)',
-            fontSize: isMobile ? 12 : 13, color: '#B23838', fontWeight: 600, lineHeight: 1.6,
-          }}>
-            ※ 반품/교환 문의: 고객센터 1544-0001 (평일 9:00~18:00)
-          </div>
+          <InfoAccordion isMobile={isMobile} items={[
+            { title: '반품/교환요청', defaultOpen: true, faq: true, blocks: [
+              { head: '반품/교환 요청', lines: [
+                { t: '- 애터미 쇼핑몰, 고객행복센터(1544-8580)' },
+              ] },
+              { head: '반품/교환이 불가능한 경우', lines: [
+                { t: '- 재고를 과다하게 보유한 경우' },
+                { t: '- 판매원의 책임 있는 사유로 상품이 멸실 또는 훼손된 경우' },
+                { t: '- 상품 택(TAG)제거 또는 상품 개봉으로 인한 상품 가치가 훼손된 경우' },
+                { t: '- 신선식품(냉장/냉동 포함)을 단순변심/주문착오로 교환/반품 신청하는 경우' },
+                { t: '- 고객님의 사용 또는 일부 소비에 의해 상품의 가치가 훼손된 경우' },
+                { t: '- 시간 경과에 따라 상품 등의 가치가 현저히 감소하여 재판매가 불가능한 경우' },
+                { t: '- 복제가 가능한 상품 등의 포장을 훼손한 경우' },
+                { t: '- 고객님이 이상 여부를 확인한 후 설치가 완료된 상품의 경우' },
+                { t: '(가전, 가구, 헬스기구 등)', i: true },
+                { t: '- 고객님의 요청에 따라 개별적으로 주문제작 되는 상품으로 재판매가' },
+                { t: '불가능한 경우 (이니셜 표시 상품, 사이즈 맞춤 상품 등)', i: true },
+                { t: '- 구매한 상품의 구성품이 누락된 경우' },
+                { t: '(화장품 세트, 의류부착 악세서리, 가전제품 부속품, 사은품 등)', i: true },
+                { t: '- 기타, 상품의 교환, 환불 및 상품 결함 등의 보상은 소비자분쟁해결기준 (공정거래위원회 고시)에 의함' },
+              ] },
+              { head: '신청기간', lines: [
+                { t: '- 소비자는 14일, 등록된 판매원은 출고 후 3개월 이내' },
+              ] },
+            ] },
+            { title: '반품/교환완료', faq: true, blocks: [
+              { head: '교환', lines: [
+                { t: '- 선회수 후 교환' },
+              ] },
+              { head: '반품', lines: [
+                { t: '- 반품 신청 시 상품 회수 후 환불' },
+              ] },
+              { head: '환불', lines: [
+                { t: '- 현금 구매 시 청약 철회 후 1~3일 이내에 회원의 등록 계좌로 송금하여 드립니다.' },
+                { t: '- 카드구매 시 청약 철회 접수 후 1 ~ 3일 이내에 구매인의 카드사로 승인 취소하여 드립니다.' },
+                { t: '- 부분 반품 시 카드 부분 승인 취소가 불가 한 경우, 반품하지 않은 상품은 다시 카드 결제 후 기존 결제 금액에 대해 승인 취소됩니다.' },
+                { t: '(ex 홍길동님의 원주문 - 30만원, 부분반품금액 -10만원 : 카드결제 금액은 20만원 입니다.)', i: true },
+                { t: '- 기간경과에 따른 수수료 공제' },
+                { t: '· 공급일로부터 1개월 이내 청약철회 등을 한 경우에는 대금 전액 환불', i: true },
+                { t: '· 공급일로부터 1개월 경과 후 2개월이내에 청약철회등을 한 경우에는 대금의 5% 공제한 금액', i: true },
+                { t: '· 공급일로부터 2개월 경과 후 3개월이내에 청약철회등을 한 경우에는 대금의 7% 공제한 금액', i: true },
+              ] },
+              { lines: [
+                { t: '반품 금액 환불 시, 기 지급된 수당 및 기 인정 직급도 재조정 됩니다.' },
+              ] },
+            ] },
+          ]} />
         </div>
       </section>)}
 
-      {/* 푸터 */}
-      <ShopFooter isMobile={isMobile} />
+      {/* 연관상품 — 함께 보면 좋은 */}
+      <RelatedProductsCarousel isMobile={isMobile} onSelectProduct={onSelectProduct} currentId={p.id} />
     </div>
   );
 }
@@ -1232,6 +1557,126 @@ function qtyBtnStyle() {
     color: '#0B1F3A', fontSize: 18, fontWeight: 700, cursor: 'pointer',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
   };
+}
+
+// 리뷰 "도움돼요" 추천 버튼
+function HelpfulButton({ count }) {
+  const [on, setOn] = React.useState(false);
+  return (
+    <button
+      onClick={() => setOn(v => !v)}
+      aria-pressed={on}
+      style={{
+        display: 'inline-flex', alignItems: 'center', gap: 6,
+        padding: '6px 12px', borderRadius: 999, cursor: 'pointer', fontFamily: 'inherit',
+        fontSize: 12, fontWeight: 700,
+        background: on ? 'rgba(0,182,240,0.1)' : '#fff',
+        border: `1px solid ${on ? '#00B6F0' : 'rgba(11,31,58,0.15)'}`,
+        color: on ? '#0088B8' : '#6B7A90',
+        transition: 'all 0.15s',
+      }}>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill={on ? '#0088B8' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" />
+      </svg>
+      도움돼요 <span style={{ fontVariantNumeric: 'tabular-nums' }}>{count + (on ? 1 : 0)}</span>
+    </button>
+  );
+}
+
+// 성분 및 필수 고시정보 — 단일 접이식 (tit/cont 목록)
+function NoticeAccordion({ notice, isMobile }) {
+  const [open, setOpen] = React.useState(false);
+  return (
+    <div style={{ borderTop: '1px solid rgba(11,31,58,0.14)', borderBottom: '1px solid rgba(11,31,58,0.14)' }}>
+      <button
+        onClick={() => setOpen(v => !v)}
+        aria-expanded={open}
+        style={{
+          width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          gap: 12, padding: isMobile ? '18px 4px' : '22px 6px',
+          background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left',
+        }}>
+        <span style={{ fontSize: isMobile ? 15 : 16, fontWeight: 700, color: '#0B1F3A', letterSpacing: '-0.01em' }}>성분 및 필수 고시정보</span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8A97AD" strokeWidth="2.2"
+             strokeLinecap="round" strokeLinejoin="round"
+             style={{ flexShrink: 0, transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
+      </button>
+      {open && (
+        <div style={{ padding: isMobile ? '2px 4px 24px' : '2px 6px 28px' }}>
+          <dl style={{ margin: 0, display: 'grid', gap: 0 }}>
+            {notice.map((n, i) => (
+              <div key={i} style={{
+                padding: isMobile ? '13px 0' : '15px 0',
+                borderTop: i === 0 ? 'none' : '1px solid rgba(11,31,58,0.06)',
+                display: 'grid', gap: 5,
+              }}>
+                <dt style={{ fontSize: isMobile ? 12 : 12.5, fontWeight: 700, color: '#8A97AD', lineHeight: 1.5, textWrap: 'pretty' }}>{n.tit}</dt>
+                <dd style={{ margin: 0, fontSize: isMobile ? 12.5 : 13.5, fontWeight: 500, color: '#2B3A52', lineHeight: 1.7, textWrap: 'pretty', whiteSpace: 'pre-line' }}>{n.cont}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// 아코디언 — 배송/결제 · 반품/교환 탭 공용
+function InfoAccordion({ items, isMobile }) {
+  const [open, setOpen] = React.useState(() => items.map(it => !!it.defaultOpen));
+  const faqBtnStyle = {
+    background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'inherit',
+    fontSize: 13, color: '#6B7A90', fontWeight: 600, textDecoration: 'underline', textUnderlineOffset: 2,
+  };
+  return (
+    <div style={{ borderTop: '1px solid rgba(11,31,58,0.14)' }}>
+      {items.map((it, i) => (
+        <div key={i} style={{ borderBottom: '1px solid rgba(11,31,58,0.14)' }}>
+          <button
+            onClick={() => setOpen(o => o.map((v, j) => (j === i ? !v : v)))}
+            aria-expanded={open[i]}
+            style={{
+              width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              gap: 12, padding: isMobile ? '18px 4px' : '22px 6px',
+              background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left',
+            }}>
+            <span style={{ fontSize: isMobile ? 15 : 16, fontWeight: 700, color: '#0B1F3A', letterSpacing: '-0.01em' }}>{it.title}</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8A97AD" strokeWidth="2.2"
+                 strokeLinecap="round" strokeLinejoin="round"
+                 style={{ flexShrink: 0, transform: open[i] ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </button>
+          {open[i] && (
+            <div style={{ padding: isMobile ? '0 4px 26px' : '0 6px 30px' }}>
+              {it.faq && (
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 18 }}>
+                  <button style={faqBtnStyle}>FAQ 보기</button>
+                </div>
+              )}
+              {it.blocks.map((b, k) => (
+                <div key={k} style={{ marginBottom: k < it.blocks.length - 1 ? 24 : 0 }}>
+                  {b.head && (
+                    <div style={{ fontSize: isMobile ? 13.5 : 14.5, fontWeight: 800, color: '#00B6F0', marginBottom: 9, letterSpacing: '-0.01em' }}>{b.head}</div>
+                  )}
+                  <div style={{ display: 'grid', gap: 6 }}>
+                    {b.lines.map((ln, m) => (
+                      <div key={m} style={{
+                        fontSize: isMobile ? 12.5 : 13.5, color: '#4A5568', fontWeight: 500, lineHeight: 1.7,
+                        paddingLeft: ln.i ? 14 : 0, textWrap: 'pretty',
+                      }}>{ln.t}</div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
 }
 
 // =============================================================
@@ -1508,6 +1953,7 @@ function HemohimShotDetail({ product, isMobile = false, onClose, onPlayVideo, on
           isMobile={isMobile}
           onClose={onClose}
           onPlayVideo={onPlayVideo}
+          onSelectProduct={onSelectProduct}
           embedded
         />
       </div>
@@ -1520,6 +1966,7 @@ function HemohimShotDetail({ product, isMobile = false, onClose, onPlayVideo, on
         isMobile={isMobile}
         onClose={onClose}
         onPlayVideo={onPlayVideo}
+        onSelectProduct={onSelectProduct}
         heroMedia={(
           <div ref={heroWrapRef} style={{
             position: 'absolute', inset: 0,
@@ -1673,169 +2120,70 @@ function StickyCtaPortal({ isMobile, rootRef, visible = true }) {
 }
 
 function NextProductFeed({ products, onSelectProduct }) {
-  const itemRefs = React.useRef([]);
-  const [activeIdx, setActiveIdx] = React.useState(-1);
-
-  // 화면 중앙에 들어온 영상만 재생, 나머지는 일시정지
-  React.useEffect(() => {
-    const observers = [];
-    itemRefs.current.forEach((el, idx) => {
-      if (!el) return;
-      const io = new IntersectionObserver(
-        (entries) => {
-          entries.forEach(e => {
-            const v = el.querySelector('video');
-            if (!v) return;
-            if (e.isIntersecting && e.intersectionRatio > 0.55) {
-              setActiveIdx(idx);
-              v.play().catch(() => {});
-            } else {
-              v.pause();
-            }
-          });
-        },
-        { threshold: [0, 0.55, 0.9] }
-      );
-      io.observe(el);
-      observers.push(io);
-    });
-    return () => observers.forEach(o => o.disconnect());
-  }, [products]);
-
+  const clips = (typeof window !== 'undefined' && Array.isArray(window.SHORTS))
+    ? window.SHORTS.slice(0, 9)
+    : [];
+  if (clips.length === 0) return null;
   return (
-    <div style={{ background: '#0B1320' }}>
-      {/* 섹션 헤더 — '다른 제품 보기' 안내 */}
-      <div style={{
-        position: 'relative',
-        padding: '28px 18px 18px',
-        background: 'linear-gradient(180deg, #fff 0%, #fff 50%, #0B1320 100%)',
-        textAlign: 'center',
-      }}>
-        <div style={{
-          fontSize: 11, fontWeight: 800, letterSpacing: '0.18em',
-          color: '#0B1F3A', opacity: 0.55, marginBottom: 8,
-        }}>NEXT</div>
-        <div style={{
-          fontSize: 18, fontWeight: 800, color: '#0B1F3A',
-          letterSpacing: '-0.01em', marginBottom: 14,
-        }}>
-          다른 제품 보기
-        </div>
-        <div style={{
-          display: 'inline-flex', alignItems: 'center', gap: 6,
-          padding: '7px 14px', borderRadius: 999,
-          background: 'rgba(11,31,58,0.06)',
-          color: '#0B1F3A', fontSize: 12, fontWeight: 700,
-        }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0B1F3A"
-               strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="6 9 12 15 18 9" />
-          </svg>
-          아래로 스크롤
-        </div>
+    <div style={{ background: '#fff', padding: '28px 16px 32px', borderTop: '1px solid rgba(11,31,58,0.08)' }}>
+      {/* 섹션 헤더 */}
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 16 }}>
+        <span style={{ fontSize: 16, fontWeight: 800, color: '#0B1F3A', letterSpacing: '-0.01em' }}>관심 상품 알아보기</span>
+        <span style={{ fontSize: 12.5, fontWeight: 600, color: '#8A97AD' }}>석세스클립</span>
       </div>
 
-      {/* 다음 제품 피드 — 한 화면씩 풀블리드 영상 */}
-      {products.map((np, idx) => (
-        <div
-          key={np.id}
-          ref={(el) => { itemRefs.current[idx] = el; }}
-          style={{
-            position: 'relative',
-            width: '100%',
-            height: 680,
-            background: '#0B1320',
-            overflow: 'hidden',
-            borderTop: idx === 0 ? 'none' : '1px solid rgba(255,255,255,0.06)',
-          }}
-        >
-          <video
-            src={np.videoUrl}
-            poster={np.poster}
-            muted
-            loop
-            playsInline
-            preload="metadata"
+      {/* 석세스클립 영상 섬네일 — 가로 스크롤 (자동재생 없음) */}
+      <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 6, WebkitOverflowScrolling: 'touch' }}>
+        {clips.map((s) => (
+          <div
+            key={s.id}
             style={{
-              width: '100%', height: '100%', objectFit: 'cover',
-              display: 'block', cursor: 'pointer',
+              flex: '0 0 auto', width: 128, cursor: 'pointer',
             }}
-            onClick={() => onSelectProduct && onSelectProduct({ id: np.id })}
-          />
-          {/* 하단 그라데이션 + 정보 */}
-          <div style={{
-            position: 'absolute', left: 0, right: 0, bottom: 0,
-            padding: '22px 18px 86px',
-            background: 'linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.55) 60%, rgba(0,0,0,0.78) 100%)',
-            color: '#fff',
-            pointerEvents: 'none',
-          }}>
+          >
             <div style={{
-              fontSize: 11, fontWeight: 800, opacity: 0.75,
-              letterSpacing: '0.12em', marginBottom: 6,
+              position: 'relative', width: '100%', aspectRatio: '9 / 16',
+              borderRadius: 12, overflow: 'hidden', background: '#E8EDF3',
+              border: '1px solid rgba(11,31,58,0.06)',
             }}>
-              상품번호 {np.id}
+              <img
+                src={s.image}
+                alt={s.title}
+                loading="lazy"
+                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                onError={(e) => { e.currentTarget.style.opacity = 0; }}
+              />
+              {/* 재생 아이콘 오버레이 */}
+              <div style={{
+                position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                background: 'linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(0,0,0,0.5) 100%)',
+              }}>
+                <div style={{
+                  width: 38, height: 38, borderRadius: '50%',
+                  background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(6px)',
+                  border: '1px solid rgba(255,255,255,0.35)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="#fff" style={{ marginLeft: 2 }}>
+                    <path d="M8 5v14l11-7z" />
+                  </svg>
+                </div>
+              </div>
+              {/* 재생시간 */}
+              <span style={{
+                position: 'absolute', right: 6, bottom: 6,
+                padding: '2px 6px', borderRadius: 5, background: 'rgba(0,0,0,0.6)',
+                color: '#fff', fontSize: 10, fontWeight: 700, fontVariantNumeric: 'tabular-nums',
+              }}>{s.duration}</span>
             </div>
+            {/* 제목 + 조회수 */}
             <div style={{
-              fontSize: 19, fontWeight: 800, letterSpacing: '-0.01em',
-              marginBottom: 4,
-            }}>
-              {np.name}
-            </div>
-            <div style={{
-              fontSize: 13, fontWeight: 500, opacity: 0.82,
-              marginBottom: 14,
-            }}>
-              {np.tagline}
-            </div>
-            <button
-              onClick={() => onSelectProduct && onSelectProduct({ id: np.id })}
-              style={{
-                pointerEvents: 'auto',
-                display: 'inline-flex', alignItems: 'center', gap: 6,
-                padding: '10px 16px', borderRadius: 999,
-                background: '#fff', color: '#0B1F3A',
-                border: 'none', fontSize: 13, fontWeight: 800,
-                cursor: 'pointer',
-                boxShadow: '0 8px 20px rgba(0,0,0,0.25)',
-              }}
-            >
-              상세보기
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0B1F3A"
-                   strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="9 18 15 12 9 6" />
-              </svg>
-            </button>
+              fontSize: 12, fontWeight: 700, color: '#0B1F3A', lineHeight: 1.35, marginTop: 8,
+              display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', textWrap: 'pretty',
+            }}>{s.title}</div>
+            <div style={{ fontSize: 11, fontWeight: 600, color: '#8A97AD', marginTop: 3 }}>조회 {s.views}</div>
           </div>
-          {/* 우측 사이드 액션 — 틱톡 스타일 미니멀 */}
-          <div style={{
-            position: 'absolute', right: 12, bottom: 110,
-            display: 'flex', flexDirection: 'column', gap: 12,
-            color: '#fff', alignItems: 'center',
-          }}>
-            <div style={{
-              width: 40, height: 40, borderRadius: '50%',
-              background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(10px)',
-              border: '1px solid rgba(255,255,255,0.22)',
-              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff">
-                <path d="M12 21s-7-4.5-9.5-9C.8 8.6 2.7 5 6 5c2 0 3.4 1.2 4 2.4C10.6 6.2 12 5 14 5c3.3 0 5.2 3.6 3.5 7-2.5 4.5-9.5 9-9.5 9z"/>
-              </svg>
-            </div>
-          </div>
-        </div>
-      ))}
-
-      {/* 피드 끝 안내 */}
-      <div style={{
-        padding: '18px 16px 28px',
-        textAlign: 'center',
-        color: 'rgba(255,255,255,0.5)',
-        fontSize: 12, fontWeight: 600,
-        letterSpacing: '0.05em',
-      }}>
-        — 마지막 제품이에요 —
+        ))}
       </div>
     </div>
   );

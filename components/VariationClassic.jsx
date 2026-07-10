@@ -353,6 +353,7 @@ function ActiveVideo({ item, active }) {
     if (!v || failed) return;
     if (active) {
       try { v.currentTime = 0; } catch(_) {}
+      v.muted = true; v.defaultMuted = true;
       const p = v.play();
       if (p && p.catch) p.catch(() => {});
       setPlaying(true);
@@ -868,20 +869,603 @@ function BottomNav({ activeKey = 'home', onNavClick = () => {} }) {
   );
 }
 
+// 작성자 클립 더 보기 — 마스터의 다른 석세스클립 그리드
+function AuthorClipsSheet({ currentId, onClose, onSelect }) {
+  const name = (typeof PROFILE !== 'undefined' && PROFILE.name) ? PROFILE.name : '마스터';
+  const clips = (typeof window !== 'undefined' && Array.isArray(window.SHORTS)) ? window.SHORTS : [];
+  const list = clips.filter(c => String(c.id) !== String(currentId)).slice(0, 12);
+  return (
+    <div
+      onClick={(e) => { e.stopPropagation(); onClose(); }}
+      onTouchStart={(e) => e.stopPropagation()}
+      onWheel={(e) => e.stopPropagation()}
+      style={{
+        position: 'absolute', inset: 0, zIndex: 21,
+        background: 'rgba(0,0,0,0.4)', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end',
+        animation: 'shortsFadeIn 0.2s ease',
+      }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        onTouchStart={(e) => e.stopPropagation()}
+        onTouchMove={(e) => e.stopPropagation()}
+        onWheel={(e) => e.stopPropagation()}
+        style={{
+          background: '#fff', borderRadius: '18px 18px 0 0',
+          height: '72%', display: 'flex', flexDirection: 'column', overflow: 'hidden',
+          animation: 'commentSheetUp 0.28s cubic-bezier(.2,.8,.3,1) both',
+        }}
+      >
+        {/* 헤더 */}
+        <div style={{ position: 'relative', padding: '12px 16px 12px', borderBottom: '1px solid rgba(11,31,58,0.08)' }}>
+          <div style={{ width: 36, height: 4, borderRadius: 999, background: 'rgba(11,31,58,0.15)', margin: '0 auto 10px' }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{
+              width: 38, height: 38, borderRadius: 999, flexShrink: 0,
+              background: 'linear-gradient(135deg, #00B6F0, #0088B8)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: '#fff', fontSize: 15, fontWeight: 800,
+            }}>{name.charAt(0)}</div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 14, fontWeight: 800, color: '#0B1F3A' }}>{name}</div>
+              <div style={{ fontSize: 11.5, fontWeight: 600, color: '#8A97AD' }}>석세스클립 {clips.length}개</div>
+            </div>
+          </div>
+          <button onClick={onClose} aria-label="닫기" style={{
+            position: 'absolute', top: 12, right: 12, width: 30, height: 30, borderRadius: 999,
+            border: 'none', background: 'rgba(11,31,58,0.06)', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4A5568" strokeWidth="2.4" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+          </button>
+        </div>
+        {/* 그리드 */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: 14, WebkitOverflowScrolling: 'touch' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+            {list.map(c => (
+              <button key={c.id} onClick={() => onSelect(c.id)} style={{
+                border: 'none', padding: 0, background: 'none', cursor: 'pointer', fontFamily: 'inherit',
+              }}>
+                <div style={{
+                  position: 'relative', width: '100%', aspectRatio: '9/16',
+                  borderRadius: 10, overflow: 'hidden',
+                  background: `linear-gradient(145deg, hsl(${c.hue} 38% 28%), hsl(${c.hue} 30% 14%))`,
+                }}>
+                  {c.image && <img src={c.image} alt={c.title} loading="lazy" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />}
+                  <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: '55%', background: 'linear-gradient(0deg, rgba(0,0,0,0.72), rgba(0,0,0,0))' }} />
+                  <span style={{ position: 'absolute', bottom: 5, right: 6, color: '#fff', fontSize: 9, fontWeight: 700 }}>▶ {c.views}</span>
+                  <div style={{ position: 'absolute', left: 6, right: 6, bottom: 16, color: '#fff', fontSize: 10, fontWeight: 700, lineHeight: 1.25, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', textShadow: '0 1px 3px rgba(0,0,0,0.5)' }}>{c.title}</div>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// 더보기 액션시트 — 링크 복사 · 상품 정보 · 작성자 클립 · 신고
+function ClipMoreSheet({ clip, onClose, onToast, onProduct, onAuthor }) {
+  const [reporting, setReporting] = React.useState(false);
+
+  const Row = ({ icon, label, sub, onClick, danger }) => (
+    <button
+      onClick={onClick}
+      style={{
+        display: 'flex', alignItems: 'center', gap: 14, width: '100%',
+        padding: '15px 18px', background: 'none', border: 'none', cursor: 'pointer',
+        textAlign: 'left', fontFamily: 'inherit',
+      }}
+    >
+      <span style={{
+        flex: '0 0 auto', width: 38, height: 38, borderRadius: 10,
+        background: danger ? 'rgba(255,59,106,0.1)' : 'rgba(11,31,58,0.06)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        color: danger ? '#FF3B6A' : '#0B1F3A',
+      }}>{icon}</span>
+      <span style={{ flex: 1, minWidth: 0 }}>
+        <span style={{ display: 'block', fontSize: 14, fontWeight: 700, color: danger ? '#FF3B6A' : '#0B1F3A' }}>{label}</span>
+        {sub && <span style={{ display: 'block', fontSize: 11.5, fontWeight: 500, color: '#8A97AD', marginTop: 1 }}>{sub}</span>}
+      </span>
+    </button>
+  );
+
+  const reportReasons = ['스팸/광고', '허위·과장 정보', '부적절한 콘텐츠', '저작권 침해', '기타'];
+
+  return (
+    <div
+      onClick={(e) => { e.stopPropagation(); onClose(); }}
+      onTouchStart={(e) => e.stopPropagation()}
+      onWheel={(e) => e.stopPropagation()}
+      style={{
+        position: 'absolute', inset: 0, zIndex: 21,
+        background: 'rgba(0,0,0,0.4)', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end',
+        animation: 'shortsFadeIn 0.2s ease',
+      }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        onTouchStart={(e) => e.stopPropagation()}
+        onTouchMove={(e) => e.stopPropagation()}
+        onWheel={(e) => e.stopPropagation()}
+        style={{
+          background: '#fff', borderRadius: '18px 18px 0 0',
+          paddingBottom: 'env(safe-area-inset-bottom, 8px)',
+          animation: 'commentSheetUp 0.28s cubic-bezier(.2,.8,.3,1) both',
+          overflow: 'hidden',
+        }}
+      >
+        <div style={{ width: 36, height: 4, borderRadius: 999, background: 'rgba(11,31,58,0.15)', margin: '10px auto 4px' }} />
+
+        {!reporting ? (
+          <div style={{ padding: '6px 0 10px' }}>
+            <Row
+              icon={<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 007.07 0l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.07 0l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>}
+              label="링크 복사"
+              onClick={() => { onClose(); onToast && onToast('링크가 복사되었어요'); }}
+            />
+            <Row
+              icon={<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg>}
+              label="상품 정보 보기"
+              sub={clip.product}
+              onClick={onProduct}
+            />
+            <Row
+              icon={<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>}
+              label="PPO 클립 더 보기"
+              onClick={onAuthor}
+            />
+            <div style={{ height: 1, background: 'rgba(11,31,58,0.06)', margin: '4px 18px' }} />
+            <Row
+              icon={<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>}
+              label="신고하기"
+              danger
+              onClick={() => setReporting(true)}
+            />
+          </div>
+        ) : (
+          <div style={{ padding: '4px 0 10px' }}>
+            <div style={{ padding: '6px 18px 10px', fontSize: 13, fontWeight: 700, color: '#0B1F3A' }}>신고 사유를 선택하세요</div>
+            {reportReasons.map(r => (
+              <button key={r} onClick={() => { onClose(); onToast && onToast('신고가 접수되었어요'); }}
+                style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%',
+                  padding: '13px 18px', background: 'none', border: 'none', cursor: 'pointer',
+                  textAlign: 'left', fontFamily: 'inherit', fontSize: 13.5, fontWeight: 600, color: '#2B3A52',
+                }}>
+                {r}
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C0C8D4" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+              </button>
+            ))}
+            <button onClick={() => setReporting(false)} style={{
+              width: 'calc(100% - 36px)', margin: '8px 18px 4px', padding: '12px',
+              borderRadius: 10, border: '1px solid rgba(11,31,58,0.12)', background: '#fff',
+              cursor: 'pointer', fontFamily: 'inherit', fontSize: 13, fontWeight: 700, color: '#6B7A90',
+            }}>뒤로</button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// 클립 댓글 바텀시트
+const _CLIP_COMMENT_POOL = [
+  { n: '김민서', t: '정보 감사합니다, 도움 많이 됐어요!', l: 42 },
+  { n: '달빛여행', t: '저도 헤모힘 챙겨 먹는데 확실히 덜 피곤해요 👍', l: 31 },
+  { n: '이준호', t: '영상 잘 보고 갑니다~ 구독하고 가요', l: 12 },
+  { n: '해피데이', t: '이 제품 어디서 구매하나요?? 궁금해요', l: 8 },
+  { n: '박서연', t: '설명이 귀에 쏙쏙 들어오네요 ㅎㅎ', l: 5 },
+  { n: '초록우산', t: '꾸준함이 답이네요, 응원합니다!', l: 19 },
+  { n: '정우성팬', t: '다음 영상도 기대할게요 🙌', l: 3 },
+  { n: '민들레', t: '가족들이랑 같이 먹고 있어요. 강추!', l: 27 },
+  { n: '하늘바다', t: '후기 보고 바로 구매했습니다 😊', l: 6 },
+  { n: '최지훈', t: '이런 콘텐츠 너무 좋아요. 감사합니다', l: 9 },
+  { n: '봄날', t: '설명 깔끔하고 믿음이 가네요', l: 14 },
+  { n: '별헤는밤', t: '오늘도 잘 배우고 갑니다 ✨', l: 2 },
+];
+
+function _timeAgo(i) {
+  const opts = ['방금', '3분 전', '12분 전', '1시간 전', '3시간 전', '어제', '2일 전', '5일 전', '1주 전'];
+  return opts[i % opts.length];
+}
+
+function ClipComments({ clip, count, onClose, onToast }) {
+  const seeded = React.useMemo(() => {
+    const base = parseInt(String(clip.id), 10) || 0;
+    const n = Math.max(4, Math.min(_CLIP_COMMENT_POOL.length, 6 + (base % 7)));
+    return Array.from({ length: n }, (_, k) => {
+      const c = _CLIP_COMMENT_POOL[(base + k) % _CLIP_COMMENT_POOL.length];
+      return { id: `${clip.id}-${k}`, name: c.n, text: c.t, likes: c.l, time: _timeAgo(base + k), liked: false };
+    });
+  }, [clip.id]);
+
+  const [list, setList] = React.useState(seeded);
+  const [input, setInput] = React.useState('');
+  React.useEffect(() => { setList(seeded); setInput(''); }, [seeded]);
+
+  const toggleLike = (id) => setList(ls => ls.map(c => c.id === id ? { ...c, liked: !c.liked, likes: c.likes + (c.liked ? -1 : 1) } : c));
+  const submit = () => {
+    const v = input.trim();
+    if (!v) return;
+    setList(ls => [{ id: `me-${Date.now()}`, name: '나', text: v, likes: 0, time: '방금', liked: false, mine: true }, ...ls]);
+    setInput('');
+    onToast && onToast('댓글이 등록되었어요');
+  };
+
+  const avatarColor = (name) => {
+    let h = 0; for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) % 360;
+    return `hsl(${h} 55% 55%)`;
+  };
+  const total = Math.max(count || 0, list.length);
+
+  return (
+    <div
+      onClick={(e) => { e.stopPropagation(); onClose(); }}
+      style={{
+        position: 'absolute', inset: 0, zIndex: 20,
+        background: 'rgba(0,0,0,0.4)', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end',
+        animation: 'shortsFadeIn 0.2s ease',
+      }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        onTouchStart={(e) => e.stopPropagation()}
+        onTouchMove={(e) => e.stopPropagation()}
+        onTouchEnd={(e) => e.stopPropagation()}
+        onWheel={(e) => e.stopPropagation()}
+        style={{
+          background: '#fff', borderRadius: '18px 18px 0 0',
+          height: '68%', display: 'flex', flexDirection: 'column',
+          animation: 'commentSheetUp 0.28s cubic-bezier(.2,.8,.3,1) both',
+          overflow: 'hidden',
+        }}
+      >
+        {/* 헤더 */}
+        <div style={{ position: 'relative', padding: '12px 16px 10px', borderBottom: '1px solid rgba(11,31,58,0.08)' }}>
+          <div style={{ width: 36, height: 4, borderRadius: 999, background: 'rgba(11,31,58,0.15)', margin: '0 auto 10px' }} />
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+            <span style={{ fontSize: 14.5, fontWeight: 800, color: '#0B1F3A' }}>댓글</span>
+            <span style={{ fontSize: 13, fontWeight: 700, color: '#8A97AD', fontVariantNumeric: 'tabular-nums' }}>{total.toLocaleString()}</span>
+          </div>
+          <button onClick={onClose} aria-label="닫기" style={{
+            position: 'absolute', top: 10, right: 12, width: 30, height: 30, borderRadius: 999,
+            border: 'none', background: 'rgba(11,31,58,0.06)', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4A5568" strokeWidth="2.4" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+          </button>
+        </div>
+
+        {/* 리스트 */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '8px 16px 12px', WebkitOverflowScrolling: 'touch' }}>
+          {list.map(c => (
+            <div key={c.id} style={{ display: 'flex', gap: 10, padding: '12px 0', borderBottom: '1px solid rgba(11,31,58,0.05)' }}>
+              <div style={{
+                flex: '0 0 auto', width: 36, height: 36, borderRadius: 999,
+                background: c.mine ? '#00B6F0' : avatarColor(c.name),
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: '#fff', fontSize: 14, fontWeight: 800,
+              }}>{c.name.charAt(0)}</div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
+                  <span style={{ fontSize: 12.5, fontWeight: 700, color: '#0B1F3A' }}>{c.name}</span>
+                  <span style={{ fontSize: 11, color: '#A0AABA', fontWeight: 500 }}>{c.time}</span>
+                </div>
+                <div style={{ fontSize: 13.5, color: '#2B3A52', fontWeight: 500, lineHeight: 1.5, textWrap: 'pretty' }}>{c.text}</div>
+                <button onClick={() => toggleLike(c.id)} style={{
+                  marginTop: 6, display: 'inline-flex', alignItems: 'center', gap: 4,
+                  background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'inherit',
+                  fontSize: 11.5, fontWeight: 700, color: c.liked ? '#FF3B6A' : '#8A97AD',
+                }}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill={c.liked ? '#FF3B6A' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 21s-7-4.5-9.5-9A5.5 5.5 0 0112 5a5.5 5.5 0 019.5 7c-2.5 4.5-9.5 9-9.5 9z" /></svg>
+                  {c.likes}
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* 입력 바 */}
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px',
+          borderTop: '1px solid rgba(11,31,58,0.08)', background: '#fff',
+        }}>
+          <input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') submit(); }}
+            placeholder="댓글을 입력하세요…"
+            style={{
+              flex: 1, border: '1px solid rgba(11,31,58,0.12)', outline: 'none',
+              borderRadius: 999, padding: '10px 14px', fontFamily: 'inherit',
+              fontSize: 13.5, fontWeight: 500, color: '#0B1F3A', background: '#F5F7FA',
+            }}
+          />
+          <button onClick={submit} disabled={!input.trim()} aria-label="등록" style={{
+            flex: '0 0 auto', width: 40, height: 40, borderRadius: 999, border: 'none',
+            cursor: input.trim() ? 'pointer' : 'default',
+            background: input.trim() ? '#00B6F0' : 'rgba(11,31,58,0.1)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            transition: 'background 0.15s',
+          }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={input.trim() ? '#fff' : '#A0AABA'} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" /></svg>
+          </button>
+        </div>
+      </div>
+      <style>{`@keyframes commentSheetUp { from { transform: translateY(100%); } to { transform: translateY(0); } }`}</style>
+    </div>
+  );
+}
+
+// 모바일 석세스클립 카드 — 뷰포트 자동재생 미리보기 + 롱프레스 + NEW/인기 뱃지
+function MobileShortCard({ s, i, onOpen }) {
+  const cellRef = React.useRef(null);
+  const [inView, setInView] = React.useState(false);
+  const [pressing, setPressing] = React.useState(false);
+  const pressTimer = React.useRef(null);
+  const longPressed = React.useRef(false);
+
+  const viewsNum = (() => {
+    const v = String(s.views || '0');
+    return v.endsWith('K') ? parseFloat(v) * 1000 : parseFloat(v) || 0;
+  })();
+  const isNew = i < 4;
+  const isHot = viewsNum >= 40000;
+  const showPreview = (inView || pressing) && !!s.videoUrl;
+
+  React.useEffect(() => {
+    const el = cellRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      (entries) => entries.forEach(e => setInView(e.isIntersecting && e.intersectionRatio >= 0.6)),
+      { threshold: [0, 0.6, 0.9] }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
+  const startPress = () => {
+    longPressed.current = false;
+    pressTimer.current = setTimeout(() => {
+      longPressed.current = true;
+      setPressing(true);
+      try { navigator.vibrate && navigator.vibrate(12); } catch (_) {}
+    }, 400);
+  };
+  const endPress = () => {
+    if (pressTimer.current) { clearTimeout(pressTimer.current); pressTimer.current = null; }
+    setPressing(false);
+  };
+  const handleClick = () => { if (!longPressed.current) onOpen(); };
+
+  return (
+    <div
+      ref={cellRef}
+      onClick={handleClick}
+      onTouchStart={startPress}
+      onTouchEnd={endPress}
+      onTouchMove={endPress}
+      onContextMenu={(e) => e.preventDefault()}
+      className="shorts-cell"
+      style={{
+        cursor: 'pointer',
+        animation: `cardFadeUp 0.55s cubic-bezier(.2,.7,.3,1) ${Math.min(i, 18) * 60}ms both`,
+      }}
+    >
+      <div style={{
+        position: 'relative', width: '100%', aspectRatio: '9/16',
+        borderRadius: 12, overflow: 'hidden',
+        background: `linear-gradient(145deg, hsl(${s.hue} 38% 28%), hsl(${s.hue} 30% 14%))`,
+        border: 'none',
+        boxShadow: pressing ? '0 10px 30px rgba(11,31,58,0.28)' : '0 2px 8px rgba(11,31,58,0.08)',
+        transform: pressing ? 'scale(0.97)' : 'none',
+        transition: 'transform 0.18s, box-shadow 0.2s',
+      }}>
+        {/* 제품 이미지 — 뷰포트 진입 시 살짝 줌 (켄번스) */}
+        {s.image && (
+          <img
+            src={s.image}
+            alt={s.product || s.title}
+            className="shorts-img"
+            style={{
+              position: 'absolute', inset: 0,
+              width: '100%', height: '100%',
+              objectFit: 'cover', objectPosition: 'center',
+              display: 'block',
+              transform: inView ? 'scale(1.06)' : 'scale(1)',
+              transition: 'transform 4s ease-out',
+              willChange: 'transform',
+            }}
+          />
+        )}
+        {/* 뷰포트 자동재생 미리보기 — 영상이 있는 클립만, 무음 루프 */}
+        {showPreview && (
+          <video
+            src={s.videoUrl}
+            poster={s.image}
+            autoPlay muted loop playsInline preload="metadata"
+            ref={(el) => { if (el) { el.muted = true; el.defaultMuted = true; } }}
+            onLoadedMetadata={(e) => { e.currentTarget.muted = true; }}
+            onPlay={(e) => { e.currentTarget.muted = true; }}
+            style={{
+              position: 'absolute', inset: 0,
+              width: '100%', height: '100%', objectFit: 'cover',
+              animation: 'previewFadeIn 0.3s ease both',
+            }}
+          />
+        )}
+        {/* 컬러 톤 오버레이 */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: `linear-gradient(160deg, hsla(${s.hue}, 30%, 20%, 0.12) 0%, hsla(${s.hue}, 30%, 10%, 0.18) 100%)`,
+          mixBlendMode: 'multiply',
+        }} />
+        {/* 대각 하이라이트 */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'linear-gradient(160deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0) 45%)',
+        }} />
+        {/* 하단 그라디언트 */}
+        <div style={{
+          position: 'absolute', left: 0, right: 0, bottom: 0, height: '58%',
+          background: 'linear-gradient(0deg, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.35) 50%, rgba(0,0,0,0) 100%)',
+        }} />
+        {/* 재생 아이콘 — 미리보기 중엔 숨김 */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          pointerEvents: 'none', opacity: showPreview ? 0 : 1, transition: 'opacity 0.25s',
+        }}>
+          <div style={{
+            width: 56, height: 56, borderRadius: 999,
+            background: 'rgba(0,0,0,0.52)', backdropFilter: 'blur(10px)',
+            border: '1.5px solid rgba(255,255,255,0.4)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: '0 6px 18px rgba(0,0,0,0.42)',
+          }}>
+            <div style={{ marginLeft: 3 }}>{ProfileIcon.play(26, '#fff')}</div>
+          </div>
+        </div>
+        {/* 미리보기 인디케이터 */}
+        {showPreview && (
+          <div style={{
+            position: 'absolute', bottom: 10, right: 10,
+            display: 'flex', alignItems: 'center', gap: 4,
+            padding: '3px 7px', borderRadius: 999,
+            background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(8px)',
+            color: '#fff', fontSize: 9, fontWeight: 800, letterSpacing: '0.08em',
+          }}>
+            <span style={{ width: 5, height: 5, borderRadius: 999, background: '#FF3B6A', animation: 'pulseDot 1.6s ease-in-out infinite' }} />
+            PREVIEW
+          </div>
+        )}
+        {/* 플래그 — 좌상단 */}
+        <div style={{
+          position: 'absolute', top: 10, left: 10,
+          display: 'inline-flex', alignItems: 'center', gap: 4,
+          padding: '4px 9px 4px 7px', borderRadius: 4,
+          background: s.flag === '공식' ? '#00B6F0' : 'rgba(245,247,250,0.96)',
+          color: s.flag === '공식' ? '#fff' : '#4A5568',
+          fontSize: 10.5, fontWeight: 700, letterSpacing: '0.03em',
+          border: s.flag === '공식' ? 'none' : '1px solid rgba(11,31,58,0.06)',
+          boxShadow: '0 2px 6px rgba(0,0,0,0.14)',
+        }}>
+          {s.flag === '공식'
+            ? NavIcon.shield(11, '#fff', 2.2)
+            : NavIcon.person(11, '#4A5568', 2.2)}
+          {s.flag}
+        </div>
+        {/* NEW / 인기 뱃지 — 플래그 아래 */}
+        {(isNew || isHot) && (
+          <div style={{ position: 'absolute', top: 40, left: 10, display: 'flex', gap: 4 }}>
+            {isNew && (
+              <span style={{
+                padding: '2px 7px', borderRadius: 4, background: '#FF3B6A',
+                color: '#fff', fontSize: 9, fontWeight: 800, letterSpacing: '0.06em',
+                boxShadow: '0 2px 6px rgba(255,59,106,0.4)',
+              }}>NEW</span>
+            )}
+            {isHot && (
+              <span style={{
+                display: 'inline-flex', alignItems: 'center', gap: 2,
+                padding: '2px 7px', borderRadius: 4, background: 'rgba(0,0,0,0.6)',
+                color: '#FFC53D', fontSize: 9, fontWeight: 800, letterSpacing: '0.04em',
+              }}>🔥 인기</span>
+            )}
+          </div>
+        )}
+        {/* duration */}
+        <div style={{
+          position: 'absolute', top: 10, right: 10,
+          padding: '4px 8px', borderRadius: 5,
+          background: 'rgba(0,0,0,0.6)',
+          color: '#fff', fontSize: 11.5, fontWeight: 700,
+          fontVariantNumeric: 'tabular-nums',
+        }}>{s.duration}</div>
+        {/* 제목 + 조회수 */}
+        <div style={{
+          position: 'absolute', left: 12, right: 12, bottom: 12,
+          color: '#fff', textShadow: '0 1px 3px rgba(0,0,0,0.5)',
+        }}>
+          <div style={{
+            fontSize: 14, fontWeight: 700, lineHeight: 1.3,
+            display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
+            overflow: 'hidden', textWrap: 'pretty',
+          }}>{s.title}</div>
+          <div style={{
+            marginTop: 6, display: 'flex', alignItems: 'center', gap: 8,
+            fontSize: 11.5, fontWeight: 600, color: 'rgba(255,255,255,0.88)',
+            fontVariantNumeric: 'tabular-nums',
+          }}>
+            <span>▶ {s.views}</span>
+            <span style={{ opacity: 0.45 }}>·</span>
+            <span>♥ {s.likes}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // 전체화면 숏폼 플레이어 모달
 function ShortsPlayer({ shorts, startIdx, onClose, showSidePanels = false, fixedToScrollContainer = false, onProductClick }) {
   const [idx, setIdx] = React.useState(startIdx);
   const [playing, setPlaying] = React.useState(true);
   const [liked, setLiked] = React.useState(false);
+  const [saved, setSaved] = React.useState(false);
+  const [muted, setMuted] = React.useState(() => {
+    try { return localStorage.getItem('clipMuted') === '1'; } catch (_) { return false; }
+  });
+  const [speed, setSpeed] = React.useState(() => {
+    try { return parseFloat(localStorage.getItem('clipSpeed')) || 1; } catch (_) { return 1; }
+  });
+  const [captions, setCaptions] = React.useState(false);
+  const [commentsOpen, setCommentsOpen] = React.useState(false);
+  const [moreOpen, setMoreOpen] = React.useState(false);
+  const [authorOpen, setAuthorOpen] = React.useState(false);
+  const commentsOpenRef = React.useRef(false);
+  commentsOpenRef.current = commentsOpen;
+  const moreOpenRef = React.useRef(false);
+  moreOpenRef.current = moreOpen;
+  const authorOpenRef = React.useRef(false);
+  authorOpenRef.current = authorOpen;
+  const overlayOpen = commentsOpen || moreOpen || authorOpen;
+  const [toast, setToast] = React.useState(null);
+  const activeVideoRef = React.useRef(null);
   const total = shorts.length;
   const cur = shorts[idx];
+
+  const flash = (msg) => { setToast(msg); setTimeout(() => setToast(t => (t === msg ? null : t)), 1400); };
+
+  // 활성 영상에 음소거/배속 반영 + 마지막 재생 위치 저장
+  React.useEffect(() => {
+    const v = activeVideoRef.current;
+    if (!v) return;
+    try { v.muted = muted; v.playbackRate = speed; } catch (_) {}
+  }, [muted, speed, idx]);
+
+  React.useEffect(() => {
+    try { localStorage.setItem('clipMuted', muted ? '1' : '0'); } catch (_) {}
+  }, [muted]);
+  React.useEffect(() => {
+    try { localStorage.setItem('clipSpeed', String(speed)); } catch (_) {}
+  }, [speed]);
+  // 이어보기 — 마지막으로 본 클립 id 저장
+  React.useEffect(() => {
+    try { if (cur) localStorage.setItem('clipResumeId', String(cur.id)); } catch (_) {}
+  }, [idx]);
+
+  const cycleSpeed = () => setSpeed(s => (s >= 2 ? 0.5 : s === 1 ? 1.5 : s === 1.5 ? 2 : 1));
 
   const go = (dir) => setIdx(i => (i + dir + total) % total);
 
   // ESC 키로 닫기, 상하 방향키로 이동
   React.useEffect(() => {
     const onKey = (e) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') { if (commentsOpenRef.current) setCommentsOpen(false); else if (moreOpenRef.current) setMoreOpen(false); else if (authorOpenRef.current) setAuthorOpen(false); else onClose(); }
+      else if (commentsOpenRef.current || moreOpenRef.current || authorOpenRef.current) return;
       else if (e.key === 'ArrowDown' || e.key === 'ArrowRight') go(1);
       else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') go(-1);
       else if (e.key === ' ') { e.preventDefault(); setPlaying(p => !p); }
@@ -894,7 +1478,7 @@ function ShortsPlayer({ shorts, startIdx, onClose, showSidePanels = false, fixed
   const [progress, setProgress] = React.useState(0);
   React.useEffect(() => {
     setProgress(0);
-    if (!playing) return;
+    if (!playing || overlayOpen) return;
     const t0 = Date.now();
     const totalMs = parseFloat(cur.duration.replace(':', '.')) * 60 * 1000; // 대략
     const id = setInterval(() => {
@@ -903,12 +1487,11 @@ function ShortsPlayer({ shorts, startIdx, onClose, showSidePanels = false, fixed
       if (p >= 1) { clearInterval(id); go(1); }
     }, 80);
     return () => clearInterval(id);
-  }, [idx, playing]);
-
-  // 터치 스와이프 (세로)
+  }, [idx, playing, commentsOpen, moreOpen, authorOpen]);
   const touchY = React.useRef(null);
-  const onTouchStart = (e) => { touchY.current = e.touches[0].clientY; };
+  const onTouchStart = (e) => { if (overlayOpen) return; touchY.current = e.touches[0].clientY; };
   const onTouchEnd = (e) => {
+    if (overlayOpen) { touchY.current = null; return; }
     if (touchY.current == null) return;
     const dy = e.changedTouches[0].clientY - touchY.current;
     if (dy < -40) go(1);
@@ -920,6 +1503,7 @@ function ShortsPlayer({ shorts, startIdx, onClose, showSidePanels = false, fixed
   const wheelLock = React.useRef(false);
   const wheelAccum = React.useRef(0);
   const onWheel = (e) => {
+    if (commentsOpenRef.current || moreOpenRef.current || authorOpenRef.current) return;
     e.preventDefault();
     if (wheelLock.current) return;
 
@@ -1102,6 +1686,8 @@ function ShortsPlayer({ shorts, startIdx, onClose, showSidePanels = false, fixed
                         autoPlay
                         loop
                         muted
+                        ref={(el) => { if (el) { el.muted = true; el.defaultMuted = true; } }}
+                        onLoadedMetadata={(e) => { e.currentTarget.muted = true; }}
                         playsInline
                         aria-hidden="true"
                         tabIndex={-1}
@@ -1117,10 +1703,12 @@ function ShortsPlayer({ shorts, startIdx, onClose, showSidePanels = false, fixed
                       {/* 메인 영상 — 잘리지 않게 contain */}
                       <video
                         key={`vid-${s.id}-${idx}`}
+                        ref={isActive ? activeVideoRef : null}
                         src={s.videoUrl}
                         poster={s.image}
                         autoPlay
                         loop
+                        muted={muted}
                         playsInline
                         controls
                         controlsList="nodownload"
@@ -1133,6 +1721,22 @@ function ShortsPlayer({ shorts, startIdx, onClose, showSidePanels = false, fixed
                           zIndex: 1,
                         }}
                       />
+                      {/* 자막 (CC) — 켜면 하단 캡션 표시 */}
+                      {isActive && captions && (
+                        <div style={{
+                          position: 'absolute', left: 0, right: 0, bottom: 96, zIndex: 2,
+                          display: 'flex', justifyContent: 'center', padding: '0 20px',
+                          pointerEvents: 'none',
+                        }}>
+                          <span style={{
+                            maxWidth: '90%', textAlign: 'center',
+                            padding: '5px 12px', borderRadius: 6,
+                            background: 'rgba(0,0,0,0.72)', color: '#fff',
+                            fontSize: 14, fontWeight: 700, lineHeight: 1.4,
+                            textWrap: 'pretty',
+                          }}>{s.title}</span>
+                        </div>
+                      )}
                     </>
                   )}
                   {/* 영상 슬라이드 위 떠다니는 제품 광고 — stage 내부 좌측 상단 */}
@@ -1167,6 +1771,21 @@ function ShortsPlayer({ shorts, startIdx, onClose, showSidePanels = false, fixed
                     position: 'absolute', inset: 0,
                     background: 'linear-gradient(180deg, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.15) 35%, rgba(0,0,0,0.55) 100%)',
                   }} />
+                  {/* 자막 (CC) — 이미지 클립에서도 노출 */}
+                  {isActive && captions && (
+                    <div style={{
+                      position: 'absolute', left: 0, right: 0, bottom: 96, zIndex: 2,
+                      display: 'flex', justifyContent: 'center', padding: '0 20px',
+                      pointerEvents: 'none',
+                    }}>
+                      <span style={{
+                        maxWidth: '90%', textAlign: 'center',
+                        padding: '5px 12px', borderRadius: 6,
+                        background: 'rgba(0,0,0,0.72)', color: '#fff',
+                        fontSize: 14, fontWeight: 700, lineHeight: 1.4, textWrap: 'pretty',
+                      }}>{s.title}</span>
+                    </div>
+                  )}
                   {/* 제목 — 큰 워터마크가 아닌 적당한 사이즈로 중앙 노출 */}
                   <div style={{
                     position: 'absolute', inset: 0,
@@ -1217,51 +1836,41 @@ function ShortsPlayer({ shorts, startIdx, onClose, showSidePanels = false, fixed
         background: 'linear-gradient(180deg, rgba(0,0,0,0.55), rgba(0,0,0,0))',
         zIndex: 3,
       }} onClick={(e) => e.stopPropagation()}>
-        {/* 프로그레스 세그먼트 */}
-        <div style={{ display: 'flex', gap: 3 }}>
-          {shorts.map((_, i) => (
-            <div key={i} style={{
-              flex: 1, height: 2.5, borderRadius: 2,
-              background: 'rgba(255,255,255,0.28)', overflow: 'hidden',
-            }}>
-              <div style={{
-                width: `${i < idx ? 100 : i === idx ? progress * 100 : 0}%`,
-                height: '100%', background: '#fff',
-                transition: i === idx ? 'width 0.08s linear' : 'none',
-              }} />
-            </div>
-          ))}
-        </div>
-
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          marginTop: 12,
         }}>
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 8,
-            color: '#fff', fontSize: 11, fontWeight: 700, letterSpacing: '0.14em',
-          }}>
-            <span className="chairman-badge" style={{
-              display: 'inline-flex', alignItems: 'center', gap: 4,
-              padding: '3px 8px', borderRadius: 4,
-              background: 'linear-gradient(135deg, #00B6F0, #5CD3F7)',
-              color: '#0B1F3A', fontSize: 9, fontWeight: 800, letterSpacing: '0.12em',
+          <div />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <button onClick={(e) => { e.stopPropagation(); setCaptions(c => !c); flash(captions ? '자막 끔' : '자막 켬'); }}
+              aria-label="자막" style={clipCtrlStyle(captions)}>
+              <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.02em' }}>CC</span>
+            </button>
+            {(cur.videoUrl || cur.youtubeId) && (<>
+            <button onClick={(e) => { e.stopPropagation(); cycleSpeed(); flash(`배속 ${speed >= 2 ? 0.5 : speed === 1 ? 1.5 : speed === 1.5 ? 2 : 1}x`); }}
+              aria-label="배속" style={clipCtrlStyle(speed !== 1)}>
+              <span style={{ fontSize: 11, fontWeight: 800, fontVariantNumeric: 'tabular-nums' }}>{speed}x</span>
+            </button>
+            <button onClick={(e) => { e.stopPropagation(); setMuted(m => !m); }}
+              aria-label={muted ? '음소거 해제' : '음소거'} style={clipCtrlStyle(false)}>
+              {muted ? (
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
+              ) : (
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 010 7.07M19.07 4.93a10 10 0 010 14.14"/></svg>
+              )}
+            </button>
+            </>)}
+            <button onClick={onClose} aria-label="닫기" style={{
+              width: 32, height: 32, borderRadius: 999, border: 'none',
+              background: 'rgba(255,255,255,0.15)', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              backdropFilter: 'blur(8px)',
             }}>
-              {ProfileIcon.crown(9, '#0B1F3A')} CHAIRMAN
-            </span>
-            <span>{PROFILE.name.toUpperCase()}</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff"
+                   strokeWidth="2.4" strokeLinecap="round">
+                <path d="M6 6l12 12M18 6L6 18" />
+              </svg>
+            </button>
           </div>
-          <button onClick={onClose} aria-label="닫기" style={{
-            width: 32, height: 32, borderRadius: 999, border: 'none',
-            background: 'rgba(255,255,255,0.15)', cursor: 'pointer',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            backdropFilter: 'blur(8px)',
-          }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff"
-                 strokeWidth="2.4" strokeLinecap="round">
-              <path d="M6 6l12 12M18 6L6 18" />
-            </svg>
-          </button>
         </div>
       </div>
 
@@ -1322,9 +1931,16 @@ function ShortsPlayer({ shorts, startIdx, onClose, showSidePanels = false, fixed
           filled={liked}
           type="heart"
         />
-        <ActionButton color="#fff" label={Math.round(parseInt(cur.views) * 0.08) + ''} type="comment" />
-        <ActionButton color="#fff" label="공유" type="share" />
-        <ActionButton color="#fff" label="" type="more" />
+        <ActionButton onClick={() => setCommentsOpen(true)} color="#fff" label={Math.round(parseInt(cur.views) * 0.08) + ''} type="comment" />
+        <ActionButton
+          onClick={() => { setSaved(s => !s); flash(saved ? '저장 취소' : '저장됨'); }}
+          color={saved ? '#FFC53D' : '#fff'}
+          label={saved ? '저장됨' : '저장'}
+          filled={saved}
+          type="save"
+        />
+        <ActionButton onClick={() => flash('링크가 복사되었어요')} color="#fff" label="공유" type="share" />
+        <ActionButton onClick={() => setMoreOpen(true)} color="#fff" label="" type="more" />
       </div>
 
       {/* 하단 캡션 + 메타 */}
@@ -1348,6 +1964,20 @@ function ShortsPlayer({ shorts, startIdx, onClose, showSidePanels = false, fixed
           marginTop: 6, fontSize: 11, color: 'rgba(255,255,255,0.7)',
           fontVariantNumeric: 'tabular-nums',
         }}>조회 {cur.views} · ♥ {cur.likes} · {cur.duration}</div>
+        {cur.product && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onClose && onClose(); onProductClick && onProductClick({ id: '000017', name: cur.product }); }}
+            style={{
+              marginTop: 12, display: 'inline-flex', alignItems: 'center', gap: 8,
+              padding: '9px 14px', borderRadius: 999, border: 'none', cursor: 'pointer',
+              background: '#fff', color: '#0B1F3A', fontSize: 12.5, fontWeight: 800,
+              fontFamily: 'inherit', boxShadow: '0 6px 18px rgba(0,0,0,0.28)',
+            }}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0B1F3A" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg>
+            {cur.product} · 이 상품 보기
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#0B1F3A" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        )}
       </div>
 
       {/* 상하 이동 버튼 (데스크톱용 힌트) */}
@@ -1383,6 +2013,51 @@ function ShortsPlayer({ shorts, startIdx, onClose, showSidePanels = false, fixed
         {String(idx + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}
       </div>
 
+      {/* 더보기 액션시트 */}
+      {moreOpen && (
+        <ClipMoreSheet
+          clip={cur}
+          onClose={() => setMoreOpen(false)}
+          onToast={flash}
+          onProduct={() => { setMoreOpen(false); onClose && onClose(); onProductClick && onProductClick({ id: '000017', name: cur.product }); }}
+          onAuthor={() => { setMoreOpen(false); setAuthorOpen(true); }}
+        />
+      )}
+
+      {/* 작성자 클립 더 보기 시트 */}
+      {authorOpen && (
+        <AuthorClipsSheet
+          currentId={cur.id}
+          onClose={() => setAuthorOpen(false)}
+          onSelect={(clipId) => {
+            const j = shorts.findIndex(x => String(x.id) === String(clipId));
+            if (j >= 0) setIdx(j);
+            setAuthorOpen(false);
+          }}
+        />
+      )}
+
+      {/* 댓글 시트 */}
+      {commentsOpen && (
+        <ClipComments
+          clip={cur}
+          count={Math.round(parseInt(cur.views) * 0.08)}
+          onClose={() => setCommentsOpen(false)}
+          onToast={flash}
+        />
+      )}
+
+      {/* 액션 토스트 (저장/공유/자막) */}
+      {toast && (
+        <div style={{
+          position: 'absolute', left: '50%', bottom: 150, transform: 'translateX(-50%)',
+          zIndex: 6, padding: '9px 16px', borderRadius: 999,
+          background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(10px)',
+          color: '#fff', fontSize: 12.5, fontWeight: 700, whiteSpace: 'nowrap',
+          animation: 'shortsFadeIn 0.2s ease', pointerEvents: 'none',
+        }}>{toast}</div>
+      )}
+
       <style>{`
         @keyframes shortsFadeIn {
           from { opacity: 0; }
@@ -1391,6 +2066,16 @@ function ShortsPlayer({ shorts, startIdx, onClose, showSidePanels = false, fixed
       `}</style>
     </div>
   );
+}
+
+function clipCtrlStyle(active) {
+  return {
+    minWidth: 32, height: 32, padding: '0 9px', borderRadius: 999, border: 'none',
+    background: active ? '#00B6F0' : 'rgba(255,255,255,0.15)',
+    color: '#fff', cursor: 'pointer', backdropFilter: 'blur(8px)',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    fontFamily: 'inherit',
+  };
 }
 
 function navArrowStyle(pos, withSidePanel = false) {
@@ -1789,6 +2474,14 @@ function ActionButton({ type, color = '#fff', label = '', filled = false, onClic
             <line x1="12" y1="2" x2="12" y2="15" />
           </svg>
         );
+      case 'save':
+        return (
+          <svg width="26" height="26" viewBox="0 0 24 24"
+               fill={filled ? color : 'none'} stroke={color}
+               strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" />
+          </svg>
+        );
       case 'more':
         return (
           <svg width="26" height="26" viewBox="0 0 24 24" fill={color}>
@@ -1886,6 +2579,7 @@ function VariationClassic({ shopVariant = 'default', onPageChange } = {}) {
   const [playerIdx, setPlayerIdx] = React.useState(null);
   const [viewerIdx, setViewerIdx] = React.useState(null);
   const [clipTab, setClipTab] = React.useState('all');
+  const [clipSearch, setClipSearch] = React.useState('');
   const [notifOpen, setNotifOpen] = React.useState(false);
   const [flagFilter, setFlagFilter] = React.useState('all'); // 'all' | 'official' | 'personal'
 
@@ -1951,7 +2645,18 @@ function VariationClassic({ shopVariant = 'default', onPageChange } = {}) {
     { key: 'business', label: '비즈니스' },
     { key: 'life',     label: '라이프' },
   ];
-  const filteredShorts = filterShorts(SHORTS, clipTab, flagFilter);
+  const filteredShorts = React.useMemo(() => {
+    let r = filterShorts(SHORTS, clipTab, flagFilter);
+    const q = clipSearch.trim().toLowerCase();
+    if (q) r = r.filter(s => (s.title || '').toLowerCase().includes(q) || (s.product || '').toLowerCase().includes(q));
+    return r;
+  }, [clipTab, flagFilter, clipSearch]);
+  // 이어보기 — 마지막으로 본 클립
+  const resumeIdx = React.useMemo(() => {
+    let id; try { id = localStorage.getItem('clipResumeId'); } catch (_) {}
+    if (!id) return -1;
+    return filteredShorts.findIndex(s => String(s.id) === String(id));
+  }, [filteredShorts]);
 
   return (
     <div style={{
@@ -2249,7 +2954,64 @@ function VariationClassic({ shopVariant = 'default', onPageChange } = {}) {
         </div>
       </div>
 
-      {/* Shorts — 3열 세로 그리드, 테두리 없이 꽉 채움 */}
+      {/* 검색 + 이어보기 */}
+      <div style={{ padding: '4px 14px 0' }}>
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 8,
+          padding: '9px 12px', borderRadius: 999,
+          background: '#fff', border: '1px solid rgba(11,31,58,0.1)',
+        }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8A97AD" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="11" cy="11" r="7" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+          <input
+            value={clipSearch}
+            onChange={(e) => setClipSearch(e.target.value)}
+            placeholder="클립 · 상품 검색"
+            style={{
+              flex: 1, border: 'none', outline: 'none', background: 'transparent',
+              fontFamily: 'inherit', fontSize: 13.5, fontWeight: 600, color: '#0B1F3A',
+            }}
+          />
+          {clipSearch && (
+            <button onClick={() => setClipSearch('')} aria-label="지우기" style={{
+              background: 'none', border: 'none', cursor: 'pointer', padding: 2, lineHeight: 0, color: '#8A97AD',
+            }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+            </button>
+          )}
+        </div>
+
+        {/* 이어보기 배너 */}
+        {!clipSearch && resumeIdx >= 0 && (
+          <button
+            onClick={() => setPlayerIdx(resumeIdx)}
+            style={{
+              marginTop: 10, width: '100%', display: 'flex', alignItems: 'center', gap: 10,
+              padding: 8, borderRadius: 12, cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit',
+              background: 'linear-gradient(135deg, rgba(0,182,240,0.1), rgba(0,182,240,0.03))',
+              border: '1px solid rgba(0,182,240,0.25)',
+            }}
+          >
+            <div style={{
+              flex: '0 0 auto', width: 40, height: 40, borderRadius: 8, overflow: 'hidden',
+              background: '#E8EDF3', position: 'relative',
+            }}>
+              <img src={filteredShorts[resumeIdx].image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.25)' }}>
+                {ProfileIcon.play(14, '#fff')}
+              </div>
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 11, fontWeight: 800, color: '#0088B8', letterSpacing: '0.04em', marginBottom: 2 }}>이어보기</div>
+              <div style={{ fontSize: 12.5, fontWeight: 700, color: '#0B1F3A', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{filteredShorts[resumeIdx].title}</div>
+            </div>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00B6F0" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><polyline points="9 18 15 12 9 6" /></svg>
+          </button>
+        )}
+      </div>
+
+      {/* Shorts — 세로 카드 그리드 */}
       <div style={{ padding: 0, position: 'relative' }}>
         {filteredShorts.length === 0 ? (
           <div style={{
@@ -2261,122 +3023,12 @@ function VariationClassic({ shopVariant = 'default', onPageChange } = {}) {
         ) : (
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(3, 1fr)',
-          gap: 0,
+          gridTemplateColumns: 'repeat(2, 1fr)',
+          gap: 12,
+          padding: '4px 14px 20px',
         }}>
           {filteredShorts.map((s, i) => (
-            <div
-              key={s.id}
-              onClick={() => setPlayerIdx(i)}
-              className="shorts-cell"
-              style={{
-                cursor: 'pointer',
-                animation: `cardFadeUp 0.55s cubic-bezier(.2,.7,.3,1) ${Math.min(i, 18) * 60}ms both`,
-              }}
-            >
-              <div style={{
-                position: 'relative', width: '100%', aspectRatio: '1/1',
-                borderRadius: 0, overflow: 'hidden',
-                background: `linear-gradient(145deg, hsl(${s.hue} 38% 28%), hsl(${s.hue} 30% 14%))`,
-                border: 'none',
-                boxShadow: 'none',
-              }}>
-                {/* 제품 이미지 — 호버 시 확대 */}
-                {s.image && (
-                  <img
-                    src={s.image}
-                    alt={s.product || s.title}
-                    className="shorts-img"
-                    style={{
-                      position: 'absolute', inset: 0,
-                      width: '100%', height: '100%',
-                      objectFit: 'cover', objectPosition: 'center',
-                      display: 'block',
-                      transition: 'transform 0.4s cubic-bezier(.2,.7,.3,1)',
-                      willChange: 'transform',
-                    }}
-                  />
-                )}
-                {/* 컬러 톤 오버레이 — 브랜드 톤 유지 */}
-                <div style={{
-                  position: 'absolute', inset: 0,
-                  background: `linear-gradient(160deg, hsla(${s.hue}, 30%, 20%, 0.12) 0%, hsla(${s.hue}, 30%, 10%, 0.18) 100%)`,
-                  mixBlendMode: 'multiply',
-                }} />
-                {/* 대각 하이라이트 */}
-                <div style={{
-                  position: 'absolute', inset: 0,
-                  background: 'linear-gradient(160deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0) 45%)',
-                }} />
-                {/* 하단 그라디언트 — 텍스트 가독성 */}
-                <div style={{
-                  position: 'absolute', left: 0, right: 0, bottom: 0, height: '58%',
-                  background: 'linear-gradient(0deg, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.35) 50%, rgba(0,0,0,0) 100%)',
-                }} />
-                {/* 재생 아이콘 — 카드 중앙 정렬, 크게 */}
-                <div style={{
-                  position: 'absolute', inset: 0,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  pointerEvents: 'none',
-                }}>
-                  <div style={{
-                    width: 44, height: 44, borderRadius: 999,
-                    background: 'rgba(0,0,0,0.48)',
-                    backdropFilter: 'blur(8px)',
-                    border: '1.5px solid rgba(255,255,255,0.35)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    boxShadow: '0 4px 14px rgba(0,0,0,0.35)',
-                  }}>
-                    <div style={{ marginLeft: 3 }}>{ProfileIcon.play(22, '#fff')}</div>
-                  </div>
-                </div>
-                {/* 플래그 — 좌상단 (개인 / 공식), 아이콘 포함 */}
-                <div style={{
-                  position: 'absolute', top: 6, left: 6,
-                  display: 'inline-flex', alignItems: 'center', gap: 3,
-                  padding: '2px 6px 2px 5px', borderRadius: 3,
-                  background: s.flag === '공식' ? '#00B6F0' : 'rgba(245,247,250,0.95)',
-                  color: s.flag === '공식' ? '#fff' : '#4A5568',
-                  fontSize: 9, fontWeight: 700, letterSpacing: '0.02em',
-                  border: s.flag === '공식' ? 'none' : '1px solid rgba(11,31,58,0.06)',
-                  boxShadow: '0 1px 3px rgba(0,0,0,0.12)',
-                }}>
-                  {s.flag === '공식'
-                    ? NavIcon.shield(9, '#fff', 2.4)
-                    : NavIcon.person(9, '#4A5568', 2.4)}
-                  {s.flag}
-                </div>
-                {/* duration */}
-                <div style={{
-                  position: 'absolute', top: 6, right: 6,
-                  padding: '2px 5px', borderRadius: 4,
-                  background: 'rgba(0,0,0,0.6)',
-                  color: '#fff', fontSize: 9, fontWeight: 700, letterSpacing: '0.02em',
-                  fontVariantNumeric: 'tabular-nums',
-                }}>{s.duration}</div>
-                {/* 제목 + 조회수 (카드 내부 하단 오버레이) */}
-                <div style={{
-                  position: 'absolute', left: 8, right: 8, bottom: 6,
-                  color: '#fff',
-                  textShadow: '0 1px 3px rgba(0,0,0,0.5)',
-                }}>
-                  <div style={{
-                    fontSize: 10.5, fontWeight: 700, lineHeight: 1.25,
-                    display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
-                    overflow: 'hidden', textWrap: 'pretty',
-                  }}>{s.title}</div>
-                  <div style={{
-                    marginTop: 3, display: 'flex', alignItems: 'center', gap: 4,
-                    fontSize: 9.5, fontWeight: 600, color: 'rgba(255,255,255,0.85)',
-                    fontVariantNumeric: 'tabular-nums',
-                  }}>
-                    <span>▶ {s.views}</span>
-                    <span style={{ opacity: 0.45 }}>·</span>
-                    <span>♥ {s.likes}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <MobileShortCard key={s.id} s={s} i={i} onOpen={() => setPlayerIdx(i)} />
           ))}
         </div>
         )}
