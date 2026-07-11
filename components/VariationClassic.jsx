@@ -1850,7 +1850,7 @@ function ShortsPlayer({ shorts, startIdx, onClose, showSidePanels = false, fixed
         position: 'absolute', top: 0, left: 0, right: 0,
         padding: '14px 14px 0',
         background: 'linear-gradient(180deg, rgba(0,0,0,0.55), rgba(0,0,0,0))',
-        zIndex: 3,
+        zIndex: 6,
       }} onClick={(e) => e.stopPropagation()}>
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -2000,7 +2000,7 @@ function ShortsPlayer({ shorts, startIdx, onClose, showSidePanels = false, fixed
       <button
         onClick={(e) => { e.stopPropagation(); go(-1); }}
         aria-label="이전"
-        style={navArrowStyle({ top: 12 }, showSidePanels)}
+        style={navArrowStyle({ top: 64 }, showSidePanels)}
       >
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff"
              strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
@@ -2789,6 +2789,14 @@ function VariationClassic({ shopVariant = 'default', onPageChange } = {}) {
   const goPage = (key) => {
     setCurrentPage(key);
     setShopProduct(null);
+    // 페이지 이동 시 재생 중인 미디어 정리 — 소리 잔류 방지
+    setPlayerIdx(null);
+    setProductVideo(null);
+    try {
+      const sc = contentRef.current ? contentRef.current.closest('.phone-scroll') : null;
+      const hostEl = sc ? sc.parentElement : null;
+      if (hostEl) [...hostEl.querySelectorAll('video, audio')].forEach(v => { if (!v.muted && !v.paused) { try { v.pause(); } catch (_) {} } });
+    } catch (_) {}
     scrollContentTop();
   };
   const clipTabs = [

@@ -112,7 +112,7 @@ function LifeWheel({ goals, isMobile = false, onSelect, highlightKey = null, wid
     });
     return () => cancelAnimationFrame(t1);
   }, []);
-  const size = wide ? 560 : (isMobile ? 280 : 420);
+  const size = wide ? 560 : (isMobile ? 380 : 420);
   const cx = size / 2, cy = size / 2;
   const maxR = (size / 2) * 0.78;
 
@@ -615,11 +615,7 @@ function AtomyLife({ isMobile = false, onPlay = () => {} }) {
       const el = cardRefs.current[goal.key];
       window.fireConfetti(el || null);
     }
-    // 해당 카드로 부드럽게 스크롤
-    const el = cardRefs.current[goal.key];
-    if (el && el.scrollIntoView) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
+    // (스크롤 이동 없음 — 선택 하이라이트만)
     // 3초 후 자동 해제
     if (handleSelect._t) clearTimeout(handleSelect._t);
     handleSelect._t = setTimeout(() => setSelectedKey(null), 3500);
@@ -918,6 +914,7 @@ function AtomyLife({ isMobile = false, onPlay = () => {} }) {
 
           <button
             className="cta-pulse"
+            onClick={() => window.open('https://atomy.page/EPrb8oCZ', '_blank')}
             style={{
             position: 'relative', flexShrink: 0,
             padding: isMobile ? '13px 22px' : '15px 28px', borderRadius: 999,

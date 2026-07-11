@@ -759,6 +759,12 @@ function VariationDesktop() {
   const goPage = (key) => {
     setCurrentPage(key);
     setShopProduct(null);
+    // 페이지 이동 시 재생 중인 미디어 정리 — 소리 잔류 방지
+    setPlayerIdx(null);
+    if (typeof setProductVideo === 'function') setProductVideo(null);
+    try {
+      document.querySelectorAll('video, audio').forEach(v => { if (!v.muted && !v.paused) { try { v.pause(); } catch (_) {} } });
+    } catch (_) {}
     scrollContainerTop();
   };
 

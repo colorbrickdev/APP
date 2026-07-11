@@ -1054,6 +1054,35 @@ ReactDOM.createRoot(document.getElementById('root')).render(<App />);
     { id: 4, eyebrow: '새 콘텐츠',        title: '박한길 회장 인터뷰 영상 업로드', body: '"몽상의 균형 잡힌 삶" 강연 풀버전이 공개됐어요.', accent: '#8A97AD', icon: 'megaphone' },
     { id: 5, eyebrow: '리뷰 적립',        title: '리뷰 작성 시 1,000원 적립',     body: '최근 구매하신 제품 4건의 리뷰가 비어있어요.', accent: '#8A97AD', icon: 'heart' },
   ];
+  // 사회적 토스트 다국어 (en/ja/zh — ko는 원본)
+  const _proofTr = {
+    en: {
+      1: { eyebrow: '10th purchase', title: '10 purchases reached! 🎉', body: 'What if you joined as an Atomy business member?' },
+      2: { eyebrow: 'Shipped', title: 'Your HemoHIM has shipped', body: 'Arrives tomorrow afternoon · Tracking 12345-67890' },
+      3: { eyebrow: 'New member offer', title: 'New members — 5% back on first order', body: 'Join today for +5% on HemoHIM · Absolute lines' },
+      4: { eyebrow: 'New content', title: 'Chairman Park Han-gill interview is up', body: 'Full talk "A balanced life of Mongsang" is now live.' },
+      5: { eyebrow: 'Review reward', title: 'Write a review, earn ₩1,000', body: '4 of your recent purchases have no review yet.' },
+    },
+    ja: {
+      1: { eyebrow: '購入10回達成', title: '購入10回達成！🎉', body: 'アトミ事業者に登録したらどうなる？' },
+      2: { eyebrow: '発送済み', title: 'ご注文のヘモヒムを発送しました', body: '明日午後お届け予定 · 送り状 12345-67890' },
+      3: { eyebrow: '新規会員特典', title: '新規会員限定 — 初回購入5%積立', body: '本日登録でヘモヒム・アブソルート5%追加積立' },
+      4: { eyebrow: '新着コンテンツ', title: '朴瀚吉会長インタビュー動画公開', body: '「夢想のバランスの取れた人生」講演フル版公開。' },
+      5: { eyebrow: 'レビュー積立', title: 'レビュー作成で1,000W積立', body: '最近の購入4件のレビューが未作成です。' },
+    },
+    zh: {
+      1: { eyebrow: '达成10次购买', title: '已购买10次！🎉', body: '如果注册成为艾多美事业会员会怎样？' },
+      2: { eyebrow: '已发货', title: '您订购的HemoHIM已发货', body: '预计明天下午送达 · 运单 12345-67890' },
+      3: { eyebrow: '新会员优惠', title: '新会员专享 — 首单返5%', body: '今日注册，HemoHIM·Absolute系列加返5%' },
+      4: { eyebrow: '新内容', title: '朴汉吉会长访谈视频上线', body: '"梦想的平衡人生"演讲完整版已公开。' },
+      5: { eyebrow: '评价奖励', title: '写评价得1,000韩元', body: '您最近购买的4件商品尚未评价。' },
+    },
+  };
+  function _proofLoc(p) {
+    const l = (window.i18nStore && window.i18nStore.lang) || 'ko';
+    const tr = _proofTr[l];
+    return (tr && tr[p.id]) ? { ...p, ...tr[p.id] } : p;
+  }
   const PROOF_ICONS = {
     trophy:    '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4h8v4a4 4 0 11-8 0V4z"/><path d="M8 6H5a3 3 0 003 3M16 6h3a3 3 0 01-3 3"/><path d="M10 14h4l1 6H9l1-6z"/></svg>',
     package:   '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9-4 9 4-9 4-9-4z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/></svg>',
@@ -1105,7 +1134,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(<App />);
     if (!document.body.classList.contains('atomy-shop-active')) return;
     const hosts = ensureProofHostsForDevices();
     if (!hosts.length) return;
-    hosts.forEach(h => mountProofInto(h, p));
+    hosts.forEach(h => mountProofInto(h, _proofLoc(p)));
   }
   function mountProofInto(h, p) {
     const el = document.createElement('div');
