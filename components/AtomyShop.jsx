@@ -1442,85 +1442,216 @@ function CategorySwitcher({ currentKey, currentLabel, isMobile, onSelect }) {
 // =============================================================
 // S26 전용 — AI 쇼핑 브리핑 + AI 맞춤 진열 (퀴즈 → 재배열)
 // =============================================================
-const AI_QUIZ_WHO = [
-  { key: 'me',     emoji: '🙋', label: { ko: '나를 위해', en: 'For me', ja: '自分のため', zh: '为自己' }, short: { ko: '나', en: 'Me', ja: '自分', zh: '自己' } },
-  { key: 'family', emoji: '👪', label: { ko: '가족을 위해', en: 'For family', ja: '家族のため', zh: '为家人' }, short: { ko: '가족', en: 'Family', ja: '家族', zh: '家人' } },
-  { key: 'gift',   emoji: '🎁', label: { ko: '지인 선물용', en: 'As a gift', ja: '贈り物用', zh: '送礼' }, short: { ko: '선물', en: 'Gift', ja: 'ギフト', zh: '礼物' } },
+const AI_QUIZ_CATEGORY = [
+  { key: 'health', emoji: '💊', label: { ko: '건강 고민이 있어요', en: 'Health concern', ja: '健康の悩み', zh: '健康困扰' }, short: { ko: '건강', en: 'Health', ja: '健康', zh: '健康' } },
+  { key: 'beauty', emoji: '✨', label: { ko: '피부 · 뷰티가 고민이에요', en: 'Skin · Beauty', ja: '肌・ビューティーの悩み', zh: '皮肤 · 美容困扰' }, short: { ko: '피부·뷰티', en: 'Beauty', ja: '美容', zh: '美容' } },
+  { key: 'living', emoji: '🧺', label: { ko: '생활용품을 찾고 있어요', en: 'Household goods', ja: '生活用品を探している', zh: '寻找生活用品' }, short: { ko: '생활용품', en: 'Living', ja: '生活用品', zh: '生活用品' } },
+  { key: 'food', emoji: '🍲', label: { ko: '식품 · 먹거리를 찾고 있어요', en: 'Food · Groceries', ja: '食品・食べ物を探している', zh: '寻找食品' }, short: { ko: '식품', en: 'Food', ja: '食品', zh: '食品' } },
 ];
-const AI_QUIZ_FOCUS = [
-  { key: 'energy',   emoji: '⚡', label: { ko: '피로 · 활력', en: 'Fatigue · Energy', ja: '疲労・活力', zh: '疲劳 · 活力' }, short: { ko: '피로·활력', en: 'Energy', ja: '活力', zh: '活力' } },
-  { key: 'immunity', emoji: '🛡️', label: { ko: '면역 · 장 건강', en: 'Immunity · Gut', ja: '免疫・腸の健康', zh: '免疫 · 肠道' }, short: { ko: '면역·장', en: 'Immunity', ja: '免疫', zh: '免疫' } },
-  { key: 'beauty',   emoji: '✨', label: { ko: '피부 · 뷰티', en: 'Skin · Beauty', ja: '肌・ビューティー', zh: '皮肤 · 美容' }, short: { ko: '피부·뷰티', en: 'Beauty', ja: '美容', zh: '美容' } },
+// 건강 — 고민 부위/증상 (12종)
+const AI_QUIZ_HEALTH = [
+  { key: 'energy',      emoji: '⚡', label: { ko: '피로 · 활력', en: 'Fatigue · Energy', ja: '疲労・活力', zh: '疲劳 · 活力' }, short: { ko: '피로·활력', en: 'Energy', ja: '活力', zh: '活力' }, rx: /헤모힘|홍삼|비타민B|아르기닌|활력/ },
+  { key: 'immune',      emoji: '🛡️', label: { ko: '면역력', en: 'Immunity', ja: '免疫力', zh: '免疫力' }, short: { ko: '면역', en: 'Immunity', ja: '免疫', zh: '免疫' }, rx: /헤모힘|프로폴리스|아연|비타민C|비타민D|홍삼/ },
+  { key: 'gut',         emoji: '🌱', label: { ko: '장 건강 · 소화', en: 'Gut · Digestion', ja: '腸・消化', zh: '肠道 · 消化' }, short: { ko: '장·소화', en: 'Gut', ja: '腸', zh: '肠道' }, rx: /유산균|프로바이오|장|소화|효소/ },
+  { key: 'eye',         emoji: '👁️', label: { ko: '눈 건강', en: 'Eye health', ja: '目の健康', zh: '眼部健康' }, short: { ko: '눈', en: 'Eyes', ja: '目', zh: '眼部' }, rx: /루테인|눈|아스타잔틴|오메가/ },
+  { key: 'joint',       emoji: '🦴', label: { ko: '관절 · 뼈', en: 'Joints · Bones', ja: '関節・骨', zh: '关节 · 骨骼' }, short: { ko: '관절·뼈', en: 'Joints', ja: '関節', zh: '关节' }, rx: /칼슘|MSM|관절|콘드로|마그네슘|비타민D/ },
+  { key: 'blood',       emoji: '🩸', label: { ko: '혈행 · 혈압', en: 'Circulation · BP', ja: '血行・血圧', zh: '血液循环 · 血压' }, short: { ko: '혈행', en: 'Circulation', ja: '血行', zh: '循环' }, rx: /오메가|EPA|DHA|혈행|홍삼|코엔자임/ },
+  { key: 'liver',       emoji: '🌿', label: { ko: '간 건강 · 회식', en: 'Liver · After drinks', ja: '肝臓・飲み会', zh: '肝脏 · 应酬' }, short: { ko: '간', en: 'Liver', ja: '肝臓', zh: '肝脏' }, rx: /밀크씨슬|간|헛겜나무|유산균/ },
+  { key: 'sleep',       emoji: '😴', label: { ko: '수면 · 스트레스', en: 'Sleep · Stress', ja: '睡眠・ストレス', zh: '睡眠 · 压力' }, short: { ko: '수면', en: 'Sleep', ja: '睡眠', zh: '睡眠' }, rx: /테아닌|수면|마그네슘|홍삼/ },
+  { key: 'sugar',       emoji: '🩺', label: { ko: '혈당 관리', en: 'Blood sugar', ja: '血糖管理', zh: '血糖管理' }, short: { ko: '혈당', en: 'Blood sugar', ja: '血糖', zh: '血糖' }, rx: /바나바|혈당|윗씨암/ },
+  { key: 'cholesterol', emoji: '🧭', label: { ko: '콜레스테롤', en: 'Cholesterol', ja: 'コレステロール', zh: '胆固醇' }, short: { ko: '콜레스테롤', en: 'Cholesterol', ja: 'コレステロール', zh: '胆固醇' }, rx: /오메가|폴리코사놀|홍국/ },
+  { key: 'diet',        emoji: '⚖️', label: { ko: '체중 관리', en: 'Weight', ja: '体重管理', zh: '体重管理' }, short: { ko: '체중', en: 'Weight', ja: '体重', zh: '体重' }, rx: /다이어트|슬림|가르시니아|단백|쉐이크/ },
+  { key: 'brain',       emoji: '🧠', label: { ko: '두뇌 · 기억력', en: 'Brain · Memory', ja: '脳・記憶力', zh: '大脑 · 记忆力' }, short: { ko: '두뇌·기억', en: 'Brain', ja: '脳', zh: '大脑' }, rx: /오메가|DHA|포스파티딘|기억|은행잎/ },
+];
+// 피부 — 타입 4종
+const AI_QUIZ_SKINTYPE = [
+  { key: 'dry',       emoji: '🌵', label: { ko: '건성 — 당김·건조감', en: 'Dry — tight, flaky', ja: '乾性 — つっぱり感', zh: '干性 — 紧绷干燥' }, short: { ko: '건성', en: 'Dry', ja: '乾性', zh: '干性' } },
+  { key: 'oily',      emoji: '💧', label: { ko: '지성 — 번들거림·모공', en: 'Oily — shine, pores', ja: '脂性 — テカり・毛穴', zh: '油性 — 泛油毛孔' }, short: { ko: '지성', en: 'Oily', ja: '脂性', zh: '油性' } },
+  { key: 'combo',     emoji: '🌗', label: { ko: '복합성 — T존만 번들', en: 'Combination', ja: '混合肌', zh: '混合性' }, short: { ko: '복합성', en: 'Combo', ja: '混合', zh: '混合' } },
+  { key: 'sensitive', emoji: '🌸', label: { ko: '민감성 — 트러블·자극', en: 'Sensitive', ja: '敏感肌', zh: '敏感性' }, short: { ko: '민감성', en: 'Sensitive', ja: '敏感', zh: '敏感' } },
+];
+// 피부 — 사용 부위
+const AI_QUIZ_SKINAREA = [
+  { key: 'face', emoji: '🙋', label: { ko: '얼굴 — 기초 스킨케어', en: 'Face — skincare', ja: '顔 — 基礎ケア', zh: '面部 — 基础护肤' }, short: { ko: '얼굴', en: 'Face', ja: '顔', zh: '面部' }, rx: /스킵|토너|세럼|크림|앱솔루트|앞크림|젤|로션/ },
+  { key: 'makeup', emoji: '💄', label: { ko: '메이크업', en: 'Makeup', ja: 'メイク', zh: '彩妆' }, short: { ko: '메이크업', en: 'Makeup', ja: 'メイク', zh: '彩妆' }, rx: /쿠션|파운데|립|아이|비비/ },
+  { key: 'body', emoji: '🧴', label: { ko: '바디 · 핸드', en: 'Body · Hands', ja: 'ボディ・ハンド', zh: '身体 · 手部' }, short: { ko: '바디', en: 'Body', ja: 'ボディ', zh: '身体' }, rx: /바디|핸드|로션|바디워시|비누/ },
+  { key: 'hair', emoji: '💇', label: { ko: '헤어 · 두피', en: 'Hair · Scalp', ja: 'ヘア・頭皮', zh: '头发 · 头皮' }, short: { ko: '헤어', en: 'Hair', ja: 'ヘア', zh: '头发' }, rx: /샴푸|트리트먼트|헤어|두피/ },
+];
+// 생활용품 — 용도
+const AI_QUIZ_LIVING = [
+  { key: 'hygiene', emoji: '🧻', label: { ko: '위생용품 — 화장지·물티슘', en: 'Hygiene — tissue, wipes', ja: '衛生用品', zh: '卫生用品' }, short: { ko: '위생용품', en: 'Hygiene', ja: '衛生用品', zh: '卫生用品' }, rx: /화장지|물티슘|키친타오|마스크|생리/ },
+  { key: 'clean', emoji: '🧹', label: { ko: '세탁 · 청소', en: 'Laundry · Cleaning', ja: '洗濯・掃除', zh: '洗涤 · 清洁' }, short: { ko: '세탁·청소', en: 'Cleaning', ja: '掃除', zh: '清洁' }, rx: /세탁|세제|섬유|유연제|청소|클리너/ },
+  { key: 'kitchen', emoji: '🍽️', label: { ko: '주방 · 설거지', en: 'Kitchen · Dishes', ja: 'キッチン', zh: '厨房' }, short: { ko: '주방', en: 'Kitchen', ja: 'キッチン', zh: '厨房' }, rx: /주방|설거지|수세미|주방세제|띱/ },
+  { key: 'oral', emoji: '🪥', label: { ko: '구강케어 — 치약·칫솔', en: 'Oral care', ja: 'オーラルケア', zh: '口腔护理' }, short: { ko: '구강케어', en: 'Oral', ja: 'オーラル', zh: '口腔' }, rx: /치약|칫솔|가글|구강/ },
+];
+// 건강 — 섭취 형태 선호
+const AI_QUIZ_FORM = [
+  { key: 'pill',   emoji: '💊', label: { ko: '알약 · 캡슐', en: 'Pills · Capsules', ja: '錠剤・カプセル', zh: '药片 · 胶囊' }, short: { ko: '알약', en: 'Pills', ja: '錠剤', zh: '药片' }, rx: /캐프슐|캐킔|정|타블릿/ },
+  { key: 'shot',   emoji: '🥤', label: { ko: '액상 · 샷 · 분말', en: 'Liquid · Shot · Powder', ja: '液体・ショット・粉末', zh: '液体 · 冲剂' }, short: { ko: '액상·샷', en: 'Liquid', ja: '液体', zh: '液体' }, rx: /샷|액|스틱|분말|앣/ },
+  { key: 'chew',   emoji: '🍬', label: { ko: '젤리 · 추어미니', en: 'Gummy · Chewable', ja: 'グミ・チュアブル', zh: '软糖 · 咀嚼片' }, short: { ko: '젤리', en: 'Gummy', ja: 'グミ', zh: '软糖' }, rx: /젤리|추어|구미/ },
+  { key: 'anyform', emoji: '🤷', label: { ko: '형태는 상관없어요', en: 'No preference', ja: 'こだわらない', zh: '无所谓' }, short: { ko: '', en: '', ja: '', zh: '' }, rx: null },
+];
+// 뷰티 — 원하는 효과
+const AI_QUIZ_EFFECT = [
+  { key: 'moisture', emoji: '💦', label: { ko: '보습 · 수분 충전', en: 'Hydration', ja: '保湿', zh: '保湿补水' }, short: { ko: '보습', en: 'Hydration', ja: '保湿', zh: '保湿' }, rx: /보습|수분|히알루론|아쿠아/ },
+  { key: 'firm',     emoji: '🏗️', label: { ko: '주름 · 탄력', en: 'Anti-aging · Firming', ja: 'シワ・ハリ', zh: '抗皱 · 紧致' }, short: { ko: '주름·탄력', en: 'Firming', ja: 'ハリ', zh: '紧致' }, rx: /주름|탄력|안티에이징|리프팅|콜라졄/ },
+  { key: 'bright',   emoji: '🌟', label: { ko: '미백 · 톤업', en: 'Brightening', ja: '美白・トーンアップ', zh: '美白 · 提亮' }, short: { ko: '미백·톤업', en: 'Brightening', ja: '美白', zh: '美白' }, rx: /미백|톤업|비타민C|브라이트|화이트/ },
+  { key: 'calm',     emoji: '🌿', label: { ko: '진정 · 트러블 케어', en: 'Calming · Trouble', ja: '鎮静・トラブル', zh: '舒缓 · 祛痘' }, short: { ko: '진정', en: 'Calming', ja: '鎮静', zh: '舒缓' }, rx: /진정|시카|티트리|알로에|수딩/ },
+];
+// 생활용품 — 중요 포인트
+const AI_QUIZ_POINT = [
+  { key: 'safe',  emoji: '🌿', label: { ko: '성분 안전성 우선', en: 'Safe ingredients', ja: '成分の安全性', zh: '成分安全' }, short: { ko: '안전성', en: 'Safety', ja: '安全性', zh: '安全' } },
+  { key: 'value', emoji: '💰', label: { ko: '대용량 가성비', en: 'Value for money', ja: '大容量コスパ', zh: '大容量性价比' }, short: { ko: '가성비', en: 'Value', ja: 'コスパ', zh: '性价比' } },
+  { key: 'scent', emoji: '🌸', label: { ko: '향 · 사용감', en: 'Scent · Feel', ja: '香り・使用感', zh: '香味 · 使用感' }, short: { ko: '향·사용감', en: 'Scent', ja: '香り', zh: '香味' } },
+  { key: 'eco',   emoji: '♻️', label: { ko: '친환경 · 저자극', en: 'Eco · Mild', ja: 'エコ・低刺激', zh: '环保 · 低刺激' }, short: { ko: '친환경', en: 'Eco', ja: 'エコ', zh: '环保' } },
+];
+// 식품 — 종류
+const AI_QUIZ_FOOD = [
+  { key: 'meal',  emoji: '🍚', label: { ko: '간편식 · 한 끼 대용', en: 'Ready meals', ja: '簡単食・食事代用', zh: '方便餐 · 代餐' }, short: { ko: '간편식', en: 'Meals', ja: '簡単食', zh: '方便餐' }, rx: /밥|죽|국|탕|찜|면|누룽지|카레|돈까스|베이컨|볶음|식사/ },
+  { key: 'drink', emoji: '🍵', label: { ko: '음료 · 차 · 커피', en: 'Drinks · Tea · Coffee', ja: '飲み物・お茶・コーヒー', zh: '饮料 · 茶 · 咖啡' }, short: { ko: '음료·차', en: 'Drinks', ja: '飲み物', zh: '饮料' }, rx: /커피|차|음료|주스|홍삼정|앣|리티|아메리카노/ },
+  { key: 'cook',  emoji: '🧂', label: { ko: '요리 재료 · 양념', en: 'Cooking · Seasoning', ja: '料理材料・調味料', zh: '食材 · 调味料' }, short: { ko: '요리재료', en: 'Cooking', ja: '材料', zh: '食材' }, rx: /오일|간장|소금|설탕|양념|잡곡|쌀|김|멸치|다시마/ },
+  { key: 'snack', emoji: '🍪', label: { ko: '간식 · 영양 간식', en: 'Snacks', ja: 'おやつ・栄養おやつ', zh: '零食 · 营养零食' }, short: { ko: '간식', en: 'Snacks', ja: 'おやつ', zh: '零食' }, rx: /과자|젤리|바(?![닥])|견과|아몬드|초콜|옥수수|스낙/ },
+];
+// 식품 — 중요 포인트
+const AI_QUIZ_FOODPICK = [
+  { key: 'healthy', emoji: '🥗', label: { ko: '건강함 — 저당 · 저칼로리', en: 'Healthy — low sugar/cal', ja: 'ヘルシー — 低糖・低カロリー', zh: '健康 — 低糖低卡' }, short: { ko: '건강함', en: 'Healthy', ja: 'ヘルシー', zh: '健康' } },
+  { key: 'easy',    emoji: '⏱️', label: { ko: '간편함 — 바로 먹기 · 데우기만', en: 'Quick — ready to eat', ja: '手軽さ — 温めるだけ', zh: '方便 — 即食即热' }, short: { ko: '간편함', en: 'Quick', ja: '手軽', zh: '方便' } },
+  { key: 'taste',   emoji: '😋', label: { ko: '맛 우선 — 온 가족 입맛', en: 'Taste first', ja: '味重視', zh: '口味优先' }, short: { ko: '맛우선', en: 'Tasty', ja: '味重視', zh: '口味' } },
+  { key: 'bulk',    emoji: '📦', label: { ko: '대용량 · 장보기용', en: 'Bulk · Stock up', ja: '大容量・まとめ買い', zh: '大容量 · 囤货' }, short: { ko: '대용량', en: 'Bulk', ja: '大容量', zh: '大容量' } },
 ];
 const AI_QUIZ_BUDGET = [
-  { key: 'low',  emoji: '💸', label: { ko: '3만원 이하', en: 'Under ₩30k', ja: '3万W以下', zh: '3万韩元以下' }, short: { ko: '~3만원', en: '<₩30k', ja: '~3万W', zh: '~3万' } },
-  { key: 'mid',  emoji: '💳', label: { ko: '3~10만원', en: '₩30–100k', ja: '3~10万W', zh: '3~10万韩元' }, short: { ko: '3~10만', en: '₩30–100k', ja: '3~10万W', zh: '3~10万' } },
-  { key: 'any',  emoji: '💎', label: { ko: '상관없어요', en: 'No limit', ja: '指定なし', zh: '不限' }, short: { ko: '예산무관', en: 'Any budget', ja: '予算自由', zh: '不限预算' } },
+  { key: 'under2', emoji: '💸', label: { ko: '2만원 이하', en: 'Under ₩20k', ja: '2万W以下', zh: '2万韩元以下' }, short: { ko: '~2만원', en: '<₩20k', ja: '~2万W', zh: '~2万' } },
+  { key: 'to5',    emoji: '💳', label: { ko: '2만 ~ 5만원', en: '₩20–50k', ja: '2~5万W', zh: '2~5万韩元' }, short: { ko: '2~5만', en: '₩20–50k', ja: '2~5万W', zh: '2~5万' } },
+  { key: 'to10',   emoji: '💼', label: { ko: '5만 ~ 10만원', en: '₩50–100k', ja: '5~10万W', zh: '5~10万韩元' }, short: { ko: '5~10만', en: '₩50–100k', ja: '5~10万W', zh: '5~10万' } },
+  { key: 'any',    emoji: '💎', label: { ko: '상관없어요', en: 'No limit', ja: '指定なし', zh: '不限' }, short: { ko: '예산무관', en: 'Any budget', ja: '予算自由', zh: '不限预算' } },
 ];
-const AI_QUIZ_STEPS = [
-  { title: { ko: '누구를 위한 제품을 찾으세요?', en: 'Who are you shopping for?', ja: 'どなたのための製品をお探しですか？', zh: '您在为谁挑选产品？' }, opts: AI_QUIZ_WHO, field: 'who' },
-  { title: { ko: '선택하신 분이 요즘 신경 쓰고 있는 부분은 어디인가요?', en: 'What are they focused on these days?', ja: '最近気にされているのはどの部分ですか？', zh: '这位最近关注哪些方面？' }, opts: AI_QUIZ_FOCUS, field: 'focus' },
-  { title: { ko: '어느 정도의 예산을 생각하세요?', en: 'What is your budget?', ja: 'ご予算はどのくらいですか？', zh: '您的预算大概是多少？' }, opts: AI_QUIZ_BUDGET, field: 'budget' },
-];
-function computeAiOrder({ who, focus, budget }) {
-  // 1) 관심사 기준 기본 순서
-  let order = focus === 'energy' ? ['today', 'rebuy', 'similar', 'chairman', 'trend', 'budget']
-    : focus === 'immunity' ? ['today', 'similar', 'rebuy', 'chairman', 'trend', 'budget']
-    : ['trend', 'similar', 'today', 'chairman', 'budget', 'rebuy'];
-  // 2) 대상 보정 — 가족: 재구매·회장 추천 / 선물: 인기·시그니처 세트 앞으로
-  if (who === 'family') {
-    const front = ['rebuy', 'chairman'];
-    order = [...front, ...order.filter(k => !front.includes(k))];
-  } else if (who === 'gift') {
-    const front = ['trend', 'chairman'];
-    order = [...front, ...order.filter(k => !front.includes(k))];
+// 분기형 스텝 구성 — 카테고리 답변에 따라 다음 질문이 바뀜
+function aiQuizSteps(answers) {
+  const steps = [{
+    title: { ko: '지금 어떤 제품을 찾고 계세요?', en: 'What are you looking for today?', ja: 'どんな製品をお探しですか？', zh: '您在找什么产品？' },
+    opts: AI_QUIZ_CATEGORY, field: 'category',
+  }];
+  if (answers.category === 'health') {
+    steps.push({
+      title: { ko: '어느 부분이 가장 신경 쓰이세요?', en: 'Which area concerns you most?', ja: '最も気になる部分は？', zh: '最关心哪方面？' },
+      opts: AI_QUIZ_HEALTH, field: 'concern', grid: true,
+    });
+    steps.push({
+      title: { ko: '어떤 형태가 먹기 편하세요?', en: 'Which form do you prefer?', ja: 'どの形状が飲みやすいですか？', zh: '哪种形态更方便？' },
+      opts: AI_QUIZ_FORM, field: 'form',
+    });
+  } else if (answers.category === 'beauty') {
+    steps.push({
+      title: { ko: '피부 타입은 어떻게 되세요?', en: 'What is your skin type?', ja: '肌タイプは？', zh: '您的肤质是？' },
+      opts: AI_QUIZ_SKINTYPE, field: 'skinType',
+    });
+    steps.push({
+      title: { ko: '주로 어느 부위에 사용하세요?', en: 'Where will you use it?', ja: '主にどこに使いますか？', zh: '主要用在哪里？' },
+      opts: AI_QUIZ_SKINAREA, field: 'area', grid: true,
+    });
+    steps.push({
+      title: { ko: '가장 원하는 효과는 무엇인가요?', en: 'What effect do you want most?', ja: '最も求める効果は？', zh: '最想要什么效果？' },
+      opts: AI_QUIZ_EFFECT, field: 'effect', grid: true,
+    });
+  } else if (answers.category === 'living') {
+    steps.push({
+      title: { ko: '어떤 용도의 생활용품이 필요하세요?', en: 'What kind of household goods?', ja: 'どんな用途ですか？', zh: '需要哪种用途？' },
+      opts: AI_QUIZ_LIVING, field: 'living', grid: true,
+    });
+    steps.push({
+      title: { ko: '고를 때 가장 중요하게 보는 것은?', en: 'What matters most to you?', ja: '選ぶとき最も重視するのは？', zh: '挑选时最看重什么？' },
+      opts: AI_QUIZ_POINT, field: 'point', grid: true,
+    });
+  } else if (answers.category === 'food') {
+    steps.push({
+      title: { ko: '어떤 종류의 먹거리를 찾으세요?', en: 'What kind of food?', ja: 'どんな食べ物をお探しですか？', zh: '想找哪类食品？' },
+      opts: AI_QUIZ_FOOD, field: 'food', grid: true,
+    });
+    steps.push({
+      title: { ko: '고를 때 가장 중요한 것은?', en: 'What matters most?', ja: '選ぶとき最も重視するのは？', zh: '挑选时最看重什么？' },
+      opts: AI_QUIZ_FOODPICK, field: 'foodPick', grid: true,
+    });
   }
-  // 3) 예산 보정 — 3만원 이하: 가성비 맨 앞 / 상관없음: 가성비 맨 뒤
-  if (budget === 'low') {
-    order = ['budget', ...order.filter(k => k !== 'budget')];
-  } else if (budget === 'any') {
-    order = [...order.filter(k => k !== 'budget'), 'budget'];
-  }
-  return order;
+  steps.push({
+    title: { ko: '어느 정도의 예산을 생각하세요?', en: 'What is your budget?', ja: 'ご予算はどのくらいですか？', zh: '您的预算大概是多少？' },
+    opts: AI_QUIZ_BUDGET, field: 'budget',
+  });
+  return steps;
 }
-function aiAnswerLabel({ who, focus, budget }) {
+function aiAnswerLabel(a) {
   const pick = (arr, k) => { const o = arr.find(x => x.key === k); return o ? _ttl(o.short) : ''; };
-  const w = pick(AI_QUIZ_WHO, who);
-  const f = pick(AI_QUIZ_FOCUS, focus);
-  const b = pick(AI_QUIZ_BUDGET, budget);
-  return [w, f, b].filter(Boolean).join(' · ');
+  return [
+    pick(AI_QUIZ_CATEGORY, a.category),
+    pick(AI_QUIZ_HEALTH, a.concern),
+    pick(AI_QUIZ_FORM, a.form),
+    pick(AI_QUIZ_SKINTYPE, a.skinType),
+    pick(AI_QUIZ_SKINAREA, a.area),
+    pick(AI_QUIZ_EFFECT, a.effect),
+    pick(AI_QUIZ_LIVING, a.living),
+    pick(AI_QUIZ_POINT, a.point),
+    pick(AI_QUIZ_FOOD, a.food),
+    pick(AI_QUIZ_FOODPICK, a.foodPick),
+    pick(AI_QUIZ_BUDGET, a.budget),
+  ].filter(Boolean).join(' · ');
 }
 
 // 답변 기반으로 큐레이션 칸 자체를 재구성
-function buildPersonalRows({ who, focus, budget }, all, best) {
+function buildPersonalRows(a, all, best) {
   const uniq = arr => Array.from(new Map(arr.filter(Boolean).map(p => [p.id, p])).values());
-  const FOCUS_DEF = {
-    energy:   { label: '피로 · 활력',   test: p => p.category === '건강식품' },
-    immunity: { label: '면역 · 장 건강', test: p => p.category === '건강식품' || /유산균|프로바이오|면역|아연/.test(p.name) },
-    beauty:   { label: '피부 · 뷰티',   test: p => p.category === '뷰티' || p.category === '헤어&바디' },
-  };
+  const { category, concern, skinType, area, living, budget, form, effect, point, food, foodPick } = a;
   const BUDGET_DEF = {
-    low: { label: '3만원 이하', test: p => p.price <= 30000 },
-    mid: { label: '3~10만원',  test: p => p.price > 30000 && p.price <= 100000 },
-    any: { label: '',          test: () => true },
+    under2: { label: '2만원 이하',   test: p => p.price <= 20000 },
+    to5:    { label: '2만~5만원',    test: p => p.price > 20000 && p.price <= 50000 },
+    to10:   { label: '5만~10만원',   test: p => p.price > 50000 && p.price <= 100000 },
+    any:    { label: '',            test: () => true },
   };
-  const WHO_T = { me: '당신', family: '우리 가족', gift: '소중한 분' };
-  const f = FOCUS_DEF[focus] || FOCUS_DEF.energy;
   const b = BUDGET_DEF[budget] || BUDGET_DEF.any;
-  const w = WHO_T[who] || '당신';
 
-  const focusItems = uniq(all.filter(f.test));
-  const mainItems = uniq([...focusItems.filter(b.test), ...focusItems]).slice(0, 6);
+  // 1) 카테고리 + 세부 답변으로 메인 후보 필터
+  let detail = null, poolTest = () => true, mainTitle = '', mainReason = '';
+  let subRx = null; // 보조 필터 (섭취 형태 · 원하는 효과)
+  if (category === 'health') {
+    detail = AI_QUIZ_HEALTH.find(o => o.key === concern);
+    const fm = AI_QUIZ_FORM.find(o => o.key === form);
+    subRx = fm && fm.rx ? fm.rx : null;
+    poolTest = p => p.category === '건강식품';
+    mainTitle = `${detail ? _ttl(detail.label) : '건강'} 케어 추천`;
+    mainReason = `'${detail ? _ttl(detail.short) : ''}' 고민${fm && fm.key !== 'anyform' ? ` · ${_ttl(fm.short)} 선호` : ''}에 맞는 성분 중심으로 골랐어요`;
+  } else if (category === 'beauty') {
+    detail = AI_QUIZ_SKINAREA.find(o => o.key === area);
+    const st = AI_QUIZ_SKINTYPE.find(o => o.key === skinType);
+    const ef = AI_QUIZ_EFFECT.find(o => o.key === effect);
+    subRx = ef && ef.rx ? ef.rx : null;
+    poolTest = p => p.category === '뷰티' || p.category === '헤어&바디';
+    mainTitle = `${st ? _ttl(st.short) : ''} 피부 · ${ef ? _ttl(ef.short) : ''} 케어`;
+    mainReason = `${detail ? _ttl(detail.short) : ''} 사용 · '${ef ? _ttl(ef.short) : ''}' 효과 중심 추천이에요`;
+  } else if (category === 'living') {
+    detail = AI_QUIZ_LIVING.find(o => o.key === living);
+    const pt = AI_QUIZ_POINT.find(o => o.key === point);
+    poolTest = p => p.category === '생활용품' || p.category === '리빙&홈데코' || p.category === '식품';
+    mainTitle = `${detail ? _ttl(detail.short) : '생활용품'} 추천`;
+    mainReason = `'${detail ? _ttl(detail.short) : ''}' 용도${pt ? ` · ${_ttl(pt.short)} 중심` : ''}으로 모았어요`;
+  } else if (category === 'food') {
+    detail = AI_QUIZ_FOOD.find(o => o.key === food);
+    const fp = AI_QUIZ_FOODPICK.find(o => o.key === foodPick);
+    poolTest = p => p.category === '식품';
+    mainTitle = `${detail ? _ttl(detail.short) : '먹거리'} 추천`;
+    mainReason = `'${detail ? _ttl(detail.short) : ''}'${fp ? ` · ${_ttl(fp.short)} 중심` : ''}으로 골랐어요`;
+  }
+  const pool = uniq(all.filter(poolTest));
+  // 세부 키워드(rx) 우선 → 보조 필터 → 카테고리 보충
+  const hit = detail && detail.rx ? pool.filter(p => detail.rx.test(p.name)) : [];
+  const subHit = subRx ? pool.filter(p => subRx.test(p.name)) : [];
+  const mainItems = uniq([...hit.filter(b.test), ...subHit.filter(b.test), ...hit, ...subHit, ...pool.filter(b.test), ...pool]).slice(0, 6);
   const budgetItems = uniq(all.filter(b.test).slice().sort((x, y) => (y.reviews || 0) - (x.reviews || 0))).slice(0, 6);
-  const giftItems = uniq(all.filter(p => p.badges && p.badges.includes('BEST'))).slice(0, 6);
-  const livingItems = uniq(all.filter(p => p.category === '리빙&홈데코' || p.category === '생활용품' || p.category === '식품')).slice(0, 6);
+  const bestItems = uniq(all.filter(p => p.badges && p.badges.includes('BEST'))).slice(0, 6);
 
   const rows = [
     {
       kind: 'p-main',
-      kicker: `✦ ${w}을 위한 맞춤`,
-      title: `${w}의 ${f.label} 케어`,
-      reason: '맞춤 진열 답변(대상·관심사·예산)을 반영한 추천이에요',
+      kicker: '✦ 당신을 위한 맞춤',
+      title: mainTitle,
+      reason: mainReason,
       badge: 'AI 맞춤', tone: '#00B6F0',
       items: mainItems,
     },
@@ -1535,25 +1666,14 @@ function buildPersonalRows({ who, focus, budget }, all, best) {
       items: budgetItems,
     });
   }
-  if (who === 'gift') {
-    rows.push({
-      kind: 'p-gift',
-      kicker: '선물 추천',
-      title: '선물로 가장 많이 나가는 베스트',
-      reason: '선물 구매 회원들이 가장 많이 선택했어요',
-      badge: 'GIFT', tone: '#FF8A3D',
-      items: giftItems,
-    });
-  } else {
-    rows.push({
-      kind: 'p-life',
-      kicker: who === 'family' ? '가족 생활템' : '함께 보면 좋은',
-      title: who === 'family' ? '온 가족이 함께 쓰는 생활용품' : '지금 많이 담는 생활용품',
-      reason: '구매 패턴이 비슷한 회원들의 장바구니예요',
-      badge: 'LIVING', tone: '#16A34A',
-      items: livingItems,
-    });
-  }
+  rows.push({
+    kind: 'p-best',
+    kicker: '함께 많이 찾는',
+    title: '지금 가장 많이 담는 베스트',
+    reason: '비슷한 답변을 한 회원들이 가장 많이 선택했어요',
+    badge: 'BEST', tone: '#FF8A3D',
+    items: bestItems,
+  });
   return rows;
 }
 
@@ -1650,19 +1770,22 @@ function AIBriefCard({ onStartQuiz, onClose }) {
 // AI 맞춤 진열 퀴즈 오버레이 — 질문 3개 → 재배열
 function AIQuizOverlay({ onDone, onClose }) {
   const _lang = useI18nLang();
-  const [step, setStep] = React.useState(0); // 0~2: 질문, 3: loading
-  const answersRef = React.useRef({});
+  const [step, setStep] = React.useState(0);
+  const [answers, setAnswers] = React.useState({});
+  const steps = aiQuizSteps(answers);
+  const loading = step >= steps.length;
 
   const pick = (key) => {
-    answersRef.current[AI_QUIZ_STEPS[step].field] = key;
-    if (step < AI_QUIZ_STEPS.length - 1) setStep(step + 1);
+    const next = { ...answers, [steps[step].field]: key };
+    setAnswers(next);
+    const nextSteps = aiQuizSteps(next);
+    if (step < nextSteps.length - 1) setStep(step + 1);
     else {
-      setStep(AI_QUIZ_STEPS.length);
-      setTimeout(() => onDone({ ...answersRef.current }), 1100);
+      setStep(nextSteps.length);
+      setTimeout(() => onDone(next), 1100);
     }
   };
-  const q = AI_QUIZ_STEPS[Math.min(step, AI_QUIZ_STEPS.length - 1)];
-  const loading = step >= AI_QUIZ_STEPS.length;
+  const q = steps[Math.min(step, steps.length - 1)];
 
   return (
     <div
@@ -1679,6 +1802,7 @@ function AIQuizOverlay({ onDone, onClose }) {
         width: '100%', maxWidth: 340, background: '#fff', borderRadius: 18,
         padding: '20px 18px 18px', boxShadow: '0 24px 60px rgba(11,31,58,0.35)',
         animation: 'aiCardIn 0.32s cubic-bezier(.2,.8,.3,1) both',
+        maxHeight: '94%', overflowY: 'auto',
       }}>
         {!loading ? (
           <React.Fragment>
@@ -1687,23 +1811,25 @@ function AIQuizOverlay({ onDone, onClose }) {
                 width: 22, height: 22, borderRadius: 7, background: 'linear-gradient(135deg,#00B6F0,#0088B8)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 11,
               }}>✦</span>
-              <span style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: '0.1em', color: '#0088B8' }}>{_ttl({ko:'AI 맞춤 진열',en:'AI Custom Shelf',ja:'AIカスタム陳列',zh:'AI定制陈列'})} · {step + 1}/{AI_QUIZ_STEPS.length}</span>
+              <span style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: '0.1em', color: '#0088B8' }}>{_ttl({ko:'AI 맞춤 진열',en:'AI Custom Shelf',ja:'AIカスタム陳列',zh:'AI定制陈列'})} · {step + 1}/{answers.category ? steps.length : 4}</span>
             </div>
             <div key={step} style={{ animation: 'aiCardIn 0.3s ease both' }}>
               <div style={{ fontSize: 17, fontWeight: 900, color: '#0B1F3A', margin: '8px 0 14px', letterSpacing: '-0.01em' }}>{_ttl(q.title)}</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={q.grid ? {
+                display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 7,
+              } : { display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {q.opts.map(o => (
                   <button key={o.key} onClick={() => pick(o.key)} style={{
-                    display: 'flex', alignItems: 'center', gap: 10,
-                    padding: '13px 14px', borderRadius: 12, cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', gap: q.grid ? 7 : 10,
+                    padding: q.grid ? '11px 10px' : '13px 14px', borderRadius: 12, cursor: 'pointer',
                     border: '1.5px solid rgba(11,31,58,0.1)', background: '#F8FAFC',
-                    fontSize: 14, fontWeight: 700, color: '#0B1F3A', fontFamily: 'inherit',
+                    fontSize: q.grid ? 12.5 : 14, fontWeight: 700, color: '#0B1F3A', fontFamily: 'inherit',
                     textAlign: 'left', transition: 'border-color 0.15s, background 0.15s',
                   }}
                     onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#00B6F0'; e.currentTarget.style.background = 'rgba(0,182,240,0.06)'; }}
                     onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(11,31,58,0.1)'; e.currentTarget.style.background = '#F8FAFC'; }}
                   >
-                    <span style={{ fontSize: 18 }}>{o.emoji}</span>{_ttl(o.label)}
+                    <span style={{ fontSize: q.grid ? 15 : 18 }}>{o.emoji}</span><span style={{ flex: 1, lineHeight: 1.3 }}>{_ttl(o.label)}</span>
                   </button>
                 ))}
               </div>

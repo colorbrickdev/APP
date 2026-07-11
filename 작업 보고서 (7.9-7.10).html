@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>애터미 쇼핑몰 프로토타입 개선 보고서</title>
+<style>
+  doc-page:not(:defined){visibility:hidden}
+  doc-page{
+    font-family:'Pretendard','Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+    color:#1A2433;font-size:14.5px;line-height:1.65;
+  }
+  h1{font-size:26px;font-weight:900;letter-spacing:-0.02em;color:#0B1F3A;margin:0 0 6px;}
+  .meta{font-size:12.5px;color:#6B7686;margin:0 0 4px;}
+  .divider{border:none;border-top:2px solid #0B1F3A;margin:16px 0 22px;}
+  h2{font-size:16.5px;font-weight:800;color:#0B1F3A;margin:26px 0 10px;padding-bottom:6px;border-bottom:1px solid #DCE2EA;letter-spacing:-0.01em;}
+  h2 .no{color:#00A3D9;margin-right:8px;}
+  p{margin:0 0 10px;text-wrap:pretty;}
+  ul{margin:0 0 12px;padding-left:20px;}
+  li{margin-bottom:5px;text-wrap:pretty;}
+  li b{color:#0B1F3A;}
+  .summary{background:#F2F7FB;border:1px solid #D9E6F0;border-radius:8px;padding:14px 18px;font-size:13.5px;break-inside:avoid;orphans:3;widows:3;}
+  .summary b{color:#0B1F3A;}
+  table{width:100%;border-collapse:collapse;font-size:13px;margin:8px 0 14px;}
+  thead th{background:#0B1F3A;color:#fff;font-weight:700;padding:7px 10px;text-align:left;}
+  tbody td{padding:7px 10px;border-bottom:1px solid #E4E9F0;vertical-align:top;}
+  tbody tr td:first-child{white-space:nowrap;font-weight:700;color:#0B1F3A;}
+  .note{font-size:12.5px;color:#6B7686;}
+  a{color:#00A3D9;} a:hover{color:#0B1F3A;}
+  .ftr{font-size:11px;color:#8A94A3;text-align:right;width:100%;}
+</style>
+</head>
+<body>
+<doc-page size="letter" margin="0.75in">
+  <div slot="footer" class="ftr">애터미 쇼핑몰 프로토타입 개선 보고서 · 2026. 7.</div>
+
+  <h1>애터미 쇼핑몰 프로토타입 개선 보고서</h1>
+  <p class="meta">대상 기간: 2026. 7. 9.(수) ~ 7. 10.(금) · 대상: 통합 프리뷰 및 기기별 배포 화면(PC · Fold7 · S26 Ultra · iPhone17)</p>
+  <hr class="divider">
+
+  <div class="summary">
+    <b>요약</b> — 이틀간 총 8개 영역을 개선했습니다. 회원·주문 체계(3초 간편가입, 주문내역, 사업자 가입 연계)를 신설하고, AI 맞춤 진열·통합 검색을 고도화했으며, 신규 기능 전반에 다국어(한/영/일/중)를 적용했습니다. 영상 소리 잔류·닫기 버튼 겹침 등 품질 이슈를 수정하고 배포 패키지를 2회 내보냈습니다.
+  </div>
+
+  <h2><span class="no">01</span>회원 · 주문 체계 신설</h2>
+  <ul>
+    <li><b>3초 간편가입</b> — 휴대폰 번호 인증 + 최초 1회 비밀번호 설정 후, 이후에는 번호+비밀번호 조합으로 로그인. 번호 입력 시 하이픈(-) 자동 포맷.</li>
+    <li><b>주문내역</b> — 상단 아이콘을 '주문내역' 텍스트 라벨로 직관화. 간편회원은 주문 목록 자동 연결, 비회원은 주문번호+휴대폰 번호로 조회. 연동 해제(로그아웃) 버튼 시인성 개선.</li>
+    <li><b>주문 완료 연계</b> — 주문 완료 시 간편가입 유도 카드 노출, 가입 시 해당 주문 자동 연결.</li>
+    <li><b>사업자 가입 연계</b> — 주문내역 내 '애터미 사업자 가입' 카드에서 간편회원 정보(이름·번호·주소) 인계 동의 후 공식 가입 페이지(atomy.page)로 이동. 인생시나리오의 '애터미 사업자 되기' 버튼에도 동일 링크 연결.</li>
+    <li><b>회원 전용 알림</b> — 구매 10회 달성 등 계정 기반 알림을 간편연동 회원에게만 노출하도록 정리.</li>
+  </ul>
+
+  <h2><span class="no">02</span>AI 맞춤 진열 고도화</h2>
+  <ul>
+    <li><b>질문 재설계</b> — ① 누구를 위한 제품인지 ② 신경 쓰는 부분 ③ 예산, 3문항 구성.</li>
+    <li><b>CTA 개선</b> — '진열장을 준비할게요' 문구로 변경, 히어로 하단 배치, 시안색 펄스 링 + 중앙 정렬 그림자로 시인성 강화.</li>
+    <li><b>맞춤 상태 관리</b> — 맞춤 진열 중 상태 칩 + '맞춤 해제' 버튼 제공, 맞춤 시 무관한 카테고리 행 정리.</li>
+  </ul>
+
+  <h2><span class="no">03</span>통합 검색</h2>
+  <ul>
+    <li><b>검색 오버레이</b> — 모바일·데스크톱 공통. 인기 검색어 칩, 실시간 제품 결과(클릭 시 상세 이동), 석세스클립 결과 연결.</li>
+    <li><b>데스크톱 최적화</b> — 검색 필드 바로 아래에 적정 너비 드롭다운으로 표시되도록 조정.</li>
+  </ul>
+
+  <h2><span class="no">04</span>석세스클립</h2>
+  <ul>
+    <li><b>정렬 필터</b> — 추천순 / 최신순 / 조회수순 / 좋아요순 추가 (모바일·데스크톱).</li>
+    <li><b>채널 필터 정정</b> — 전체 / 공식 / 개인으로 수정.</li>
+    <li><b>플레이어 수정</b> — 닫기 버튼이 이동 화살표에 가려지던 겹침 오류 수정(레이어 순서 조정 + 화살표 위치 분리).</li>
+  </ul>
+
+  <h2><span class="no">05</span>제품 구매 · 상세</h2>
+  <ul>
+    <li><b>브레드크럼 내비게이션</b> — 홈 &gt; 카테고리 &gt; 제품 각 단계 클릭 시 해당 페이지로 이동, 전 상품 상세에 노출.</li>
+    <li><b>기기 간 오류 수정</b> — iPhone17에서 장바구니 담기 시 S26 Ultra 화면에 반영되던 교차 오류 해결.</li>
+  </ul>
+
+  <h2><span class="no">06</span>인생시나리오</h2>
+  <ul>
+    <li><b>수레바퀴 차트 확대</b> — S26 Ultra·iPhone17에서 좌우 정비례 확대.</li>
+    <li><b>조작감 개선</b> — 8개 항목 클릭 시 화면이 아래로 스크롤되던 현상 제거.</li>
+  </ul>
+
+  <h2><span class="no">07</span>다국어(한 · 영 · 일 · 중) 적용</h2>
+  <ul>
+    <li><b>신규 기능 전체</b> — 간편가입·로그인·주문내역·사업자 가입·AI 맞춤 진열(질문/선택지/칩/토스트)·쇼핑 브리핑·정렬 필터·검색 UI.</li>
+    <li><b>사회적 증명 토스트</b> — 5종(구매 10회·배송 출고·신규 혜택·새 콘텐츠·리뷰 적립) 눈썹·제목·본문 번역, 표시 시점 언어 자동 반영.</li>
+  </ul>
+
+  <h2><span class="no">08</span>품질 점검 · 배포</h2>
+  <ul>
+    <li><b>영상 소리 잔류 수정</b> — 클립 재생 중 페이지 이동 시 플레이어·영상 모달 자동 종료 + 재생 중 미디어 일시정지 안전망 적용(모바일·데스크톱).</li>
+    <li><b>배포 패키지</b> — 다국어 반영본 및 최종본 zip 2회 내보내기. 기기별 직접 접속 라우트(<span class="note">/pc · /fold · /s26 · /iphone</span>) 포함.</li>
+  </ul>
+
+  <h2>남은 과제</h2>
+  <table>
+    <thead><tr><th>항목</th><th>내용</th></tr></thead>
+    <tbody>
+      <tr><td>배포 반영</td><td>최종 zip을 GitHub 저장소(colorbrickdev/APP)에 업로드하여 실서버 반영</td></tr>
+      <tr><td>실데이터 연동</td><td>검색·리뷰·주문 데이터는 현재 데모 데이터 기반 — 실제 API 연동 시 교체 필요</td></tr>
+    </tbody>
+  </table>
+</doc-page>
+<script src="doc-page.js"></script>
+</body>
+</html>
