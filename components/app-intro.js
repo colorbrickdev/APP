@@ -1,4 +1,5 @@
 // app-intro.js — 첫 접속 인트로 영상 (하루 1회, 서서히 등장/종료, SKIP 지원)
+// 폰(iPhone17·S26): 화면 컨테이너에 풀블리드 / 큰 화면(Fold·PC): 모달 레이어 + 원본 비율
 (function () {
   var VIDEO_SRC = 'uploads/intro.mp4';
   var LS_KEY = 'appIntroVideoDate';
@@ -11,21 +12,25 @@
   } catch (_) {}
 
   var css = [
-    '#appIntro{position:absolute;inset:0;z-index:9999;background:#000;display:flex;align-items:center;justify-content:center;overflow:hidden;opacity:0;transition:opacity 1s ease;}',
-    '#appIntro.show{opacity:1;}',
-    '#appIntro.fade{opacity:0;pointer-events:none;}',
-    '#appIntro video{width:100%;height:100%;object-fit:cover;display:block;}',
-    '#appIntro .skip{position:absolute;top:7%;right:5%;z-index:10;background:rgba(0,0,0,0.45);color:#fff;font-size:13px;font-weight:700;letter-spacing:0.08em;padding:8px 18px;border-radius:999px;border:1px solid rgba(255,255,255,0.35);cursor:pointer;font-family:inherit;backdrop-filter:blur(6px);}',
-    '#appIntro .skip:hover{background:rgba(0,0,0,0.65);}'
+    '.app-intro{position:absolute;inset:0;z-index:9999;background:#000;display:flex;align-items:center;justify-content:center;overflow:hidden;opacity:0;transition:opacity 1s ease;}',
+    '.app-intro.show{opacity:1;}',
+    '.app-intro.fade{opacity:0;pointer-events:none;}',
+    '.app-intro video{width:100%;height:100%;object-fit:cover;display:block;}',
+    '.app-intro .skip{position:absolute;top:7%;right:5%;z-index:10;background:rgba(0,0,0,0.45);color:#fff;font-size:13px;font-weight:700;letter-spacing:0.08em;padding:8px 18px;border-radius:999px;border:1px solid rgba(255,255,255,0.35);cursor:pointer;font-family:inherit;backdrop-filter:blur(6px);}',
+    '.app-intro .skip:hover{background:rgba(0,0,0,0.65);}',
+    /* 모달 모드 — 딤 배경 + 원본 비율 비디오 */
+    '.app-intro.modal{background:rgba(4,10,20,0.82);backdrop-filter:blur(8px);}',
+    '.app-intro.modal video{width:min(72vw,1080px);height:auto;max-height:80vh;object-fit:contain;border-radius:18px;box-shadow:0 40px 120px rgba(0,0,0,0.6);}',
+    '.app-intro.modal .skip{top:auto;bottom:6%;right:50%;transform:translateX(50%);}'
   ].join('\n');
 
-  function mount(container) {
+  function mount(container, isModal) {
     var styleEl = document.createElement('style');
     styleEl.textContent = css;
     document.head.appendChild(styleEl);
 
     var root = document.createElement('div');
-    root.id = 'appIntro';
+    root.className = 'app-intro' + (isModal ? ' modal' : '');
     root.innerHTML =
       '<video src="' + VIDEO_SRC + '" autoplay muted playsinline preload="auto"></video>' +
       '<button class="skip" type="button">SKIP</button>';
@@ -69,16 +74,31 @@
     });
   }
 
-  // iPhone 17 화면 컨테이너(React 렌더 완료)를 기다렸다가 그 안에 마운트
+  // 기기별 마운트 대상 — [selector, 모달 여부]
+  // 폰: 화면 컨테이너 안에 풀블리드 / Fold·PC: 화면 컨테이너 위 모달 레이어 (원본 비율)
+  var TARGETS = [
+    // 통합 프리뷰 (Master) — iPhone17 화면
+    ['.iphone-noto .phone-scroll', false],
+    // 단독 페이지
+    ['[data-screen-label="iPhone 17"] .phone-scroll', false],
+    ['[data-screen-label="S26 Ultra"] .phone-scroll', false],
+    ['[data-screen-label="Fold7"] .phone-scroll', true],
+    ['[data-screen-label="PC"] .phone-scroll', true],
+  ];
+
   var mounted = false;
   function tryMount() {
     if (mounted) return false;
-    var scroll = document.querySelector('.iphone-noto .phone-scroll');
-    var container = scroll ? scroll.parentElement : null;
-    if (container) {
-      mounted = true;
-      mount(container);
-      return true;
+    for (var i = 0; i < TARGETS.length; i++) {
+      var el = document.querySelector(TARGETS[i][0]);
+      if (el) {
+        var container = el.classList.contains('phone-scroll') ? el.parentElement : el;
+        if (container) {
+          mounted = true;
+          mount(container, TARGETS[i][1]);
+          return true;
+        }
+      }
     }
     return false;
   }
