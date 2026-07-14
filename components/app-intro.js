@@ -1,15 +1,7 @@
-// app-intro.js — 첫 접속 인트로 영상 (하루 1회, 서서히 등장/종료, SKIP 지원)
+// app-intro.js — 접속 인트로 영상 (매 접속마다 재생, 서서히 등장/종료, SKIP 지원)
 // 폰(iPhone17·S26): 화면 컨테이너에 풀블리드 / 큰 화면(Fold·PC): 모달 레이어 + 원본 비율
 (function () {
   var VIDEO_SRC = 'uploads/intro.mp4';
-  var LS_KEY = 'appIntroVideoDate';
-
-  // 하루 1회 — 오늘 이미 봤으면 표시하지 않음
-  var today = new Date();
-  var stamp = today.getFullYear() + '-' + (today.getMonth() + 1) + '-' + today.getDate();
-  try {
-    if (localStorage.getItem(LS_KEY) === stamp) return;
-  } catch (_) {}
 
   var css = [
     '.app-intro{position:absolute;inset:0;z-index:9999;background:#000;display:flex;align-items:center;justify-content:center;overflow:hidden;opacity:0;transition:opacity 1s ease;}',
@@ -39,9 +31,7 @@
     var video = root.querySelector('video');
     var done = false;
 
-    function markSeen() {
-      try { localStorage.setItem(LS_KEY, stamp); } catch (_) {}
-    }
+    function markSeen() {}
 
     // 서서히 나타남
     requestAnimationFrame(function () {
