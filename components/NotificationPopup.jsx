@@ -59,19 +59,46 @@ let NOTIFICATIONS = [
   },
 ];
 
-// 비회원 gating — 구매이력 기반 알림(1 구매10회, 2 출고, 5 리뷰적립)은 간편회원만
+// 비회원 gating — AI가 접속한 비회원(게스트)에게 보내는 '행동 유도형' 알림
 (function () {
   let m = false; try { m = !!localStorage.getItem('quickMember'); } catch (_) {}
   if (!m) {
     NOTIFICATIONS = [
       {
-        id: 9, type: 'event', icon: 'gift',
-        title: '간편가입하면 배송·재구매 알림을 받아요',
-        body: '휴대폰 번호만으로 3초 · 지난 주문도 자동 연결됩니다.',
-        cta: { label: '간편가입 하기', url: '#' },
-        time: '지금', unread: true, accent: '#00B6F0',
+        id: 21, ai: true, type: 'clip', icon: 'megaphone', accent: '#7C5CFF',
+        title: '오늘의 석세스클립 3편이 새로 올라왔어요',
+        body: '실제 사용 후기 영상이 준비됐어요. 지금 시청하러 이동해볼까요?',
+        cta: { label: '클립 보러가기', action: 'shorts' },
+        time: '방금 전', unread: true,
       },
-      ...NOTIFICATIONS.filter(n => ![1, 2, 5].includes(n.id)),
+      {
+        id: 22, ai: true, type: 'reco', icon: 'heart', accent: '#22C28C',
+        title: '오늘 컨디션에 맞는 제품을 골라봤어요',
+        body: '30초 맞춤 질문이면 딱 맞는 3가지를 추천해드려요. 지금 시작해볼까요?',
+        cta: { label: '맞춤 추천 받기', action: 'assistant', question: '오늘 내 컨디션에 맞는 제품을 추천해줘' },
+        time: '10분 전', unread: true,
+      },
+      {
+        id: 23, ai: true, type: 'cart', icon: 'gift', accent: '#FF8A3D',
+        title: '장바구니에 담아둔 상품이 기다리고 있어요',
+        body: '지금 주문하면 오늘의 혜택가 그대로예요. 확인하러 가볼까요?',
+        cta: { label: '장바구니 확인하기', action: 'shop' },
+        time: '30분 전', unread: true,
+      },
+      {
+        id: 24, ai: true, type: 'signup', icon: 'gift', accent: '#00B6F0',
+        title: '간편가입하면 배송·재구매 알림을 받아요',
+        body: '휴대폰 번호만으로 3초면 끝나요. 가입 방법을 안내해드릴까요?',
+        cta: { label: '가입 방법 물어보기', action: 'assistant', question: '간편가입은 어떻게 하나요?' },
+        time: '1시간 전', unread: true,
+      },
+      {
+        id: 25, ai: true, type: 'news', icon: 'megaphone', accent: '#8A97AD',
+        title: '이번 주 신제품이 도착했어요',
+        body: "'앱솔루트 셀렉티브 스킨케어' 라인이 새로 입고됐어요. 먼저 만나보실래요?",
+        cta: { label: '신제품 보러가기', action: 'shop' },
+        time: '어제', unread: false,
+      },
     ];
   }
 })();
@@ -231,7 +258,7 @@ function NotificationPopup({ open, onClose, anchorRight = 12, anchorTop = 56, is
         overflowY: 'auto',
       }}>
         {NOTIFICATIONS.map((n, i) => (
-          <NotificationItem key={n.id} notif={n} isFirst={i === 0} />
+          <NotificationItem key={n.id} notif={n} isFirst={i === 0} onClose={onClose} />
         ))}
       </div>
 
@@ -250,7 +277,21 @@ function NotificationPopup({ open, onClose, anchorRight = 12, anchorTop = 56, is
   );
 }
 
-function NotificationItem({ notif: n, isFirst }) {
+// 알림 CTA 행동 실행 — 클릭 시 실제 페이지 이동 / 어시스턴트 호출
+function runNotifAction(cta, id, onClose, node) {
+  try { if (window.notifStore) window.notifStore.markRead(id); } catch (_) {}
+  if (cta) {
+    const a = cta.action;
+    if (a === 'assistant') {
+      try { window.dispatchEvent(new CustomEvent('atomy-assistant-ask', { detail: { question: cta.question || '' } })); } catch (_) {}
+    } else if (a === 'shop' || a === 'shorts') {
+      try { (node || window).dispatchEvent(new CustomEvent('atomy-go-page', { detail: { page: a }, bubbles: true })); } catch (_) {}
+    }
+  }
+  if (onClose) onClose();
+}
+
+function NotificationItem({ notif: n, isFirst, onClose }) {
   const isMilestone = n.type === 'milestone';
 
   return (
@@ -300,6 +341,12 @@ function NotificationItem({ notif: n, isFirst }) {
 
       {/* 본문 */}
       <div style={{ flex: 1, minWidth: 0 }}>
+        {n.ai && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 4 }}>
+            <span style={{ width: 16, height: 16, borderRadius: 5, background: 'linear-gradient(135deg,#00B6F0,#5CD3F7)', color: '#fff', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, flexShrink: 0 }}>✦</span>
+            <span style={{ fontSize: 10.5, fontWeight: 800, color: '#0088B8', letterSpacing: '-0.01em' }}>몽상 로봇</span>
+          </div>
+        )}
         <div style={{
           display: 'flex', alignItems: 'flex-start', gap: 8, justifyContent: 'space-between',
         }}>
@@ -341,7 +388,7 @@ function NotificationItem({ notif: n, isFirst }) {
         )}
 
         {isMilestone && n.cta && (
-          <button style={{
+          <button onClick={(e) => { e.stopPropagation(); runNotifAction(n.cta, n.id, onClose, e.currentTarget); }} style={{
             marginTop: 12, width: '100%',
             padding: '9px 14px', borderRadius: 8,
             background: '#0B1F3A', border: 'none', cursor: 'pointer',
@@ -351,6 +398,16 @@ function NotificationItem({ notif: n, isFirst }) {
           }}>
             {n.cta.label}
             <span style={{ fontSize: 13 }}>→</span>
+          </button>
+        )}
+        {!isMilestone && n.cta && (
+          <button onClick={(e) => { e.stopPropagation(); runNotifAction(n.cta, n.id, onClose, e.currentTarget); }} style={{
+            marginTop: 10, display: 'inline-flex', alignItems: 'center', gap: 6,
+            padding: '8px 14px', borderRadius: 999,
+            background: `${n.accent}14`, border: `1px solid ${n.accent}55`,
+            color: '#0B1F3A', fontSize: 12, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit',
+          }}>
+            {n.cta.label}<span style={{ color: n.accent }}>→</span>
           </button>
         )}
       </div>

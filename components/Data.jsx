@@ -152,6 +152,15 @@ const _shortsVideoMap = {
 };
 
 // 50개 숏폼 — 제품 이미지 순환 + 다양한 통계값 + 플래그
+// 특정 제목 — 부적절 이미지 교체 (사용자 지정)
+const _clipImageOverrideUrl = 'https://postfiles.pstatic.net/MjAyNjA2MTVfNTUg/MDAxNzgxNTIxODE3MjM4.suYXTNqPzzjAVOA3__a8rnnCFc6rXl7VGwOTcc2EHHUg.r0Q2fxdMhq7TfYuEISvNwjJCcld8rBSZsDoW1eCDbEQg.JPEG/1730206366262.jpg?type=w773';
+const _clipImageOverride = {
+  '라이브 방송 다시보기': _clipImageOverrideUrl,
+  '샴푸 10일 챌린지': _clipImageOverrideUrl,
+  '민감성 피부 케어': _clipImageOverrideUrl,
+  '부작용 없는 제품 고르기': _clipImageOverrideUrl,
+  '오프라인 미팅 팁': _clipImageOverrideUrl,
+};
 const SHORTS = Array.from({ length: 50 }, (_, i) => {
   const product = _productPool[i % _productPool.length];
   const title = _shortsTitles[i % _shortsTitles.length];
@@ -171,9 +180,10 @@ const SHORTS = Array.from({ length: 50 }, (_, i) => {
     duration: durations[i % durations.length],
     hue: product.hue,
     tone: product.tone,
-    image: product.image,
+    image: _clipImageOverride[title] || product.image,
     product: product.product,
     flag: _flagFor(title),       // '개인' or '공식'
+    aigc: i % 9 === 4,           // ⑩⑪ AI 제작 콘텐츠 표기 (데모 — 일부 클립)
     category: _categoryFor(title), // 'product' | 'company' | 'business' | 'life'
     ...videoMap,                 // youtubeId 또는 videoUrl
   };

@@ -473,8 +473,65 @@ function RelatedProductsCarousel({ isMobile, onSelectProduct, currentId }) {
 }
 
 // 상품 도구 — 프린트 / 찜 / 공유
-function ProductTools({ productId }) {
+// SNS 채널 정의 + 공유 함수 팩토리 (일반/AI 공유 공용)
+const SHARE_CHANNELS = [
+  { key: 'kakaotalk', label: '카카오톡', bg: '#FEE500', fg: '#191600', ic: 'K' },
+  { key: 'line', label: '라인', bg: '#06C755', fg: '#fff', ic: 'L' },
+  { key: 'band', label: '밴드', bg: '#27C24C', fg: '#fff', ic: 'B' },
+  { key: 'facebook', label: '페이스북', bg: '#1877F2', fg: '#fff', ic: 'f' },
+  { key: 'x', label: 'X', bg: '#111', fg: '#fff', ic: '𝕏' },
+  { key: 'telegram', label: '텔레그램', bg: '#26A5E4', fg: '#fff', ic: '✈' },
+  { key: 'whatsapp', label: '왓츠앱', bg: '#25D366', fg: '#fff', ic: 'W' },
+  { key: 'system', label: '기타', bg: '#EEF1F5', fg: '#4A5568', ic: '⋯' },
+];
+function makeShareFns(P) {
+  const toast = (msg) => { if (window.showToast) window.showToast(msg); };
+  const openPop = (u, name, w = 600, h = 500) => {
+    try { window.open(u, name || '_blank', `width=${w},height=${h}`); } catch (_) { toast('공유 창을 열 수 없어요.'); }
+  };
+  const isMobile = /Android|iPhone|iPad|iPod/i.test(typeof navigator !== 'undefined' ? navigator.userAgent : '');
+  const msg = P.text || P.title;
+  return {
+    kakaotalk() {
+      if (window.Kakao && window.Kakao.isInitialized && window.Kakao.isInitialized()) {
+        try {
+          window.Kakao.Link.sendDefault({
+            objectType: 'feed',
+            content: { title: P.title, description: P.text || P.description || P.title, imageUrl: P.image, link: { mobileWebUrl: P.url, webUrl: P.url } },
+            buttons: [{ title: '자세히 보기', link: { mobileWebUrl: P.url, webUrl: P.url } }],
+          });
+          return;
+        } catch (_) {}
+      }
+      toast('카카오톡 공유는 실제 서비스에서 연결됩니다.');
+    },
+    facebook() { openPop('https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(P.url) + '&quote=' + encodeURIComponent(msg), 'share_fb'); },
+    x() { openPop('https://twitter.com/intent/tweet?text=' + encodeURIComponent(msg) + '&url=' + encodeURIComponent(P.url), 'share_x', 600, 320); },
+    line() {
+      const u = isMobile
+        ? 'https://line.me/R/msg/text/?' + encodeURIComponent(msg + '\n' + P.url)
+        : 'https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent(P.url) + '&text=' + encodeURIComponent(msg);
+      openPop(u, 'share_line');
+    },
+    band() { openPop('https://band.us/plugin/share?body=' + encodeURIComponent(msg + '\n' + P.url) + '&route=' + encodeURIComponent(P.url), 'share_band'); },
+    telegram() { openPop('https://t.me/share/url?url=' + encodeURIComponent(P.url) + '&text=' + encodeURIComponent(msg), 'share_tg'); },
+    whatsapp() { openPop('https://api.whatsapp.com/send?text=' + encodeURIComponent(msg + '\n' + P.url), 'share_wa'); },
+    system() {
+      if (navigator.share) { navigator.share({ title: P.title, text: P.text || P.description || '', url: P.url }).catch(() => {}); }
+      else toast('이 브라우저는 기본 공유를 지원하지 않아요.');
+    },
+    copy() {
+      const payload = (P.text ? P.text + '\n' : '') + P.url;
+      try { navigator.clipboard.writeText(payload).then(() => toast(P.text ? '문구와 링크가 복사되었습니다.' : 'URL이 복사되었습니다.')); }
+      catch (_) { window.prompt('아래 내용을 복사하세요.', payload); }
+    },
+  };
+}
+
+function ProductTools({ productId, shareTitle = '애터미 상품', shareImage = '', shareUrl = '' }) {
   const [wished, setWished] = React.useState(false);
+  const [shareMode, setShareMode] = React.useState(null); // null | 'choice' | 'general' | 'ai'
+  const toolsRef = React.useRef(null);
   const btn = {
     width: 38, height: 38, borderRadius: 999,
     border: '1px solid rgba(11,31,58,0.12)', background: '#fff',
@@ -482,7 +539,7 @@ function ProductTools({ productId }) {
     padding: 0, flexShrink: 0,
   };
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+    <div ref={toolsRef} style={{ display: 'flex', alignItems: 'center', gap: 8, position: 'relative' }}>
       <button aria-label="프린트하기" title="프린트" style={btn} onClick={() => window.print && window.print()}>
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#4A5568" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <polyline points="6 9 6 2 18 2 18 9" /><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2" /><rect x="6" y="14" width="12" height="8" />
@@ -498,15 +555,241 @@ function ProductTools({ productId }) {
           <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
         </svg>
       </button>
-      <button aria-label="공유하기" title="공유"
-        onClick={() => { if (window.showToast) window.showToast('상품 링크가 복사되었습니다.'); }}
+      <button aria-label="공유하기" title="공유" data-role="sns-share"
+        onClick={() => setShareMode(m => m ? null : 'choice')}
         style={btn}>
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#4A5568" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" />
           <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
         </svg>
       </button>
+      {shareMode === 'choice' && (
+        <ShareChoice
+          onGeneral={() => setShareMode('general')}
+          onAi={() => setShareMode('ai')}
+          onClose={() => setShareMode(null)}
+        />
+      )}
+      {shareMode === 'general' && (
+        <ShareSheet
+          title={shareTitle}
+          image={shareImage}
+          url={shareUrl || (typeof location !== 'undefined' ? location.href : '')}
+          onClose={() => setShareMode(null)}
+        />
+      )}
+      {shareMode === 'ai' && (
+        <AiShareSheet
+          title={shareTitle}
+          image={shareImage}
+          url={shareUrl || (typeof location !== 'undefined' ? location.href : '')}
+          hostEl={toolsRef.current}
+          onClose={() => setShareMode(null)}
+        />
+      )}
     </div>
+  );
+}
+
+// 공유 방식 선택 — 일반 공유 / 맞춤 Ai 공유
+function ShareChoice({ onGeneral, onAi, onClose }) {
+  return (
+    <>
+      <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 10005 }} />
+      <div style={{
+        position: 'absolute', top: 'calc(100% + 8px)', right: 0, zIndex: 10006,
+        width: 300, background: '#fff', borderRadius: 14,
+        boxShadow: '0 16px 44px rgba(11,31,58,0.28)', border: '1px solid rgba(11,31,58,0.08)',
+        padding: '16px 16px 18px', animation: 'shortsFadeIn 0.16s ease both', fontFamily: 'inherit',
+      }}>
+        <div style={{ position: 'absolute', top: -7, right: 12, width: 14, height: 14, background: '#fff', borderLeft: '1px solid rgba(11,31,58,0.08)', borderTop: '1px solid rgba(11,31,58,0.08)', transform: 'rotate(45deg)' }} />
+        <div style={{ fontSize: 15, fontWeight: 900, color: '#0B1F3A', marginBottom: 4 }}>어떻게 공유할까요?</div>
+        <div style={{ fontSize: 12, color: '#6B7A90', lineHeight: 1.55, marginBottom: 14 }}>바로 보내고 싶다면 <b style={{ color: '#0B1F3A' }}>일반 공유</b>를, Ai 문구를 원하시면 <b style={{ color: '#0088B8' }}>맞춤 Ai 공유</b>를 선택하세요!</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <button onClick={onGeneral} style={{
+            width: '100%', padding: '12px 14px', borderRadius: 11, cursor: 'pointer', fontFamily: 'inherit',
+            border: '1.5px solid rgba(11,31,58,0.14)', background: '#fff', color: '#0B1F3A', fontSize: 13.5, fontWeight: 800,
+          }}>일반 공유</button>
+          <button onClick={onAi} style={{
+            width: '100%', padding: '12px 14px', borderRadius: 11, cursor: 'pointer', fontFamily: 'inherit',
+            border: '1.5px solid rgba(0,182,240,0.5)', background: 'linear-gradient(135deg, rgba(0,182,240,0.08), rgba(0,182,240,0.02))',
+            color: '#0088B8', fontSize: 13.5, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+          }}><span style={{ fontSize: 15 }}>✦</span> 맞춤 Ai 공유</button>
+        </div>
+      </div>
+    </>
+  );
+}
+
+// 맞춤 Ai 공유 — 성별/연령/화법 선택 → Ai 문구 생성 → SNS 공유
+function AiShareSheet({ title, image = '', url = '', hostEl = null, onClose, centered = false }) {
+  const [gender, setGender] = React.useState('MALE');
+  const [age, setAge] = React.useState('AGE_2030');
+  const [tone, setTone] = React.useState('FRIENDLY');
+  const [step, setStep] = React.useState('form'); // form | loading | result
+  const [text, setText] = React.useState('');
+
+  const GENDERS = [{ v: 'MALE', t: '남성' }, { v: 'FEMALE', t: '여성' }];
+  const AGES = [{ v: 'AGE_2030', t: '20 ~ 30대' }, { v: 'AGE_4050', t: '30 ~ 40대' }, { v: 'AGE_60_PLUS', t: '60대 이상' }];
+  const TONES = [{ v: 'FRIENDLY', t: '친근한' }, { v: 'POLITE', t: '정중한' }, { v: 'PROFESSIONAL', t: '전문적인' }, { v: 'EMOTIONAL', t: '감성적인' }];
+
+  const genText = () => {
+    const g = GENDERS.find(x => x.v === gender).t;
+    const a = AGES.find(x => x.v === age).t;
+    const openers = {
+      FRIENDLY: `이거 진짜 좋아서 공유해! — ${title} 😊`,
+      POLITE: `안녕하세요, 괜찮으시다면 ‘${title}’ 한번 보셔도 좋을 것 같아 전해드려요.`,
+      PROFESSIONAL: `[추천] ${title} — 성분·품질 기준으로 설명드립니다.`,
+      EMOTIONAL: `문득 생각나서 전해요. ${title}, 요즘 제게 위로가 된 제품이에요.`,
+    };
+    const closers = {
+      FRIENDLY: `${a} ${g}이 쓰기 딱 좋더라! 링크 넣어둥게 ↓`,
+      POLITE: `${a} ${g}께 특히 잘 맞을 거라 생각해요. 아래 링크 참고하세요.`,
+      PROFESSIONAL: `${a} ${g} 사용자 기준 만족도가 높은 제품입니다. 상세는 링크에서.`,
+      EMOTIONAL: `${a} ${g}의 하루에 작은 선물이 되길 바라요 💛`,
+    };
+    return `${openers[tone]}\n${closers[tone]}`;
+  };
+
+  const next = () => {
+    setStep('loading');
+    setTimeout(() => { setText(genText()); setStep('result'); }, 1100);
+  };
+  const share = makeShareFns({ title, image, url, text });
+
+  const Section = ({ h, p, children }) => (
+    <div style={{ marginBottom: 16 }}>
+      <div style={{ fontSize: 13.5, fontWeight: 800, color: '#0B1F3A' }}>{h}</div>
+      <div style={{ fontSize: 11.5, color: '#8A97AD', margin: '3px 0 9px', lineHeight: 1.45 }}>{p}</div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>{children}</div>
+    </div>
+  );
+  const Pill = ({ on, onClick, children }) => (
+    <button onClick={onClick} style={{
+      padding: '9px 15px', borderRadius: 999, cursor: 'pointer', fontFamily: 'inherit',
+      border: on ? '1.5px solid #00B6F0' : '1.5px solid rgba(11,31,58,0.14)',
+      background: on ? 'rgba(0,182,240,0.08)' : '#fff', color: on ? '#0088B8' : '#4A5568',
+      fontSize: 12.5, fontWeight: on ? 800 : 600,
+    }}>{children}</button>
+  );
+
+  const host = (hostEl && hostEl.closest && hostEl.closest('.phone-scroll')) || null;
+  const sheet = (
+    <div onClick={onClose} style={{
+      position: 'absolute', inset: 0, zIndex: 10010, background: 'rgba(11,31,58,0.55)',
+      display: 'flex', alignItems: centered ? 'center' : 'flex-end', justifyContent: 'center',
+      padding: centered ? '0 14px' : 0, animation: 'shortsFadeIn 0.2s ease both',
+    }}>
+      <div onClick={(e) => e.stopPropagation()} style={{
+        width: '100%', maxWidth: 440, maxHeight: centered ? '84%' : '88%', overflowY: 'auto', background: '#fff',
+        borderRadius: centered ? 18 : '18px 18px 0 0', padding: '20px 20px 20px', fontFamily: 'inherit',
+        boxShadow: centered ? '0 24px 60px rgba(11,31,58,0.4)' : 'none',
+        animation: 'notifSlideDown 0.28s cubic-bezier(.2,.8,.3,1) both',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 6 }}>
+          <div style={{ fontSize: 16, fontWeight: 900, color: '#0B1F3A', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ color: '#00B6F0' }}>✦</span> Ai 가 완성해 드립니다</div>
+          <button onClick={onClose} aria-label="닫기" style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: '#8A97AD', padding: 2, lineHeight: 0 }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+          </button>
+        </div>
+
+        {step === 'form' && (<>
+          <div style={{ fontSize: 12.5, color: '#6B7A90', lineHeight: 1.55, marginBottom: 18 }}>어떻게 보낼지 고민하지 마세요! 받는 분의 성별·연령대·화법만 선택하시면 Ai가 똑똑하게 완성해 드립니다.</div>
+          <Section h="성별을 선택해 주세요." p="받는 분의 성별에 어울리는 맞춤형 문구로 만들어 드릴게요.">
+            {GENDERS.map(o => <Pill key={o.v} on={gender === o.v} onClick={() => setGender(o.v)}>{o.t}</Pill>)}
+          </Section>
+          <Section h="연령을 선택해 주세요." p="받는 분의 연령에 따라 센스 있는 문구를 제안해 드려요.">
+            {AGES.map(o => <Pill key={o.v} on={age === o.v} onClick={() => setAge(o.v)}>{o.t}</Pill>)}
+          </Section>
+          <Section h="화법을 선택해 주세요." p="원하시는 화법에 맞는 자연스러운 문구로 만들어 드려요.">
+            {TONES.map(o => <Pill key={o.v} on={tone === o.v} onClick={() => setTone(o.v)}>{o.t}</Pill>)}
+          </Section>
+          <div style={{ display: 'flex', gap: 8, marginTop: 20 }}>
+            <button onClick={onClose} style={{ flex: 1, padding: '13px', borderRadius: 11, border: '1.5px solid rgba(11,31,58,0.14)', background: '#fff', color: '#4A5568', fontSize: 13.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>닫기</button>
+            <button onClick={next} style={{ flex: 1.4, padding: '13px', borderRadius: 11, border: 'none', background: '#0B1F3A', color: '#5CD3F7', fontSize: 13.5, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit' }}>다음</button>
+          </div>
+        </>)}
+
+        {step === 'loading' && (
+          <div style={{ padding: '48px 0 44px', textAlign: 'center' }}>
+            <div style={{ width: 36, height: 36, margin: '0 auto 14px', borderRadius: 999, border: '3px solid rgba(0,182,240,0.2)', borderTopColor: '#00B6F0', animation: 'spin 0.8s linear infinite' }} />
+            <div style={{ fontSize: 13, fontWeight: 700, color: '#6B7A90' }}>Ai가 맞춤 문구를 쓰고 있어요…</div>
+          </div>
+        )}
+
+        {step === 'result' && (<>
+          <div style={{ fontSize: 12.5, color: '#6B7A90', marginBottom: 10 }}>Ai가 완성한 문구예요. 그대로 공유하거나 복사해 쓰세요.</div>
+          <div style={{ position: 'relative', background: '#F5F7FA', borderRadius: 12, padding: '14px 15px', marginBottom: 14 }}>
+            <textarea value={text} onChange={(e) => setText(e.target.value)} rows={4} style={{
+              width: '100%', border: 'none', background: 'transparent', resize: 'vertical', outline: 'none',
+              fontFamily: 'inherit', fontSize: 13.5, lineHeight: 1.6, color: '#0B1F3A',
+            }} />
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px 4px', marginBottom: 6 }}>
+            {SHARE_CHANNELS.map(c => (
+              <button key={c.key} data-role="sns-share" data-sns={c.key}
+                onClick={() => { try { share[c.key](); } catch (_) {} }}
+                style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>
+                <span style={{ width: 46, height: 46, borderRadius: 999, background: c.bg, color: c.fg, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 19, fontWeight: 800 }}>{c.ic}</span>
+                <span style={{ fontSize: 10.5, fontWeight: 600, color: '#4A5568' }}>{c.label}</span>
+              </button>
+            ))}
+          </div>
+          <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
+            <button onClick={() => setStep('form')} style={{ flex: 1, padding: '12px', borderRadius: 11, border: '1.5px solid rgba(11,31,58,0.14)', background: '#fff', color: '#4A5568', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>이전</button>
+            <button onClick={() => share.copy()} style={{ flex: 1.4, padding: '12px', borderRadius: 11, border: 'none', background: '#0B1F3A', color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit' }}>문구 + 링크 복사</button>
+          </div>
+        </>)}
+      </div>
+    </div>
+  );
+  return host ? ReactDOM.createPortal(sheet, host) : sheet;
+}
+
+// SNS 공유 레이어 — 공유 버튼 옆에 팝오버로 펼침 (m-kr.atomy.com ShareModule 구조 이식)
+function ShareSheet({ title, description = '', image = '', url = '', onClose }) {
+  const share = makeShareFns({ title, description, image, url });
+  const CH = SHARE_CHANNELS;
+  return (
+    <>
+      {/* 클릭어웨이 배경 */}
+      <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 10005 }} />
+      {/* 공유 버튼 오른쪽 아래 팝오버 */}
+      <div style={{
+        position: 'absolute', top: 'calc(100% + 8px)', right: 0, zIndex: 10006,
+        width: 288, background: '#fff', borderRadius: 14,
+        boxShadow: '0 16px 44px rgba(11,31,58,0.28)', border: '1px solid rgba(11,31,58,0.08)',
+        padding: '14px 15px 16px', animation: 'shortsFadeIn 0.16s ease both', fontFamily: 'inherit',
+      }}>
+        {/* 방향 꺼비 */}
+        <div style={{ position: 'absolute', top: -7, right: 12, width: 14, height: 14, background: '#fff', borderLeft: '1px solid rgba(11,31,58,0.08)', borderTop: '1px solid rgba(11,31,58,0.08)', transform: 'rotate(45deg)' }} />
+        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}>
+          <div style={{ fontSize: 14, fontWeight: 900, color: '#0B1F3A' }}>공유하기</div>
+          <button onClick={onClose} aria-label="닫기" style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: '#8A97AD', padding: 2, lineHeight: 0 }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+          </button>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px 4px' }}>
+          {CH.map(c => (
+            <button key={c.key} data-role="sns-share" data-sns={c.key}
+              onClick={() => { try { share[c.key](); } catch (_) {} onClose(); }}
+              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>
+              <span style={{ width: 44, height: 44, borderRadius: 999, background: c.bg, color: c.fg, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 800 }}>{c.ic}</span>
+              <span style={{ fontSize: 10.5, fontWeight: 600, color: '#4A5568' }}>{c.label}</span>
+            </button>
+          ))}
+        </div>
+        <button onClick={() => { share.copy(); }} style={{
+          width: '100%', marginTop: 14, padding: '11px 14px', borderRadius: 10,
+          border: '1px solid rgba(11,31,58,0.14)', background: '#fff', cursor: 'pointer', fontFamily: 'inherit',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, fontSize: 12.5, fontWeight: 700, color: '#0B1F3A',
+        }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" /></svg>
+          URL 복사
+        </button>
+      </div>
+    </>
   );
 }
 
@@ -536,6 +819,14 @@ function AtomyProductDetail({ product, isMobile = false, onClose, onPlayVideo, e
   }), [_raw]);
   const [qty, setQty] = React.useState(1);
   const [tab, setTab] = React.useState('info'); // 'info' | 'ingredients' | 'reviews'
+  const [reviewSort, setReviewSort] = React.useState('ai'); // ai | rating_high | rating_low | latest
+  const [photoOnly, setPhotoOnly] = React.useState(false);
+  const [starFilter, setStarFilter] = React.useState(0); // 0=전체, 5,4,3(=3이하)
+  const [lightbox, setLightbox] = React.useState(null); // { imgs, i } | null
+  const [reviewLimit, setReviewLimit] = React.useState(5);
+  const [expandedReviews, setExpandedReviews] = React.useState({});
+  React.useEffect(() => { setReviewLimit(5); }, [reviewSort, photoOnly, starFilter]);
+  const detailRootRef = React.useRef(null);
 
   React.useEffect(() => {
     const onKey = (e) => { if (e.key === 'Escape') onClose && onClose(); };
@@ -543,19 +834,34 @@ function AtomyProductDetail({ product, isMobile = false, onClose, onPlayVideo, e
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
 
+  // 최근 본 상품 기록 ({id, d} 형태 — 날짜별 그룹 지원)
+  React.useEffect(() => {
+    if (!p || p.id == null || embedded) return;
+    try {
+      const key = 'atomy_recent_viewed';
+      const raw = JSON.parse(localStorage.getItem(key) || '[]');
+      const arr = raw.filter(x => (typeof x === 'object' ? x.id : x) !== p.id);
+      const dt = new Date();
+      const ds = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+      arr.unshift({ id: p.id, d: ds });
+      localStorage.setItem(key, JSON.stringify(arr.slice(0, 30)));
+      window.dispatchEvent(new Event('atomy-recent-updated'));
+    } catch (e) {}
+  }, [p && p.id, embedded]);
+
   const fmt = (n) => n.toLocaleString('ko-KR');
   const totalPrice = p.price * qty;
   const totalPv = p.pv * qty;
 
   return (
-    <div style={{
+    <div ref={detailRootRef} style={{
       fontFamily: '"Pretendard", "Noto Sans KR", system-ui, sans-serif',
       background: '#fff', color: '#0B1F3A',
       minHeight: '100%',
     }}>
       {/* 상단 닫기 바 */}
       {!embedded && (<div style={{
-        position: 'sticky', top: 0, zIndex: 5,
+        position: 'sticky', top: 0, zIndex: 50,
         height: isMobile ? 48 : 56,
         background: 'rgba(255,255,255,0.96)', backdropFilter: 'blur(14px)',
         borderBottom: '1px solid rgba(11,31,58,0.08)',
@@ -652,22 +958,20 @@ function AtomyProductDetail({ product, isMobile = false, onClose, onPlayVideo, e
                 alt={p.name}
               />
             )}
-            <div style={{
-              position: 'absolute', top: 18, left: 18, zIndex: 3,
-              display: 'flex', flexDirection: 'column', gap: 6,
-            }}>
-              <span style={{
-                padding: '5px 11px', borderRadius: 4,
-                background: '#E84141', color: '#fff',
-                fontSize: 10.5, fontWeight: 800, letterSpacing: '-0.01em',
-              }}>NEW · 출시 프로모션</span>
-              <span style={{
-                padding: '5px 11px', borderRadius: 4,
-                background: 'rgba(11,31,58,0.85)', color: '#fff',
-                fontSize: 10.5, fontWeight: 800, letterSpacing: '-0.01em',
-                width: 'fit-content',
-              }}>기능성 표시 식품</span>
-            </div>
+            {(p.badges && p.badges.length > 0) && (
+              <div style={{
+                position: 'absolute', top: 16, left: 16, zIndex: 3,
+                display: 'flex', flexWrap: 'wrap', gap: 6, maxWidth: '82%',
+              }}>
+                {p.badges.slice(0, 2).map(b => (
+                  <span key={b} style={{
+                    padding: '5px 11px', borderRadius: 4,
+                    background: 'rgba(11,31,58,0.85)', color: '#fff',
+                    fontSize: 10.5, fontWeight: 800, letterSpacing: '-0.01em',
+                  }}>{b}</span>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* 우 — 정보 + 구매 */}
@@ -684,14 +988,20 @@ function AtomyProductDetail({ product, isMobile = false, onClose, onPlayVideo, e
                 </span>
                 <span style={{ color: '#D2D8E0' }}>|</span>
                 <button
-                  onClick={() => { setTab('reviews'); }}
+                  onClick={() => {
+                    setTab('reviews');
+                    setTimeout(() => {
+                      const el = document.getElementById('detail-tab-bar');
+                      if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }, 60);
+                  }}
                   style={{
                     background: 'none', border: 'none', cursor: 'pointer', padding: 0,
                     fontSize: 13, fontWeight: 600, color: '#6B7A90', fontFamily: 'inherit',
                     textDecoration: 'underline', textUnderlineOffset: 2,
                   }}>{p.reviewsCount.toLocaleString()}건 리뷰보기</button>
               </div>
-              <ProductTools productId={p.id} />
+              <ProductTools productId={p.id} shareTitle={p.name} shareImage={(p.images && p.images[0]) || p.image} />
             </div>
 
             {/* 브랜드 + 배송 태그 */}
@@ -716,15 +1026,15 @@ function AtomyProductDetail({ product, isMobile = false, onClose, onPlayVideo, e
 
             {/* 이름 */}
             <h1 style={{
-              margin: 0, fontSize: isMobile ? 23 : 30, fontWeight: 800,
-              color: '#0B1F3A', letterSpacing: '-0.025em', lineHeight: 1.25,
+              margin: 0, fontSize: isMobile ? 20 : 26, fontWeight: 800,
+              color: '#0B1F3A', letterSpacing: '-0.02em', lineHeight: 1.3,
             }}>{p.name}</h1>
 
             {/* 가격 + PV */}
             <div style={{ marginTop: 16, display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
               <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: 2 }}>
                 <span style={{
-                  fontSize: isMobile ? 30 : 38, fontWeight: 900, color: '#0B1F3A',
+                  fontSize: isMobile ? 26 : 32, fontWeight: 900, color: '#0B1F3A',
                   letterSpacing: '-0.03em', fontVariantNumeric: 'tabular-nums', lineHeight: 1,
                 }}>{fmt(p.price)}</span>
                 <span style={{ fontSize: 15, fontWeight: 700, color: '#0B1F3A' }}>원</span>
@@ -739,10 +1049,34 @@ function AtomyProductDetail({ product, isMobile = false, onClose, onPlayVideo, e
               </span>
             </div>
 
-            {/* 상품번호 */}
+
+            {/* 상품번호 + ⑫ 표준 속성 */}
             <div style={{ marginTop: 12, fontSize: 12.5, color: '#6B7A90', fontWeight: 600 }}>
               상품번호 <span style={{ color: '#2B3A52', fontWeight: 700, marginLeft: 4 }}>{p.id}</span>
             </div>
+            {(() => {
+              // 표준 속성 자동 태깅 — 이름·카테고리에서 형태/성분/용도 추출 (AI 검색·추천용 데이터 정비)
+              const src = (p.name || '') + ' ' + (p.category || '');
+              const tags = [];
+              if (/샷|액상|스틱/.test(src)) tags.push('액상·샷');
+              if (/캡슐|정|타블렛/.test(src)) tags.push('알약·캡슐');
+              if (/젤리|추어/.test(src)) tags.push('젤리');
+              if (/헤모힘/.test(src)) tags.push('헤모힘 원료');
+              if (/유산균|프로바이오/.test(src)) tags.push('유산균');
+              if (/비타민/.test(src)) tags.push('비타민');
+              if (/샴푸|헤어/.test(src)) tags.push('헤어케어');
+              if (/기능성|건강/.test(src)) tags.push('건강기능');
+              if (/무료|개별 배송/.test(src)) tags.push('무료배송');
+              if (!tags.length) return null;
+              return (
+                <div style={{ marginTop: 8, display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+                  {tags.slice(0, 5).map(t => (
+                    <span key={t} style={{ fontSize: 10.5, fontWeight: 700, color: '#6B7A90', background: '#F1F4F9', border: '1px solid rgba(11,31,58,0.07)', borderRadius: 999, padding: '3px 9px' }}>#{t}</span>
+                  ))}
+                  <span style={{ fontSize: 10, fontWeight: 700, color: '#A0AABA', alignSelf: 'center' }}>✦ AI 표준 속성</span>
+                </div>
+              );
+            })()}
 
             {/* 구분선 */}
             <div style={{ margin: '18px 0', height: 1, background: 'rgba(11,31,58,0.08)' }} />
@@ -882,7 +1216,7 @@ function AtomyProductDetail({ product, isMobile = false, onClose, onPlayVideo, e
       </section>
 
       {/* 1.5. 회원 소개 영상 — 상세 정보 탭 가장 상단 (embedded이면 info 탭일 때만) */}
-      {(!embedded || tab === 'info') && (<section style={{
+      {(!embedded || tab === 'info') && p.points.length > 0 && (<section style={{
         padding: isMobile ? '20px 16px' : '32px 36px',
         background: '#fff',
       }}>
@@ -1013,48 +1347,43 @@ function AtomyProductDetail({ product, isMobile = false, onClose, onPlayVideo, e
                 음소거 상태로 자동 재생되며, 영상을 클릭하면 소리와 함께
                 전체화면으로 감상할 수 있어요.
               </p>
-
-              {/* 작은 메타 정보 */}
-              <div style={{
-                marginTop: 16, display: 'flex', flexWrap: 'wrap', gap: 8,
-              }}>
-                {[
-                  { icon: '⏱', label: '0:45 짧은 영상' },
-                  { icon: '🔇', label: '음소거 자동재생' },
-                  { icon: '⛶', label: '클릭 시 전체화면' },
-                ].map((m, i) => (
-                  <span key={i} style={{
-                    display: 'inline-flex', alignItems: 'center', gap: 5,
-                    padding: '5px 10px', borderRadius: 999,
-                    background: 'rgba(11,31,58,0.05)',
-                    color: '#4A5568', fontSize: 11, fontWeight: 700,
-                  }}>
-                    <span>{m.icon}</span> {m.label}
-                  </span>
-                ))}
-              </div>
             </div>
           </div>
         </div>
       </section>)}
 
       {/* 탭 바 — 상세 정보 / 핵심 성분 / 리뷰 / 배송·결제 / 반품·교환 */}
-      <section style={{
+      <section id="detail-tab-bar" style={{
         padding: isMobile ? '0 8px' : '0 36px',
         background: '#fff',
-        position: 'sticky', top: 0, zIndex: 50,
+        position: 'sticky', top: embedded ? (isMobile ? 48 : 0) : (isMobile ? 48 : 56), zIndex: 40,
         borderBottom: '1px solid rgba(11,31,58,0.08)',
         boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
         overflowX: 'auto',
       }}>
-        <div style={{ maxWidth: 1280, margin: '0 auto', display: 'flex', gap: 0, minWidth: 'max-content' }}>
+        <div style={{ maxWidth: 1280, margin: '0 auto', display: 'flex', gap: 0, minWidth: 'max-content', alignItems: 'stretch' }}>
           {[
             { k: 'info', ko: '상품정보' },
             { k: 'reviews', ko: `리뷰(${p.reviewsCount.toLocaleString()})` },
             { k: 'shipping', ko: '배송/결제' },
             { k: 'return', ko: '반품/교환' },
           ].map(t => (
-            <button key={t.k} onClick={() => setTab(t.k)} style={{
+            <button key={t.k} onClick={(e) => {
+              setTab(t.k);
+              const bar = e.currentTarget.closest('#detail-tab-bar');
+              const scroller = bar && bar.closest('.phone-scroll');
+              const anchor = bar && bar.nextElementSibling;
+              if (!bar || !scroller || !anchor) return;
+              const stickyTop = embedded ? (isMobile ? 48 : 0) : (isMobile ? 48 : 56);
+              requestAnimationFrame(() => {
+                // sticky 영향 없는 앵커의 실제 위치로 탭 시작점 계산 (스크롤 위치 무관)
+                const scRect = scroller.getBoundingClientRect();
+                const aRect = anchor.getBoundingClientRect();
+                const anchorContentTop = scroller.scrollTop + (aRect.top - scRect.top);
+                const target = anchorContentTop - bar.offsetHeight - stickyTop;
+                scroller.scrollTo({ top: Math.max(0, target), behavior: 'auto' });
+              });
+            }} style={{
               flex: isMobile ? '0 0 auto' : 1,
               padding: isMobile ? '14px 14px 12px' : '18px 10px 14px',
               background: 'transparent', border: 'none',
@@ -1072,9 +1401,53 @@ function AtomyProductDetail({ product, isMobile = false, onClose, onPlayVideo, e
           ))}
         </div>
       </section>
+      <div data-tab-anchor="1" aria-hidden="true" style={{ height: 0 }} />
+
+      {/* ② 상품 한눈에 보기 — AI 요약 (상품정보 탭 최상단) */}
+      {tab === 'info' && window.AIProductGlance && <window.AIProductGlance isMobile={isMobile} />}
+
+      {/* 일반 상품 — 기본 상품 설명 (헤모힘형 리치 콘텐츠가 없을 때) */}
+      {tab === 'info' && p.highlights.length === 0 && p.points.length === 0 && (
+        <section style={{ padding: isMobile ? '24px 16px' : '44px 36px', background: '#fff' }}>
+          <div style={{ maxWidth: 720, margin: '0 auto' }}>
+            <div style={{
+              borderRadius: 16, overflow: 'hidden', background: '#F5F7FA',
+              border: '1px solid rgba(11,31,58,0.06)', aspectRatio: '4/3',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: isMobile ? 20 : 28,
+            }}>
+              {(p.images[0] || p.image) && (
+                <img src={p.images[0] || p.image} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                     onError={(e) => { e.currentTarget.style.opacity = 0; }} />
+              )}
+            </div>
+            {(p.tagline || p.description) && (
+              <p style={{
+                margin: '0 0 22px', fontSize: isMobile ? 14 : 15, lineHeight: 1.75,
+                color: '#3A4657', fontWeight: 500, textWrap: 'pretty',
+              }}>{p.description || p.tagline}</p>
+            )}
+            <div style={{ borderTop: '1px solid rgba(11,31,58,0.08)' }}>
+              {[
+                { k: '상품번호', v: p.id },
+                p.sub ? { k: '구성', v: p.sub } : null,
+                p.category ? { k: '카테고리', v: p.category } : null,
+                { k: '배송', v: (p.badges || []).includes('무료배송') ? '무료배송' : '기본배송' },
+              ].filter(Boolean).map((r, i) => (
+                <div key={i} style={{
+                  display: 'grid', gridTemplateColumns: '96px 1fr', gap: 12,
+                  padding: '13px 2px', borderBottom: '1px solid rgba(11,31,58,0.08)', fontSize: isMobile ? 13 : 13.5,
+                }}>
+                  <span style={{ color: '#8A97AD', fontWeight: 700 }}>{r.k}</span>
+                  <span style={{ color: '#0B1F3A', fontWeight: 600, lineHeight: 1.5 }}>{r.v}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* 2. 핵심 함량 그리드 */}
-      {tab === 'info' && (<section style={{
+      {tab === 'info' && p.highlights.length > 0 && (<section style={{
         padding: isMobile ? '24px 16px' : '40px 36px',
         background: 'linear-gradient(180deg, #fff 0%, #FFF5F3 100%)',
       }}>
@@ -1122,7 +1495,7 @@ function AtomyProductDetail({ product, isMobile = false, onClose, onPlayVideo, e
       </section>)}
 
       {/* 3. 7가지 포인트 */}
-      {tab === 'info' && (<section style={{
+      {tab === 'info' && p.points.length > 0 && (<section style={{
         padding: isMobile ? '32px 16px' : '60px 36px',
         background: '#0B1F3A', color: '#fff',
       }}>
@@ -1176,7 +1549,7 @@ function AtomyProductDetail({ product, isMobile = false, onClose, onPlayVideo, e
       </section>)}
 
       {/* 4. 추천 대상 */}
-      {tab === 'info' && (<section style={{
+      {tab === 'info' && p.recommendFor.length > 0 && (<section style={{
         padding: isMobile ? '32px 16px' : '50px 36px',
         background: '#fff',
       }}>
@@ -1214,7 +1587,7 @@ function AtomyProductDetail({ product, isMobile = false, onClose, onPlayVideo, e
       </section>)}
 
       {/* 5. 영양 정보 + 상세 스펙 */}
-      {tab === 'info' && (<section style={{
+      {tab === 'info' && (p.nutrition.length > 0 || p.specs.length > 0) && (<section style={{
         padding: isMobile ? '32px 16px' : '50px 36px',
         background: '#F5F7FA',
       }}>
@@ -1305,6 +1678,8 @@ function AtomyProductDetail({ product, isMobile = false, onClose, onPlayVideo, e
         background: '#fff',
       }}>
         <div style={{ maxWidth: 1280, margin: '0 auto' }}>
+          {/* ① 리뷰 AI 요약 */}
+          {window.AIReviewSummary && <window.AIReviewSummary productName={p.name} isMobile={isMobile} />}
           {/* 상품 만족도 + 평점 비율 차트 */}
           <div style={{
             display: 'grid',
@@ -1342,115 +1717,131 @@ function AtomyProductDetail({ product, isMobile = false, onClose, onPlayVideo, e
           </div>
 
           {/* 사진·영상 리뷰 */}
-          <div style={{ marginBottom: isMobile ? 24 : 32 }}>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 12 }}>
-              <span style={{ fontSize: isMobile ? 15 : 16, fontWeight: 800, color: '#0B1F3A' }}>사진·영상 리뷰</span>
-              <span style={{ fontSize: 13, fontWeight: 700, color: '#00B6F0' }}>15건</span>
-            </div>
-            <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
-              {[p.images[0], p.images[1], p.images[2], p.images[0], p.images[1]].map((src, i) => (
-                <div key={i} style={{
-                  position: 'relative', flex: '0 0 auto',
-                  width: isMobile ? 92 : 116, height: isMobile ? 92 : 116,
-                  borderRadius: 10, overflow: 'hidden', cursor: 'pointer',
-                  border: '1px solid rgba(11,31,58,0.06)',
-                }}>
-                  <img src={src} alt={`리뷰 사진 ${i + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                       onError={(e) => { e.currentTarget.style.background = '#E8EDF3'; e.currentTarget.style.opacity = 0; }} />
-                  {i === 4 && (
-                    <div style={{
-                      position: 'absolute', inset: 0, background: 'rgba(11,31,58,0.55)',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      color: '#fff', fontSize: 13, fontWeight: 800,
-                    }}>+11</div>
-                  )}
+          {(() => {
+            const pool = (p.images && p.images.filter(Boolean).length) ? p.images.filter(Boolean) : [p.image].filter(Boolean);
+            const gallery = p.reviews.flatMap((r, ri) => (r.photos && r.photos.length) ? r.photos : (ri % 2 === 0 && pool.length ? [pool[ri % pool.length]] : []));
+            if (!gallery.length) return null;
+            const shown = gallery.slice(0, 5);
+            const extra = gallery.length - shown.length;
+            return (
+              <div style={{ marginBottom: isMobile ? 24 : 32 }}>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 12 }}>
+                  <span style={{ fontSize: isMobile ? 15 : 16, fontWeight: 800, color: '#0B1F3A' }}>사진·영상 리뷰</span>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: '#00B6F0' }}>{gallery.length}건</span>
                 </div>
-              ))}
-            </div>
-          </div>
-
-          {/* 정렬 · 필터 바 */}
-          <div style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
-            padding: '14px 0', borderTop: '1px solid rgba(11,31,58,0.1)', borderBottom: '1px solid rgba(11,31,58,0.1)',
-            marginBottom: 20, flexWrap: 'wrap',
-          }}>
-            <span style={{ fontSize: 13.5, fontWeight: 700, color: '#0B1F3A' }}>전체 <span style={{ color: '#00B6F0' }}>{p.reviewsCount}</span>건</span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <button style={{
-                display: 'inline-flex', alignItems: 'center', gap: 5,
-                padding: '7px 12px', borderRadius: 8, background: '#fff',
-                border: '1px solid rgba(11,31,58,0.15)', cursor: 'pointer', fontFamily: 'inherit',
-                fontSize: 12, fontWeight: 700, color: '#6B7A90',
-              }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><path d="M2 12h20M12 2a15 15 0 010 20M12 2a15 15 0 000 20" /></svg>
-                번역
-              </button>
-              <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
-                <select style={{
-                  appearance: 'none', WebkitAppearance: 'none',
-                  padding: '7px 30px 7px 12px', borderRadius: 8, background: '#fff',
-                  border: '1px solid rgba(11,31,58,0.15)', cursor: 'pointer', fontFamily: 'inherit',
-                  fontSize: 12, fontWeight: 700, color: '#0B1F3A',
-                }}>
-                  <option>AI 추천순</option>
-                  <option>평점 높은순</option>
-                  <option>추천순</option>
-                  <option>최신순</option>
-                </select>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8A97AD" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ position: 'absolute', right: 10, pointerEvents: 'none' }}><polyline points="6 9 12 15 18 9" /></svg>
+                <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
+                  {shown.map((src, i) => (
+                    <button key={i} onClick={() => setLightbox({ imgs: gallery, i })} style={{
+                      position: 'relative', flex: '0 0 auto', padding: 0,
+                      width: isMobile ? 92 : 116, height: isMobile ? 92 : 116,
+                      borderRadius: 10, overflow: 'hidden', cursor: 'pointer', background: '#E8EDF3',
+                      border: '1px solid rgba(11,31,58,0.06)',
+                    }}>
+                      <img src={src} alt={`리뷰 사진 ${i + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                           onError={(e) => { e.currentTarget.style.opacity = 0; }} />
+                      {i === 4 && extra > 0 && (
+                        <div style={{ position: 'absolute', inset: 0, background: 'rgba(11,31,58,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 13, fontWeight: 800 }}>+{extra}</div>
+                      )}
+                    </button>
+                  ))}
+                </div>
               </div>
-              <button aria-label="필터" style={{
-                width: 34, height: 34, borderRadius: 8, background: '#fff',
-                border: '1px solid rgba(11,31,58,0.15)', cursor: 'pointer',
-                display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: '#6B7A90',
-              }}>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="4" y1="6" x2="20" y2="6" /><line x1="7" y1="12" x2="17" y2="12" /><line x1="10" y1="18" x2="14" y2="18" /></svg>
-              </button>
-            </div>
-          </div>
+            );
+          })()}
 
-          {/* 리뷰 카드 */}
-          <div style={{ display: 'grid', gap: isMobile ? 0 : 0 }}>
-            {p.reviews.map((r, ri) => {
-              const maskedId = r.maskedId || `${400 + r.id * 17}***${(10 + r.id * 7) % 100}`;
+          {(() => {
+            const pool = (p.images && p.images.filter(Boolean).length) ? p.images.filter(Boolean) : [p.image].filter(Boolean);
+            const withPhotos = p.reviews.map((r, ri) => {
+              const photos = (r.photos && r.photos.length) ? r.photos : (ri % 2 === 0 && pool.length ? [pool[ri % pool.length], pool[(ri + 1) % pool.length]].filter(Boolean) : []);
               const helpful = r.like != null ? r.like : (12 - r.id * 2 > 0 ? 12 - r.id * 2 : r.id);
-              return (
-                <div key={r.id} style={{
-                  padding: isMobile ? '18px 2px' : '22px 4px',
-                  borderBottom: '1px solid rgba(11,31,58,0.08)',
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, gap: 10 }}>
-                    <StarRating rating={r.rating} size={14} />
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11.5, color: '#8A97AD', fontWeight: 600 }}>
-                      <span style={{ color: '#4A5568', fontWeight: 700 }}>{maskedId}</span>
-                      <span style={{ color: '#D2D8E0' }}>|</span>
-                      <span>{r.date}</span>
-                    </div>
-                  </div>
-                  <p style={{ margin: 0, fontSize: isMobile ? 13 : 13.5, lineHeight: 1.7, color: '#2B3A52', fontWeight: 500, textWrap: 'pretty' }}>{r.text}</p>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginTop: 12 }}>
-                    <button style={{
-                      background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'inherit',
-                      fontSize: 12, fontWeight: 600, color: '#8A97AD', textDecoration: 'underline', textUnderlineOffset: 2,
-                    }}>상세리뷰 보기</button>
-                    <HelpfulButton count={helpful} />
+              const ts = Date.parse(String(r.date || '').replace(/\./g, '-').replace(/-$/, '')) || 0;
+              return { ...r, photos, helpful, ts };
+            });
+            let list = withPhotos;
+            if (photoOnly) list = list.filter(r => r.photos.length);
+            if (starFilter === 5) list = list.filter(r => Math.round(r.rating) >= 5);
+            else if (starFilter === 4) list = list.filter(r => Math.round(r.rating) === 4);
+            else if (starFilter === 3) list = list.filter(r => Math.round(r.rating) <= 3);
+            list = [...list].sort((a, b) => {
+              if (reviewSort === 'rating_high') return b.rating - a.rating || b.helpful - a.helpful;
+              if (reviewSort === 'rating_low') return a.rating - b.rating || b.helpful - a.helpful;
+              if (reviewSort === 'latest') return b.ts - a.ts;
+              return b.helpful - a.helpful;
+            });
+            const chip = (active) => ({ padding: '6px 12px', borderRadius: 999, border: active ? '1px solid #00B6F0' : '1px solid rgba(11,31,58,0.15)', background: active ? '#E6F7FE' : '#fff', color: active ? '#0089C7' : '#6B7A90', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' });
+            return (<React.Fragment>
+              {/* 정렬 · 필터 바 */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '14px 0', borderTop: '1px solid rgba(11,31,58,0.1)', flexWrap: 'wrap' }}>
+                <span style={{ fontSize: 13.5, fontWeight: 700, color: '#0B1F3A' }}>전체 <span style={{ color: '#00B6F0' }}>{list.length}</span>건</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <button onClick={() => setPhotoOnly(v => !v)} style={{ ...chip(photoOnly), display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" /><circle cx="12" cy="13" r="4" /></svg>
+                    포토리뷰
+                  </button>
+                  <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
+                    <select value={reviewSort} onChange={(e) => setReviewSort(e.target.value)} style={{ appearance: 'none', WebkitAppearance: 'none', padding: '7px 30px 7px 12px', borderRadius: 8, background: '#fff', border: '1px solid rgba(11,31,58,0.15)', cursor: 'pointer', fontFamily: 'inherit', fontSize: 12, fontWeight: 700, color: '#0B1F3A' }}>
+                      <option value="ai">AI 추천순</option>
+                      <option value="rating_high">평점 높은순</option>
+                      <option value="rating_low">평점 낮은순</option>
+                      <option value="latest">최신순</option>
+                    </select>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8A97AD" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ position: 'absolute', right: 10, pointerEvents: 'none' }}><polyline points="6 9 12 15 18 9" /></svg>
                   </div>
                 </div>
-              );
-            })}
-          </div>
+              </div>
+              {/* 별점 필터 칩 */}
+              <div style={{ display: 'flex', gap: 6, padding: '10px 0 16px', borderBottom: '1px solid rgba(11,31,58,0.1)', marginBottom: 20, overflowX: 'auto' }}>
+                {[{ v: 0, l: '전체' }, { v: 5, l: '★ 5' }, { v: 4, l: '★ 4' }, { v: 3, l: '★ 3↓' }].map(o => (
+                  <button key={o.v} onClick={() => setStarFilter(o.v)} style={chip(starFilter === o.v)}>{o.l}</button>
+                ))}
+              </div>
+              {/* 리뷰 카드 */}
+              <div style={{ display: 'grid', gap: 0 }}>
+                {list.length === 0 && (
+                  <div style={{ padding: '40px 0', textAlign: 'center', color: '#8A97AD', fontSize: 13, fontWeight: 600 }}>조건에 맞는 리뷰가 없습니다.</div>
+                )}
+                {list.slice(0, reviewLimit).map((r) => {
+                  const maskedId = r.maskedId || `${400 + r.id * 17}***${(10 + r.id * 7) % 100}`;
+                  const isExp = !!expandedReviews[r.id];
+                  return (
+                    <div key={r.id} style={{ padding: isMobile ? '18px 2px' : '22px 4px', borderBottom: '1px solid rgba(11,31,58,0.08)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, gap: 10 }}>
+                        <StarRating rating={r.rating} size={14} />
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11.5, color: '#8A97AD', fontWeight: 600 }}>
+                          <span style={{ color: '#4A5568', fontWeight: 700 }}>{maskedId}</span>
+                          <span style={{ color: '#D2D8E0' }}>|</span>
+                          <span>{r.date}</span>
+                        </div>
+                      </div>
+                      <p style={{ margin: 0, fontSize: isMobile ? 13 : 13.5, lineHeight: 1.7, color: '#2B3A52', fontWeight: 500, textWrap: 'pretty', ...(isExp ? {} : { display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }) }}>{r.text}</p>
+                      {r.photos.length > 0 && (
+                        <div style={{ display: 'flex', flexWrap: isExp ? 'wrap' : 'nowrap', gap: 6, marginTop: 12 }}>
+                          {(isExp ? r.photos : r.photos.slice(0, 4)).map((src, pi) => (
+                            <button key={pi} onClick={() => setLightbox({ imgs: r.photos, i: pi })} style={{ width: isExp ? 84 : 60, height: isExp ? 84 : 60, borderRadius: 8, overflow: 'hidden', border: '1px solid rgba(11,31,58,0.08)', padding: 0, cursor: 'pointer', background: '#E8EDF3', flex: '0 0 auto' }}>
+                              <img src={src} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} onError={(e) => { e.currentTarget.style.opacity = 0; }} />
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginTop: 12 }}>
+                        <button onClick={() => setExpandedReviews(m => ({ ...m, [r.id]: !m[r.id] }))} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'inherit', fontSize: 12, fontWeight: 600, color: '#8A97AD', textDecoration: 'underline', textUnderlineOffset: 2 }}>{isExp ? '접기' : '상세리뷰 보기'}</button>
+                        <HelpfulButton count={r.helpful} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              {list.length > reviewLimit && (
+                <div style={{ display: 'flex', justifyContent: 'center', marginTop: 24 }}>
+                  <button onClick={() => setReviewLimit(n => n + 5)} style={{ padding: '12px 26px', borderRadius: 999, background: '#fff', border: '1px solid rgba(11,31,58,0.15)', color: '#0B1F3A', fontSize: 13, fontWeight: 800, cursor: 'pointer', letterSpacing: '-0.01em' }}>
+                    후기 더보기 ({(list.length - reviewLimit).toLocaleString()}건 남음) →
+                  </button>
+                </div>
+              )}
+            </React.Fragment>);
+          })()}
 
-          <div style={{ display: 'flex', justifyContent: 'center', marginTop: 24 }}>
-            <button style={{
-              padding: '12px 26px', borderRadius: 999,
-              background: '#fff', border: '1px solid rgba(11,31,58,0.15)',
-              color: '#0B1F3A', fontSize: 13, fontWeight: 800, cursor: 'pointer',
-              letterSpacing: '-0.01em',
-            }}>
-              후기 더보기 ({p.reviewsCount.toLocaleString()}) →
-            </button>
-          </div>
+          {lightbox && <ReviewLightbox imgs={lightbox.imgs} index={lightbox.i} onClose={() => setLightbox(null)} hostEl={detailRootRef.current} />}
         </div>
       </section>)}
 
@@ -1579,6 +1970,58 @@ function qtyBtnStyle() {
     color: '#0B1F3A', fontSize: 18, fontWeight: 700, cursor: 'pointer',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
   };
+}
+
+// 리뷰 사진 라이트박스
+function ReviewLightbox({ imgs, index, onClose, hostEl }) {
+  const [i, setI] = React.useState(index || 0);
+  const [host, setHost] = React.useState(null);
+  React.useEffect(() => {
+    const scroller = hostEl && hostEl.closest && hostEl.closest('.phone-scroll');
+    const h = scroller ? scroller.parentElement : null;
+    if (h && getComputedStyle(h).position === 'static') h.style.position = 'relative';
+    setHost(h || null);
+  }, [hostEl]);
+  React.useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === 'Escape') onClose();
+      else if (e.key === 'ArrowRight') setI(v => (v + 1) % imgs.length);
+      else if (e.key === 'ArrowLeft') setI(v => (v - 1 + imgs.length) % imgs.length);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [imgs.length, onClose]);
+  const arrow = (dir) => ({
+    position: 'absolute', top: '50%', [dir === 'prev' ? 'left' : 'right']: 12, transform: 'translateY(-50%)',
+    width: 40, height: 40, borderRadius: '50%', border: 'none', cursor: 'pointer',
+    background: 'rgba(255,255,255,0.16)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
+  });
+  const node = (
+    <div onClick={onClose} style={{
+      position: host ? 'absolute' : 'fixed', inset: 0, zIndex: 80,
+      background: 'rgba(0,0,0,0.92)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+      animation: 'catSheetFade 0.18s ease',
+    }}>
+      <button onClick={onClose} aria-label="닫기" style={{
+        position: 'absolute', top: 12, right: 12, width: 40, height: 40, borderRadius: '50%',
+        border: 'none', background: 'rgba(255,255,255,0.16)', color: '#fff', cursor: 'pointer',
+        display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2,
+      }}>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+      </button>
+      <div style={{ position: 'absolute', top: 18, left: '50%', transform: 'translateX(-50%)', color: '#fff', fontSize: 13, fontWeight: 700, fontVariantNumeric: 'tabular-nums', opacity: 0.85 }}>{i + 1} / {imgs.length}</div>
+      <img src={imgs[i]} alt={`리봰 사진 ${i + 1}`} onClick={(e) => e.stopPropagation()} style={{ maxWidth: '90%', maxHeight: '82%', objectFit: 'contain', borderRadius: 8 }} />
+      {imgs.length > 1 && (<React.Fragment>
+        <button onClick={(e) => { e.stopPropagation(); setI(v => (v - 1 + imgs.length) % imgs.length); }} aria-label="이전" style={arrow('prev')}>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
+        </button>
+        <button onClick={(e) => { e.stopPropagation(); setI(v => (v + 1) % imgs.length); }} aria-label="다음" style={arrow('next')}>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
+        </button>
+      </React.Fragment>)}
+    </div>
+  );
+  return host ? ReactDOM.createPortal(node, host) : node;
 }
 
 // 리뷰 "도움돼요" 추천 버튼
@@ -1734,11 +2177,15 @@ function HemohimShotDetail({ product, isMobile = false, onClose, onPlayVideo, on
   const rootRef = React.useRef(null);
   const [pipVisible, setPipVisible] = React.useState(false);
   const [ctaSticky, setCtaSticky] = React.useState(false);
+  const [barSolid, setBarSolid] = React.useState(false);
+  const [screenH, setScreenH] = React.useState(0);
   const [muted, setMuted] = React.useState(true);
   const [progress, setProgress] = React.useState(0);
 
   // 모바일: 영상이 화면의 대부분을 차지하고, 시트(섬네일 포함)는 '지금 구매하기' 버튼 근처까지 내려옴
   const heroHeight = isMobile ? 680 : 420;
+  // 영상은 기기 화면 높이의 75%를 채우고 고정(sticky), 시트가 위로 올라오며 영상을 덮음
+  const videoH = (isMobile && screenH) ? Math.round(screenH * 0.75) : heroHeight;
 
   // 스크롤 컨테이너 찾기 — 가장 가까운 phone-scroll 또는 window
   const findScroller = () => {
@@ -1770,6 +2217,46 @@ function HemohimShotDetail({ product, isMobile = false, onClose, onPlayVideo, on
     return () => io.disconnect();
   }, []);
 
+  // 모바일 — 영상 히어로를 지나면 상단 솔리드 바(제품목록·상품번호) 고정
+  React.useEffect(() => {
+    if (!isMobile) return;
+    const scroller = rootRef.current && rootRef.current.closest('.phone-scroll');
+    if (!scroller) return;
+    const onScroll = () => setBarSolid(scroller.scrollTop > 120);
+    onScroll();
+    scroller.addEventListener('scroll', onScroll, { passive: true });
+    return () => scroller.removeEventListener('scroll', onScroll);
+  }, [isMobile]);
+
+  // 기기 화면 높이 측정 — 영상 높이 = 75%
+  React.useEffect(() => {
+    if (!isMobile) return;
+    const scroller = rootRef.current && rootRef.current.closest('.phone-scroll');
+    if (!scroller) return;
+    const measure = () => setScreenH(scroller.clientHeight);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(scroller);
+    return () => ro.disconnect();
+  }, [isMobile]);
+
+  // 시트가 올라와 영상을 덮으면 재생 정지 (자동재생 안 함 — 다시 드러나도 hover 시에만 재생)
+  React.useEffect(() => {
+    if (!isMobile) return;
+    const scroller = rootRef.current && rootRef.current.closest('.phone-scroll');
+    if (!scroller) return;
+    const onScroll = () => {
+      const v = heroVideoRef.current;
+      if (!v) return;
+      const vh = screenH ? screenH * 0.75 : 680;
+      const covered = scroller.scrollTop > vh * 0.85;
+      if (covered && !v.paused) v.pause();
+    };
+    onScroll();
+    scroller.addEventListener('scroll', onScroll, { passive: true });
+    return () => scroller.removeEventListener('scroll', onScroll);
+  }, [isMobile, screenH]);
+
   // 데스크톱 — 인라인 CTA가 스크롤로 사라지면 하단 스티키 바 노출
   React.useEffect(() => {
     if (isMobile) return;
@@ -1798,7 +2285,7 @@ function HemohimShotDetail({ product, isMobile = false, onClose, onPlayVideo, on
         pip.pause();
       }
       hero.muted = muted;
-      hero.play().catch(() => {});
+      // 자동재생 안 함 — hover 시에만 재생
     }
   }, [pipVisible, muted]);
 
@@ -1879,12 +2366,35 @@ function HemohimShotDetail({ product, isMobile = false, onClose, onPlayVideo, on
         </div>
       </div>)}
 
-      {/* 상단 영상 영역 — 모바일에서만 표시. 데스크톱에서는 갤러리(썸네일 위치)에 영상이 들어감. */}
+      {/* 스크롤 시 나타나는 솔리드 고정 바 — 공통 상세와 동일 */}
+      {isMobile && (<div style={{
+        position: 'sticky', top: 0, zIndex: 12, height: 48, marginBottom: -48,
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 14px',
+        background: 'rgba(255,255,255,0.96)', backdropFilter: 'blur(14px)',
+        borderBottom: '1px solid rgba(11,31,58,0.08)',
+        transform: barSolid ? 'translateY(0)' : 'translateY(-100%)',
+        opacity: barSolid ? 1 : 0, pointerEvents: barSolid ? 'auto' : 'none',
+        transition: 'transform 0.28s cubic-bezier(.2,.7,.3,1), opacity 0.2s ease',
+      }}>
+        <button onClick={(e) => {
+          const src = (p.images && p.images[0]) || '';
+          if (window.productShrinkToList) window.productShrinkToList(e.currentTarget, src, onClose);
+          else onClose && onClose();
+        }} style={{
+          display: 'inline-flex', alignItems: 'center', gap: 6,
+          background: 'transparent', border: 'none', cursor: 'pointer',
+          color: '#0B1F3A', fontSize: 12.5, fontWeight: 700, letterSpacing: '-0.01em', padding: '6px 0',
+        }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0B1F3A" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
+          제품 목록
+        </button>
+        <div style={{ fontSize: 11.5, fontWeight: 700, color: '#6B7A90' }}>상품번호 {p.id}</div>
+      </div>)}
       {isMobile && (
       <div ref={heroWrapRef} style={{
-        position: 'relative',
+        position: 'sticky', top: 0, zIndex: 1,
         width: '100%',
-        height: heroHeight,
+        height: videoH,
         background: '#0B1320',
         overflow: 'hidden',
       }}>
@@ -1892,13 +2402,14 @@ function HemohimShotDetail({ product, isMobile = false, onClose, onPlayVideo, on
           ref={heroVideoRef}
           src={HEMOHIM_VIDEO_URL}
           poster={HEMOHIM_VIDEO_POSTER}
-          autoPlay
           muted={muted}
           loop
           playsInline
           onClick={openFullscreen}
+          onMouseEnter={(e) => { e.currentTarget.muted = true; e.currentTarget.play().catch(() => {}); }}
+          onMouseLeave={(e) => { e.currentTarget.pause(); }}
           style={{
-            width: '100%', height: '100%', objectFit: 'cover',
+            width: '100%', height: '100%', objectFit: 'contain',
             cursor: 'pointer', display: 'block',
           }}
         />
@@ -1999,11 +2510,12 @@ function HemohimShotDetail({ product, isMobile = false, onClose, onPlayVideo, on
               ref={heroVideoRef}
               src={HEMOHIM_VIDEO_URL}
               poster={HEMOHIM_VIDEO_POSTER}
-              autoPlay
               muted={muted}
               loop
               playsInline
               onClick={openFullscreen}
+              onMouseEnter={(e) => { e.currentTarget.muted = true; e.currentTarget.play().catch(() => {}); }}
+              onMouseLeave={(e) => { e.currentTarget.pause(); }}
               style={{
                 width: '100%', height: '100%', objectFit: 'cover',
                 cursor: 'pointer', display: 'block',
@@ -2333,4 +2845,4 @@ function PipPortal({ pipVisible, muted, progress, isMobile, pipVideoRef, openFul
   return ReactDOM.createPortal(node, host);
 }
 
-Object.assign(window, { AtomyProductDetail, HemohimShotDetail, HEMOHIM_DETAIL, HERBAL_SHAMPOO_DETAIL });
+Object.assign(window, { AtomyProductDetail, HemohimShotDetail, HEMOHIM_DETAIL, HERBAL_SHAMPOO_DETAIL, ShareChoice, ShareSheet, AiShareSheet, makeShareFns });

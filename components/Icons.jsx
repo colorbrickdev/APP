@@ -112,11 +112,13 @@ const NavIcon = {
     </svg>
   ),
   // 애터미란 — 세 줄 정보 아이콘 (info doc)
+  // 애터미소개 — 빌딩(사옥) 아이콘
   info: (size = 22, color = '#0B1F3A', stroke = 1.8) => (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={stroke} strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="9" />
-      <path d="M12 8.2h.01" />
-      <path d="M11 12h1v4.2h1" />
+      <path d="M4 21V6a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v15" />
+      <path d="M13 21V10a1 1 0 0 1 1-1h5a1 1 0 0 1 1 1v11" />
+      <path d="M2 21h20" />
+      <path d="M7 8.5h2M7 12h2M7 15.5h2M16 12.5h1M16 16h1" />
     </svg>
   ),
   // 인생시나리오 — 8각형 수레바퀴 (다르마차크라 풍)

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>부회장님 보고 스크립트 — 최근 1주 개선 사항</title>
+<style>
+  doc-page:not(:defined){visibility:hidden}
+  doc-page{font-family:'Pretendard','Apple SD Gothic Neo','Malgun Gothic',sans-serif;color:#1A2433;font-size:14px;line-height:1.7;}
+  h1{font-size:24px;font-weight:900;letter-spacing:-0.02em;color:#0B1F3A;margin:0 0 4px;}
+  .meta{font-size:12.5px;color:#6B7686;margin:0 0 2px;}
+  .divider{border:none;border-top:2px solid #0B1F3A;margin:14px 0 20px;}
+  h2{font-size:16px;font-weight:800;color:#0B1F3A;margin:24px 0 8px;padding-bottom:5px;border-bottom:1px solid #DCE2EA;}
+  h2 .no{color:#00A3D9;margin-right:8px;}
+  .act{background:#F2F7FB;border-left:3px solid #00A3D9;padding:8px 14px;margin:8px 0;font-size:13px;color:#3A4657;border-radius:0 8px 8px 0;}
+  .act b{color:#0B1F3A;}
+  .say{margin:8px 0 14px;padding:0 2px;text-wrap:pretty;}
+  .say::before{content:'🗣 ';opacity:0.5;}
+  .tip{font-size:12.5px;color:#8A94A3;margin:6px 0 0;}
+  .opening{background:#0B1F3A;color:#fff;border-radius:10px;padding:16px 20px;margin:14px 0 6px;}
+  .opening p{margin:0;text-wrap:pretty;}
+  a{color:#00A3D9;} a:hover{color:#0B1F3A;}
+  .ftr{font-size:11px;color:#8A94A3;text-align:right;width:100%;}
+</style>
+</head>
+<body>
+<doc-page size="letter" margin="0.75in">
+  <div slot="footer" class="ftr">APP 개선 보고 스크립트 · 2026. 7.</div>
+
+  <h1>부회장님 보고 스크립트</h1>
+  <p class="meta">최근 1주 개선 사항 · iPhone 17 화면 시연 기준 · 예상 소요 7~8분</p>
+  <hr class="divider">
+
+  <div class="opening">
+    <p>"부회장님, 지난 한 주간 APP에 반영한 개선 사항을 화면으로 직접 보여드리면서 설명드리겠습니다. 크게 세 가지입니다 — 첫째, AI가 고객 개개인에 맞춰 매장을 바꿔주는 '맞춤 진열', 둘째, 비회원 중심이던 구조에 '3초 간편가입'과 주문 관리 체계를 얹은 것, 셋째, 검색·정렬·다국어 같은 기본기 보강입니다."</p>
+  </div>
+
+  <h2><span class="no">01</span>첫인상 — 인트로 영상 <span style="font-weight:400;font-size:13px;color:#8A94A3">(30초)</span></h2>
+  <div class="act"><b>시연:</b> 앱 첫 접속 → 인트로 영상 자동 재생 → SKIP 버튼 표시</div>
+  <p class="say">"접속하면 브랜드 인트로 영상이 먼저 나옵니다. 같은 고객에게는 하루 한 번만 보여주고, SKIP을 누르면 바로 쇼핑으로 넘어갑니다. 폰에서는 화면을 꽉 채우고, 폴드나 PC처럼 큰 화면에서는 원본 비율의 모달로 재생됩니다."</p>
+
+  <h2><span class="no">02</span>AI 맞춤 진열 — 이번 주 핵심 <span style="font-weight:400;font-size:13px;color:#8A94A3">(2분)</span></h2>
+  <div class="act"><b>시연:</b> 제품구매 탭 → 히어로 배너 아래 <b>"AI 맞춤 진열 시작하기"</b> 버튼(파란 펄스) 클릭</div>
+  <p class="say">"제품구매 화면입니다. 지금까지는 모든 고객이 같은 진열을 봤는데, 이제 AI가 고객마다 다른 매장을 만들어 줍니다. 이 버튼을 누르면 —"</p>
+  <div class="act"><b>시연:</b> 퀴즈 진행 — ① 건강 고민 선택 → ② 고민 부위 12종 중 '장 건강' → ③ 섭취 형태 → ④ 예산</div>
+  <p class="say">"질문이 백화점 전문 상담원처럼 구체적입니다. 건강을 고르면 피로·면역·장·눈·관절·혈행 등 12가지 고민 부위를 묻고, 알약이 편한지 액상이 편한지 섭취 형태까지 묻습니다. 피부를 고르면 피부 타입과 사용 부위, 원하는 효과를 묻고, 생활용품·식품도 각각 다른 질문이 나옵니다. 마지막은 예산인데 2만원 이하부터 네 구간입니다."</p>
+  <div class="act"><b>시연:</b> 결과 화면 — 맞춤 추천 행 + 헤드라인("장·소화 케어 추천") + 상단 상태 칩 확인</div>
+  <p class="say">"답을 하고 나면 진열장이 통째로 재구성됩니다. 고민에 맞는 성분의 제품이 맨 앞에 오고, 왜 추천했는지 이유도 함께 적혀 있습니다. 위의 칩으로 언제든 다시 설정하거나 원래 진열로 돌아갈 수 있습니다. 답변 데이터가 쌓이면 그 자체가 고객 수요 지도가 되기 때문에, 상품 기획에도 쓸 수 있는 자산이 됩니다."</p>
+
+  <h2><span class="no">03</span>통합 검색 <span style="font-weight:400;font-size:13px;color:#8A94A3">(40초)</span></h2>
+  <div class="act"><b>시연:</b> 상단 검색 아이콘 → 인기 검색어 칩 확인 → '유산균' 입력 → 제품 결과 클릭</div>
+  <p class="say">"검색도 실제로 동작합니다. 열자마자 인기 검색어가 보이고, 입력하는 즉시 제품이 실시간으로 걸러집니다. 제품뿐 아니라 석세스클립 영상까지 함께 찾아줍니다."</p>
+
+  <h2><span class="no">04</span>상품 상세 — 길 잃지 않는 동선 <span style="font-weight:400;font-size:13px;color:#8A94A3">(30초)</span></h2>
+  <div class="act"><b>시연:</b> 상품 상세 상단 브레드크럼 "홈 &gt; 건강식품 &gt; 헤모힘" 각 단계 클릭</div>
+  <p class="say">"상세 페이지 상단에 지금 어느 카테고리에 있는지 경로가 표시되고, 각 단계를 누르면 바로 그 목록으로 이동합니다. 깊이 들어가도 길을 잃지 않습니다."</p>
+
+  <h2><span class="no">05</span>간편가입 · 주문 체계 — 구조적 변화 <span style="font-weight:400;font-size:13px;color:#8A94A3">(2분)</span></h2>
+  <div class="act"><b>시연:</b> 상품 구매 → 주문 완료 시트의 <b>"✦ 휴대폰 번호만으로 3초 간편가입"</b> 카드 → 가입 흐름(번호 입력 시 하이픈 자동)</div>
+  <p class="say">"우리 몰은 비회원 구매가 기본이라 편하지만, 주문 조회가 어렵다는 문제가 있었습니다. 그래서 주문이 끝난 직후에 휴대폰 번호만으로 가입하는 '3초 간편가입'을 붙였습니다. 가입하면 방금 주문이 계정에 자동으로 연결되고, 비밀번호를 한 번 정해두면 다음부터는 인증 문자 없이 로그인됩니다."</p>
+  <div class="act"><b>시연:</b> 하단 탭 <b>'주문내역'</b> → 주문 목록 → 하단 <b>'소비가 소득이 되는 애터미 사업자'</b> 카드 클릭 → 정보 인계 동의 화면</div>
+  <p class="say">"하단에 '주문내역'을 글자로 크게 넣었습니다. 아이콘만으로는 어르신들이 못 찾으시기 때문입니다. 그리고 이 안에 사업자 전환 카드를 심었습니다 — 간편회원 때 입력한 이름·번호·주소를 그대로 넘겨서, 재입력 없이 1분 만에 공식 가입 페이지로 이어집니다. 소비자가 사업자가 되는 전환 퍼널을 주문내역 안에 만든 겁니다."</p>
+
+  <h2><span class="no">06</span>석세스클립 정비 <span style="font-weight:400;font-size:13px;color:#8A94A3">(40초)</span></h2>
+  <div class="act"><b>시연:</b> 석세스클립 탭 → 정렬(추천순/최신순/조회수순/좋아요순) + 채널 필터(전체/공식/개인) → 클립 재생 → 닫기</div>
+  <p class="say">"클립에 정렬 기준 네 가지를 넣었고, 채널 구분도 전체·공식·개인으로 바로잡았습니다. 재생 중에 다른 탭으로 이동하면 소리가 남던 문제, 닫기 버튼이 가려지던 문제도 이번 주에 다 잡았습니다."</p>
+
+  <h2><span class="no">07</span>다국어 — 글로벌 대응 <span style="font-weight:400;font-size:13px;color:#8A94A3">(30초)</span></h2>
+  <div class="act"><b>시연:</b> 언어를 English로 전환 → 주문내역·AI 맞춤 진열 퀴즈가 영어로 바뀌는 것 확인 → 한국어 복귀</div>
+  <p class="say">"이번 주에 만든 기능 전부가 한·영·일·중 4개 언어로 동작합니다. 간편가입, 주문내역, AI 퀴즈의 질문과 선택지, 좌하단 실시간 구매 알림까지 언어 설정을 따라갑니다. 글로벌 회원이 많은 우리 구조에 필수라고 봤습니다."</p>
+
+  <h2>마무리 멘트</h2>
+  <div class="opening">
+    <p>"정리하면 — 고객마다 다른 매장을 만들어 주는 AI 맞춤 진열로 '개인화'의 뼈대를 세웠고, 간편가입과 주문내역으로 비회원을 회원으로, 회원을 사업자로 끌어올리는 전환 구조를 만들었습니다. 다음 단계는 실제 상품·주문 데이터 연동과, 맞춤 진열 응답 데이터를 활용한 추천 고도화입니다. 이상입니다."</p>
+  </div>
+  <p class="tip">※ 시연 전 준비: ① 인트로는 하루 1회라 미리 시청 기록 초기화 필요 ② AI 맞춤 진열이 켜져 있다면 '맞춤 해제' 후 시작 ③ 소리 나는 클립 시연 대비 볼륨 확인</p>
+</doc-page>
+<script src="doc-page.js"></script>
+</body>
+</html>

@@ -236,7 +236,7 @@ const HEMOHIM_SHOT_IMG = 'https://image.atomy.com/KR/goods/000017/org/911/250902
             <button class="__oh_signup" style="width:100%;margin:10px 0 6px;padding:13px;border:none;border-radius:10px;background:#00B6F0;color:#fff;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;">✦ ${TT({ko:'간편가입 하기',en:'Quick sign up',ja:'簡単登録',zh:'快捷注册'})}</button>
             <div style="margin:14px 0 4px;padding-top:12px;border-top:1px solid rgba(11,31,58,0.07);">
               <div style="font-size:12px;font-weight:800;color:#0B1F3A;margin-bottom:8px;">${TT({ko:'비회원 주문조회',en:'Guest order lookup',ja:'非会員注文照会',zh:'非会员订单查询'})}</div>
-              <input class="__oh_gno" type="text" placeholder="${TT({ko:'주문번호 (예: A12345678)',en:'Order no. (e.g. A12345678)',ja:'注文番号（例: A12345678）',zh:'订单号（例: A12345678）'})}" style="width:100%;box-sizing:border-box;padding:11px 13px;border:1.5px solid rgba(11,31,58,0.12);border-radius:10px;font-size:13px;font-weight:700;color:#0B1F3A;font-family:inherit;outline:none;" />
+              <input class="__oh_gno" type="text" placeholder="${TT({ko:'주문번호 (예: 7123451234512345)',en:'Order no. (e.g. 7123451234512345)',ja:'注文番号（例: 7123451234512345）',zh:'订单号（例: 7123451234512345）'})}" style="width:100%;box-sizing:border-box;padding:11px 13px;border:1.5px solid rgba(11,31,58,0.12);border-radius:10px;font-size:13px;font-weight:700;color:#0B1F3A;font-family:inherit;outline:none;" />
               <input class="__oh_gph" type="tel" placeholder="${TT({ko:'주문자 휴대폰 번호',en:'Phone number on order',ja:'注文者の携帯番号',zh:'下单人手机号'})}" style="width:100%;box-sizing:border-box;margin-top:7px;padding:11px 13px;border:1.5px solid rgba(11,31,58,0.12);border-radius:10px;font-size:13px;font-weight:700;color:#0B1F3A;font-family:inherit;outline:none;" />
               <button class="__oh_gfind" style="width:100%;margin:9px 0 4px;padding:12px;border:1px solid rgba(0,182,240,0.5);border-radius:10px;background:#fff;color:#0088B8;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;">${TT({ko:'주문 조회',en:'Find order',ja:'注文を照会',zh:'查询订单'})}</button>
               <div class="__oh_gres" style="padding-bottom:10px;"></div>
@@ -432,6 +432,16 @@ const HEMOHIM_SHOT_IMG = 'https://image.atomy.com/KR/goods/000017/org/911/250902
   };
 })();
 
+// 사이트 전역 허용 플래그 — 신제품·무료배송·수량한정·개별배송·추가혜택·시즌한정
+const FLAG_COLORS = {
+  '신제품': '#00B6F0',
+  '무료배송': '#0B1F3A',
+  '수량한정': '#FF3B6A',
+  '개별배송': '#7B8597',
+  '추가혜택': '#FF8A3D',
+  '시즌한정': '#16A34A',
+};
+
 const SHOP_PRODUCTS = [
   // ★ 강조 — 헤모힘 샷 (id: 000017) ─ 상세페이지 연결 (히어로/네비용 유지)
   {
@@ -528,7 +538,7 @@ const SHOP_PRODUCTS = [
     rating: 4.5, reviews: 102, category: '리빙&홈데코' },
   { id: '000185', name: '애터미 터마신MSM (128정, 32일분)',
     sub: '128정 · 32일분', price: 39800, pv: 16000,
-    image: 'https://image.atomy.com/KR/goods/000185/e5f1d8de-e013-48fb-8d95-c8705f06ac3d.jpg?w=480&h=480',
+    image: 'https://image.atomy.com/KR/goods/000185/org/210/260624000053210.jpg?w=480&h=480',
     rating: 4.7, reviews: 181, badges: ['무료배송'], category: '건강식품' },
   { id: '000979', name: '애터미 해양심층수 500ml (20ea)',
     sub: '500ml x 20병', price: 12800, pv: 3000,
@@ -568,31 +578,31 @@ const SHOP_PRODUCTS = [
     rating: 4.7, reviews: 165, category: '건강식품' },
   { id: '004030', name: '애터미 바이탈 메가비타민C 2000 (90포)',
     sub: '90포 · 3개월분', price: 29000, pv: 13000,
-    image: 'https://image.atomy.com/KR/goods/004030/img1_480.jpg',
+    image: 'https://image.atomy.com/KR/goods/004030/org/264/260105000049264.jpg?w=480&h=480',
     rating: 4.7, reviews: 142, category: '건강식품' },
   { id: '000174', name: '애터미 홍경천 밀크씨슬 (120정)',
     sub: '120정 · 2개월분', price: 31800, pv: 11500,
-    image: 'https://image.atomy.com/KR/goods/000174/img1_480.jpg',
+    image: 'https://image.atomy.com/KR/goods/000174/org/206/260624000053206.jpg?w=480&h=480',
     rating: 4.7, reviews: 126, badges: ['무료배송'], category: '건강식품' },
   { id: '004007', name: '애터미 아이헬스 루아잔틴 (90캡슐)',
     sub: '90캡슐 · 3개월분', price: 38800, pv: 19500,
-    image: 'https://image.atomy.com/KR/goods/004007/img1_480.jpg',
+    image: 'https://image.atomy.com/KR/goods/004007/d1a23fc8-71ba-4691-8623-f4d66c0d4650.jpg?w=480&h=480',
     rating: 4.7, reviews: 159, badges: ['무료배송'], category: '건강식품' },
   { id: '000227', name: '애터미 앱솔루트 셀랙티브 앰플 (40ml)',
     sub: '40ml · 집중 케어', price: 39600, pv: 20000,
-    image: 'https://image.atomy.com/KR/goods/000227/img1_480.jpg',
+    image: 'https://image.atomy.com/KR/goods/000227/df32df5a-f072-4919-baf3-8132e79672ed.jpg?w=480&h=480',
     rating: 4.7, reviews: 152, badges: ['무료배송'], category: '뷰티' },
   { id: '000574', name: '애터미 허브데이 팬티라이너(20개 x 4팩)',
     sub: '20개 x 4팩', price: 12900, pv: 3400,
-    image: 'https://image.atomy.com/KR/goods/000574/img1_480.jpg',
+    image: 'https://image.atomy.com/KR/goods/000554/b69f4c4e-37d5-4ecb-a5d6-611975fe3dbd.jpg?w=480&h=480',
     rating: 4.6, reviews: 131, category: '헤어&바디' },
   { id: '000506', name: '애터미 치약 플러스 200g*4set(20ea)',
     sub: '200g x 20개입', price: 64200, pv: 12000,
-    image: 'https://image.atomy.com/KR/goods/000506/img1_480.jpg',
+    image: 'https://image.atomy.com/KR/goods/000505/ebd42f7f-f930-41f7-967f-a24840e1b837.jpg?w=480&h=480',
     rating: 4.8, reviews: 87, badges: ['무료배송'], category: '헤어&바디' },
   { id: '004008', name: '애터미 이너콜라겐 (14병, 14일분)',
     sub: '14병 · 14일분', price: 34800, pv: 17000,
-    image: 'https://image.atomy.com/KR/goods/004008/img1_480.jpg',
+    image: 'https://image.atomy.com/KR/goods/004008/a4543a06-de1f-4ecd-ad23-eb7aa523024c.jpg?w=480&h=480',
     rating: 4.7, reviews: 116, badges: ['무료배송'], category: '건강식품' },
   { id: '000567', name: '애터미 더페임 밸런싱 로션 (125ml)',
     sub: '125ml · 산뜻한 마무리', price: 24800, pv: 12500,
@@ -600,11 +610,11 @@ const SHOP_PRODUCTS = [
     rating: 4.6, reviews: 42, badges: ['신제품'], category: '뷰티' },
   { id: '000304', name: '애터미 이브닝케어 폼클렌저 *4ea',
     sub: '150ml x 4개입', price: 33600, pv: 12000,
-    image: 'https://image.atomy.com/KR/goods/000304/img1_480.jpg',
+    image: 'https://image.atomy.com/KR/goods/000300/6cf76d2d-ebb4-4d67-b56a-9e0eb0b34cd0.jpg?w=480&h=480',
     rating: 4.7, reviews: 95, badges: ['무료배송'], category: '뷰티' },
   { id: '004001', name: '애터미 트리액티브 칼마디 (180정)',
     sub: '180정 · 2개월분', price: 22800, pv: 11500,
-    image: 'https://image.atomy.com/KR/goods/004001/img1_480.jpg',
+    image: 'https://image.atomy.com/KR/goods/004001/e04c1980-3a94-421a-9c4a-8d3ae1d6ac94.jpg?w=480&h=480',
     rating: 4.6, reviews: 84, category: '건강식품' },
 ];
 
@@ -766,20 +776,17 @@ function ProductCard({ product, isMobile = false, onSelect, large = false }) {
           </div>
         )}
 
-        {/* 좌상단 뱃지들 */}
-        {p.badges && p.badges.length > 0 && (
+        {/* 좌상단 뱃지들 — 허용 플래그만 노출 (신제품·무료배송·수량한정·개별배송·추가혜택·시즌한정) */}
+        {p.badges && p.badges.filter(b => FLAG_COLORS[b]).length > 0 && (
           <div style={{
             position: 'absolute', top: 10, left: 10,
             display: 'flex', flexDirection: 'column', gap: 4,
           }}>
-            {p.badges.map(b => (
+            {p.badges.filter(b => FLAG_COLORS[b]).map(b => (
               <span key={b} style={{
                 display: 'inline-flex', alignItems: 'center',
                 padding: '3px 8px', borderRadius: 4,
-                background: b === 'BEST' ? '#FF3B6A'
-                  : b === '신제품' ? '#00B6F0'
-                  : b === '프로모션' ? '#FF8A3D'
-                  : 'rgba(11,31,58,0.85)',
+                background: FLAG_COLORS[b],
                 color: '#fff', fontSize: 9.5, fontWeight: 800, letterSpacing: '-0.01em',
                 width: 'fit-content',
               }}>{b}</span>
@@ -937,7 +944,7 @@ function ProductCard({ product, isMobile = false, onSelect, large = false }) {
 // 메인 페이지
 // =============================================================
 
-function AtomyShop({ isMobile = false, shopVariant = 'default', onSelectProduct = () => {} }) {
+function AtomyShop({ isMobile = false, shopVariant = 'default', searchQuery = '', onClearSearch = () => {}, onClips = () => {}, onSelectProduct = () => {} }) {
   // 변형 라우팅 — TikTok / Magazine / AI 큐레이션
   if (shopVariant === 'tiktok' && typeof window.AtomyShopTikTok === 'function') {
     return <window.AtomyShopTikTok isMobile={isMobile} onSelectProduct={onSelectProduct} />;
@@ -948,7 +955,7 @@ function AtomyShop({ isMobile = false, shopVariant = 'default', onSelectProduct 
   if (shopVariant === 'ai' && typeof window.AtomyShopAI === 'function') {
     return <window.AtomyShopAI isMobile={isMobile} onSelectProduct={onSelectProduct} />;
   }
-  return <AtomyShopDefault isMobile={isMobile} onSelectProduct={onSelectProduct} />;
+  return <AtomyShopDefault isMobile={isMobile} searchQuery={searchQuery} onClearSearch={onClearSearch} onClips={onClips} onSelectProduct={onSelectProduct} />;
 }
 
 // 필터 드로어 — 우→좌 슬라이드 (kr.atomy.com 스타일)
@@ -1149,8 +1156,32 @@ function FilterCheck({ label }) {
   );
 }
 
-function AtomyShopDefault({ isMobile = false, onSelectProduct = () => {} }) {
+// 그리드 페이징 — 무한 스크롤 센티넬 + 더보기 버튼
+function GridLoadMore({ total, shown, onMore, isMobile }) {
+  const ref = React.useRef(null);
+  React.useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const scroller = el.closest('.phone-scroll') || null;
+    const io = new IntersectionObserver((entries) => {
+      if (entries[0] && entries[0].isIntersecting) onMore();
+    }, { root: scroller, rootMargin: '240px' });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [onMore, shown]);
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, marginTop: isMobile ? 24 : 32 }}>
+      <button onClick={onMore} style={{ padding: '12px 28px', borderRadius: 999, background: '#fff', border: '1px solid rgba(11,31,58,0.15)', color: '#0B1F3A', fontSize: 13, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '-0.01em' }}>
+        더보기 ({(total - shown).toLocaleString()})
+      </button>
+      <div ref={ref} aria-hidden="true" style={{ height: 1, width: '100%' }} />
+    </div>
+  );
+}
+
+function AtomyShopDefault({ isMobile = false, searchQuery = '', onClearSearch = () => {}, onClips = () => {}, onSelectProduct = () => {} }) {
   const { t } = (typeof useTranslation === 'function') ? useTranslation() : { t: (k) => k };
+  React.useEffect(() => { window.__atomyOpenProduct = onSelectProduct; }, [onSelectProduct]);
   const [category, setCategory] = React.useState(() => {
     // 브레드크럼 네비게이션 — 상세에서 카테고리 클릭 시 진입
     const nav = window.__shopNavCategory;
@@ -1162,8 +1193,16 @@ function AtomyShopDefault({ isMobile = false, onSelectProduct = () => {} }) {
     return null;
   }); // null = 메인 / 'all' | 'health' | ... = 카테고리 화면
   const [sortKey, setSortKey] = React.useState('popular');
+  const [gridLimit, setGridLimit] = React.useState(12);
+  React.useEffect(() => { setGridLimit(12); }, [category, subCat, sortKey]);
   const [viewMode, setViewMode] = React.useState('grid'); // grid | list
   const [filterOpen, setFilterOpen] = React.useState(false);
+  const [subCat, setSubCat] = React.useState(0); // 서브카테고리 탭 인덱스 (0 = 전체)
+  React.useEffect(() => {
+    const s = window.__shopNavSub;
+    if (s != null) { setSubCat(s); window.__shopNavSub = null; }
+    else setSubCat(0);
+  }, [category]);
 
   // 카테고리 화면용 필터링 + 정렬
   const categoryProducts = React.useMemo(() => {
@@ -1174,6 +1213,12 @@ function AtomyShopDefault({ isMobile = false, onSelectProduct = () => {} }) {
           const c = CATEGORY_ICONS.find(c => c.key === category);
           return c && p.category === (c.match || c.label);
         });
+    // 서브카테고리 필터 (0 = 전체)
+    const subs = (typeof SUB_CATEGORIES !== 'undefined') ? SUB_CATEGORIES[category] : null;
+    if (subs && subCat > 0 && subs[subCat] && subs[subCat].rx) {
+      const rx = subs[subCat].rx;
+      list = list.filter(p => rx.test(p.name || ''));
+    }
     list = [...list];
     if (sortKey === 'popular') list.sort((a, b) => (b.reviews || 0) - (a.reviews || 0));
     else if (sortKey === 'eval') list.sort((a, b) => (b.reviews || 0) - (a.reviews || 0));
@@ -1183,11 +1228,109 @@ function AtomyShopDefault({ isMobile = false, onSelectProduct = () => {} }) {
     else if (sortKey === 'high') list.sort((a, b) => b.price - a.price);
     else if (sortKey === 'low')  list.sort((a, b) => a.price - b.price);
     else if (sortKey === 'pv_by_price') list.sort((a, b) => ((b.pv || 0) / b.price) - ((a.pv || 0) / a.price));
+    else if (sortKey === 'atomy') list.sort((a, b) => ((b.badges?.includes('BEST') ? 2 : 0) + (b.badges?.includes('신제품') ? 1 : 0) + (b.reviews || 0) / 10000) - ((a.badges?.includes('BEST') ? 2 : 0) + (a.badges?.includes('신제품') ? 1 : 0) + (a.reviews || 0) / 10000));
     return list;
-  }, [category, sortKey]);
+  }, [category, sortKey, subCat]);
 
   const promoProducts = SHOP_PRODUCTS.filter(p => (p.badges || []).includes('프로모션'));
   const bestProducts = SHOP_PRODUCTS.filter(p => (p.badges || []).includes('BEST')).slice(0, 4);
+
+  // ====== 검색 결과 화면 ======
+  const searchResults = React.useMemo(() => {
+    const kw = (searchQuery || '').trim().toLowerCase();
+    if (!kw) return [];
+    return SHOP_PRODUCTS.filter(p => {
+      const hay = ((p.name || '') + ' ' + (p.category || '') + ' ' + (p.tagline || '') + ' ' + (p.badges || []).join(' ')).toLowerCase();
+      return kw.split(/\s+/).every(tok => hay.includes(tok));
+    });
+  }, [searchQuery]);
+
+  const clipResults = React.useMemo(() => {
+    const kw = (searchQuery || '').trim().toLowerCase();
+    if (!kw) return [];
+    return (window.SHORTS || []).filter(s => {
+      const hay = ((s.title || '') + ' ' + (s.product || '')).toLowerCase();
+      return kw.split(/\s+/).some(tok => hay.includes(tok));
+    }).slice(0, 8);
+  }, [searchQuery]);
+
+  if ((searchQuery || '').trim()) {
+    return (
+      <div style={{
+        fontFamily: '"Pretendard", "Noto Sans KR", system-ui, sans-serif',
+        background: '#fff', color: '#0B1F3A', minHeight: '100%',
+      }}>
+        <header style={{
+          display: 'flex', alignItems: 'center', gap: 4,
+          padding: isMobile ? '14px 16px' : '20px 36px',
+          borderBottom: '1px solid rgba(11,31,58,0.06)',
+          background: '#fff', position: 'sticky', top: 0, zIndex: 5,
+        }}>
+          <button onClick={onClearSearch} aria-label="뒤로" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 6, display: 'flex', alignItems: 'center', color: '#1A1A1A' }}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
+          </button>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#8A97AD', letterSpacing: '0.04em' }}>검색 결과</div>
+            <div style={{ fontSize: isMobile ? 16 : 19, fontWeight: 900, color: '#0B1F3A', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              “{searchQuery.trim()}”
+            </div>
+          </div>
+        </header>
+
+        <div style={{
+          padding: isMobile ? '12px 16px 10px' : '18px 36px 14px',
+          maxWidth: 1280, margin: '0 auto', width: '100%', boxSizing: 'border-box',
+          fontSize: isMobile ? 12.5 : 13.5, fontWeight: 700, color: '#0B1F3A', fontVariantNumeric: 'tabular-nums',
+        }}>
+          상품 <span style={{ color: '#00A3D9' }}>{searchResults.length}</span>건
+          {clipResults.length > 0 && <span style={{ color: '#8A97AD', fontWeight: 600 }}>  ·  석세스클립 <span style={{ color: '#00A3D9', fontWeight: 700 }}>{clipResults.length}</span></span>}
+        </div>
+
+        <section style={{ padding: isMobile ? '6px 16px 40px' : '8px 36px 60px', maxWidth: 1280, margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
+          {searchResults.length === 0 && clipResults.length === 0 ? (
+            <div style={{ padding: '54px 24px', textAlign: 'center', background: '#F5F7FA', borderRadius: 14 }}>
+              <div style={{ fontSize: 13.5, fontWeight: 800, color: '#0B1F3A', marginBottom: 6 }}>“{searchQuery.trim()}” 검색 결과가 없어요</div>
+              <div style={{ fontSize: 12, color: '#8A97AD', lineHeight: 1.6 }}>철자를 확인하거나 다른 검색어로 찾아보세요.<br />예: 헤모힘, 유산균, 칫솔</div>
+            </div>
+          ) : (<>
+            {searchResults.length > 0 && (
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(5, 1fr)', gap: isMobile ? 10 : 14 }}>
+                {searchResults.map(p => (
+                  <ProductCard key={p.id} product={p} isMobile={isMobile} onSelect={onSelectProduct} />
+                ))}
+              </div>
+            )}
+            {clipResults.length > 0 && (
+              <div style={{ marginTop: searchResults.length ? 30 : 4 }}>
+                <div style={{ fontSize: isMobile ? 14 : 16, fontWeight: 900, color: '#0B1F3A', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 7 }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="#00A3D9"><polygon points="5 3 19 12 5 21 5 3" /></svg>
+                  관련 석세스클립
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: isMobile ? 10 : 14 }}>
+                  {clipResults.map(s => (
+                    <button key={s.id} onClick={() => onClips(searchQuery.trim())} style={{
+                      display: 'block', padding: 0, border: 'none', background: 'none', cursor: 'pointer',
+                      textAlign: 'left', fontFamily: 'inherit',
+                    }}>
+                      <div style={{ position: 'relative', aspectRatio: '9 / 14', borderRadius: 12, overflow: 'hidden', background: '#E9EDF3' }}>
+                        {s.image && <img src={s.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />}
+                        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(0,0,0,0) 55%, rgba(0,0,0,0.55) 100%)' }} />
+                        <div style={{ position: 'absolute', left: 8, right: 8, bottom: 7, color: '#fff', fontSize: 11.5, fontWeight: 700, lineHeight: 1.35, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{s.title}</div>
+                        <div style={{ position: 'absolute', top: 7, right: 7, background: 'rgba(11,31,58,0.7)', color: '#fff', fontSize: 9.5, fontWeight: 700, padding: '2px 6px', borderRadius: 4 }}>{s.duration}</div>
+                      </div>
+                      <div style={{ marginTop: 5, fontSize: 10.5, color: '#8A97AD', fontWeight: 600 }}>조회 {s.views} · ♥ {s.likes}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </>)}
+        </section>
+
+        <ShopFooter isMobile={isMobile} />
+      </div>
+    );
+  }
 
   // ====== 카테고리 화면 ======
   if (category) {
@@ -1224,6 +1367,39 @@ function AtomyShopDefault({ isMobile = false, onSelectProduct = () => {} }) {
           <div style={{ width: 34 }} />
         </header>
 
+        {/* 서브카테고리 탭 — kr.atomy.com 카테고리 진입 시 하위 분류 */}
+        {category !== 'all' && typeof SUB_CATEGORIES !== 'undefined' && SUB_CATEGORIES[category] && (
+          <div
+            className="subcat-scroll"
+            style={{
+              display: 'flex', gap: isMobile ? 4 : 6, alignItems: 'stretch',
+              padding: isMobile ? '2px 12px 0' : '4px 30px 0',
+              maxWidth: 1280, margin: '0 auto', width: '100%', boxSizing: 'border-box',
+              overflowX: 'auto', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none',
+              borderBottom: '1px solid rgba(11,31,58,0.08)', background: '#fff',
+            }}
+          >
+            <style>{'.subcat-scroll::-webkit-scrollbar{display:none}'}</style>
+            {SUB_CATEGORIES[category].map((s, i) => {
+              const active = subCat === i;
+              return (
+                <button
+                  key={s.label}
+                  onClick={() => setSubCat(i)}
+                  style={{
+                    flex: '0 0 auto', border: 'none', background: 'none', cursor: 'pointer',
+                    fontFamily: 'inherit', padding: isMobile ? '10px 9px 11px' : '12px 12px 13px',
+                    fontSize: isMobile ? 13 : 14, fontWeight: active ? 800 : 600,
+                    color: active ? '#00A3D9' : '#5A6577', whiteSpace: 'nowrap',
+                    borderBottom: active ? '2.5px solid #00A3D9' : '2.5px solid transparent',
+                    marginBottom: -1, letterSpacing: '-0.01em', transition: 'color 0.15s',
+                  }}
+                >{s.label}</button>
+              );
+            })}
+          </div>
+        )}
+
         {/* 정렬/뷰/필터 바 */}
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -1259,6 +1435,7 @@ function AtomyShopDefault({ isMobile = false, onSelectProduct = () => {} }) {
                 <option value="high">가격 높은순</option>
                 <option value="low">가격 낮은순</option>
                 <option value="pv_by_price">가격 대비 PV 높은순</option>
+                <option value="atomy">애터미 추천순</option>
               </select>
               <svg
                 width="11" height="11" viewBox="0 0 24 24" fill="none"
@@ -1316,8 +1493,9 @@ function AtomyShopDefault({ isMobile = false, onSelectProduct = () => {} }) {
               padding: '60px 24px', textAlign: 'center',
               background: '#F5F7FA', borderRadius: 14,
               color: '#8A97AD', fontSize: 13, fontWeight: 600,
-            }}>이 카테고리의 제품이 아직 없어요</div>
+            }}>{subCat > 0 ? '이 분류의 제품을 준비 중이에요' : '이 카테고리의 제품이 아직 없어요'}</div>
           ) : (
+            <React.Fragment>
             <div style={{
               display: 'grid',
               gridTemplateColumns: viewMode === 'list'
@@ -1325,10 +1503,14 @@ function AtomyShopDefault({ isMobile = false, onSelectProduct = () => {} }) {
                 : (isMobile ? 'repeat(2, 1fr)' : 'repeat(5, 1fr)'),
               gap: isMobile ? 10 : 14,
             }}>
-              {categoryProducts.map(p => (
+              {categoryProducts.slice(0, gridLimit).map(p => (
                 <ProductCard key={p.id} product={p} isMobile={isMobile} onSelect={onSelectProduct} />
               ))}
             </div>
+            {categoryProducts.length > gridLimit && (
+              <GridLoadMore total={categoryProducts.length} shown={gridLimit} onMore={() => setGridLimit(n => n + 12)} isMobile={isMobile} />
+            )}
+            </React.Fragment>
           )}
         </section>
 
@@ -2392,15 +2574,15 @@ const HERO_SLIDES = [
   {
     id: '000017',
     bg: 'linear-gradient(135deg, #FFD1CB 0%, #FF9A8B 100%)',
-    chips: ['NEW', '신제품 출시'],
-    chipColor: '#C73120',
+    chips: ['신제품'],
+    chipColor: '#00B6F0',
     title: ['지친 몸을 깨우는', '애터미 헤모힘 샷'],
     sub: '청량한 파인애플 맛 액상 100ml 에너지 샷',
   },
   {
     id: '000164',
     bg: 'linear-gradient(135deg, #DCEEFF 0%, #93C7FF 100%)',
-    chips: ['BEST', '무료배송'],
+    chips: ['무료배송'],
     chipColor: '#1F5FAB',
     title: ['장 건강을 챙기는', '친생유산균 4개월분'],
     sub: '120포 대용량 · 매일 한 포 간편 섭취',
@@ -2408,7 +2590,7 @@ const HERO_SLIDES = [
   {
     id: '001846',
     bg: 'linear-gradient(135deg, #FFE5F0 0%, #FFA8C8 100%)',
-    chips: ['10% 쿠폰', '사은품 증정'],
+    chips: ['추가혜택'],
     chipColor: '#C2185B',
     title: ['하루 한 번 손이 가는', '애터미 화장지 4D'],
     sub: '4D 엠보싱 · 35M × 15롤 × 4팩 대용량',
@@ -2416,7 +2598,7 @@ const HERO_SLIDES = [
   {
     id: '000276',
     bg: 'linear-gradient(135deg, #FFF8DC 0%, #F7C873 100%)',
-    chips: ['프로모션', '~30% 할인'],
+    chips: ['시즌한정'],
     chipColor: '#A6711B',
     title: ['톤업과 자외선 차단을 동시에', '앱솔루트 에센스 선'],
     sub: '40ml · 산뜻한 마무리감, 데일리 선케어',
@@ -2424,7 +2606,7 @@ const HERO_SLIDES = [
   {
     id: '000523',
     bg: 'linear-gradient(135deg, #D9F4E4 0%, #6FCF97 100%)',
-    chips: ['앱전용 쿠폰', '쇼핑지원금'],
+    chips: ['개별배송'],
     chipColor: '#1F7A47',
     title: ['휴대용 사이즈로 챙겨가는', '애터미 치약 플러스'],
     sub: '50g 휴대용 · 외출/여행 필수템',
@@ -2629,7 +2811,6 @@ function AIShelfCta({ isMobile }) {
 // 카테고리 아이콘 — kr.atomy.com 메인 스타일
 // =============================================================
 const CATEGORY_ICONS = [
-  { key: 'all',       label: '전체상품',   img: 'https://image.atomy.com/KR/banner/90/483/241200000011483102033.svg' },
   { key: 'health',    label: '건강식품',   img: 'https://image.atomy.com/KR/banner/90/493/24120000001149310162.svg' },
   { key: 'beauty',    label: '뷰티',       img: 'https://image.atomy.com/KR/banner/90/495/241200000011495101712.svg' },
   { key: 'body',      label: '헤어&바디',  img: 'https://image.atomy.com/KR/banner/90/482/241200000011482101740.svg' },
@@ -2638,13 +2819,171 @@ const CATEGORY_ICONS = [
   { key: 'food',      label: '식품',       img: 'https://image.atomy.com/KR/banner/90/498/24120000001149810193.svg' },
   { key: 'fashion',   label: '패션',       img: 'https://image.atomy.com/KR/banner/90/499/241200000011499101929.svg' },
   { key: 'goods',     label: '굿즈&발행물', img: 'https://image.atomy.com/KR/banner/90/500/24120000001150010200.svg' },
+  { key: 'all',       label: '전체상품',   img: 'https://image.atomy.com/KR/banner/90/483/241200000011483102033.svg' },
 ];
+
+// 서브카테고리 — kr.atomy.com 각 카테고리 하위 분류 (0번 전체, 이후 rx로 상품명 필터)
+const SUB_CATEGORIES = {
+  health: [
+    { label: '전체' },
+    { label: '헤모힘', rx: /헤모힘/ },
+    { label: '기초영양', rx: /홍삼|비타민|미네랄|프로틴|칼슘|철분|비오틴/ },
+    { label: '성분', rx: /유산균|오메가|루테인|루아잔틴|밀크씨슬|쏘팔메토|비수리|MSM|보이차|식이섬유|풋사과|위건강|프로폴리스|락티움|콜라겐|스피루리나|소포라퀸|루바브|여주|징코|낫토|바이오틱스|마이크로바이옴/ },
+    { label: '키즈', rx: /키즈|어린이|키성장/ },
+    { label: '자연지향', rx: /노니|누룽지|곡밥|죽염|자연|슬림바디/ },
+  ],
+  beauty: [
+    { label: '전체' },
+    { label: '스킨케어', rx: /토너|로션|크림|세럼|앰플|에센스|스킨|클렌|필링|팩|패치|미스트|선|마스크/ },
+    { label: '메이크업', rx: /BB|쿠션|립|아이|베이스|글로우|헬시글로우/ },
+    { label: '미용기기·소품', rx: /기기|디바이스|코튼|퍼프|브러시/ },
+  ],
+  body: [
+    { label: '전체' },
+    { label: '헤어케어', rx: /샴푸|컨디셔너|트리트먼트|헤어|두피|앰플|에센스|컬러|염색|모단수|스칼프|컬링/ },
+    { label: '바디케어', rx: /바디|핸드|워시|클렌저|로션|솝|페미닌|테라피/ },
+    { label: '오랄케어', rx: /치약|칫솔|치간|구강|오랄|덴탈/ },
+    { label: '키즈&맘케어', rx: /베베|키즈|어린이|맘/ },
+    { label: '헤어·바디 소품', rx: /코튼|브러시|타월/ },
+  ],
+  living: [
+    { label: '전체' },
+    { label: '세제', rx: /세제|세탁|버블|얼룩|한장세제|울앤다운|파워/ },
+    { label: '주방용품', rx: /수세미|프라이팬|주방|장갑|메디쿡/ },
+    { label: '위생용품·화장지', rx: /화장지|티슈|물티슈|키친|생리대|허브데이|순한데이|마스크|종이컵|위생백|지퍼백/ },
+    { label: '욕실용품', rx: /욕실|비데물티슈|비데 물티슈/ },
+    { label: '생활용품', rx: /탈취|크리너|테이프|필터/ },
+    { label: '홈데코·침구', rx: /디퓨저|침구|퍼퓸/ },
+    { label: '반려동물', rx: /헤이 독|헤이 캣|반려|펫/ },
+  ],
+  appliance: [
+    { label: '전체' },
+    { label: '생활가전', rx: /비데|정수기|온열|매트/ },
+    { label: '환경가전', rx: /공기청정기|가습기/ },
+    { label: '뷰티가전', rx: /드라이어|스타일러|스킨부스터|덴탈소닉|헤어롤/ },
+    { label: '필터·소모품', rx: /필터|칫솔 머리|건전지|리필/ },
+  ],
+  food: [
+    { label: '전체' },
+    { label: '농수산물', rx: /고등어|미역|김|견과|밤/ },
+    { label: '간편식', rx: /간편국|삼계탕|갈비탕|곰탕|카레|라면|비빔면|만두|곡밥|누룽지|햄/ },
+    { label: '양념', rx: /간장|고추장|죽염|원당시럽|아보카도|조미/ },
+    { label: '음료', rx: /두유|커피|아라비카|심층수|생수|캔디|껌|양갱|콘칩|칩|두부과자/ },
+  ],
+  fashion: [
+    { label: '전체' },
+    { label: '의류', rx: /팬츠|원피스|티셔츠|맨투맨|셔츠|이지웨어/ },
+    { label: '언더·이너웨어', rx: /팬티|거들|보정|쉐이퍼|언더|이너/ },
+    { label: '슈즈', rx: /정장화|로퍼|구두|스니커즈|슈즈/ },
+    { label: '굿즈', rx: /쇼핑백|노트|리플렛|굿즈/ },
+  ],
+  goods: [
+    { label: '전체' },
+    { label: '발행물', rx: /노트|학습|도서|캠프/ },
+    { label: '판촉물', rx: /쇼핑백|리플렛|종이컵/ },
+    { label: '문구', rx: /펜|다이어리|스티커|문구/ },
+  ],
+};
+
+// =============================================================
+// 전체 카테고리 시트 — 8개 대분류 + 서브카테고리를 한 번에 펼침
+// =============================================================
+function CategorySheet({ open, onClose, onSelect, isMobile, hostEl }) {
+  const [host, setHost] = React.useState(null);
+  React.useEffect(() => {
+    if (!open) return;
+    const scroller = hostEl && hostEl.closest && hostEl.closest('.phone-scroll');
+    const h = scroller ? scroller.parentElement : null;
+    if (h && getComputedStyle(h).position === 'static') h.style.position = 'relative';
+    setHost(h || null);
+  }, [open, hostEl]);
+  if (!open) return null;
+  const cats = CATEGORY_ICONS.filter(c => c.key !== 'all');
+  const node = (
+    <div
+      onClick={onClose}
+      style={{
+        position: host ? 'absolute' : 'fixed', inset: 0, zIndex: 60,
+        background: 'rgba(11,31,58,0.45)', backdropFilter: 'blur(2px)',
+        display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+        animation: 'catSheetFade 0.2s ease',
+      }}
+    >
+      <style>{'@keyframes catSheetFade{from{opacity:0}to{opacity:1}}@keyframes catSheetUp{from{transform:translateY(100%)}to{transform:translateY(0)}}.catsheet-scroll::-webkit-scrollbar{width:0}'}</style>
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="catsheet-scroll"
+        style={{
+          width: '100%', maxWidth: 560, maxHeight: '86%', background: '#fff',
+          borderRadius: '20px 20px 0 0', overflowY: 'auto', scrollbarWidth: 'none',
+          animation: 'catSheetUp 0.28s cubic-bezier(.2,.7,.3,1)',
+          fontFamily: '"Pretendard", "Noto Sans KR", system-ui, sans-serif', color: '#0B1F3A',
+        }}
+      >
+        <div style={{
+          position: 'sticky', top: 0, background: '#fff', zIndex: 2,
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: isMobile ? '16px 18px 12px' : '20px 24px 14px',
+          borderBottom: '1px solid rgba(11,31,58,0.07)',
+        }}>
+          <div style={{ fontSize: isMobile ? 17 : 19, fontWeight: 900, letterSpacing: '-0.02em' }}>전체 카테고리</div>
+          <button onClick={onClose} aria-label="닫기" style={{
+            width: 32, height: 32, border: 'none', background: '#F0F4FA', borderRadius: 10,
+            cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0B1F3A',
+          }}>
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <div style={{ padding: isMobile ? '6px 14px 26px' : '10px 20px 32px' }}>
+          {cats.map((cat) => {
+            const subs = SUB_CATEGORIES[cat.key] || [];
+            return (
+              <div key={cat.key} style={{ padding: isMobile ? '13px 4px' : '15px 6px', borderBottom: '1px solid rgba(11,31,58,0.05)' }}>
+                <button
+                  onClick={() => onSelect(cat.key, 0)}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 11, width: '100%',
+                    border: 'none', background: 'none', cursor: 'pointer', padding: 0,
+                    fontFamily: 'inherit', textAlign: 'left', marginBottom: subs.length > 1 ? 11 : 0,
+                  }}
+                >
+                  <img src={cat.img} alt="" style={{ width: 34, height: 34, objectFit: 'contain', flexShrink: 0 }} />
+                  <span style={{ fontSize: isMobile ? 15 : 16, fontWeight: 800, color: '#0B1F3A', letterSpacing: '-0.02em' }}>{cat.label}</span>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#B4BECC" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: 'auto' }}><polyline points="9 18 15 12 9 6"/></svg>
+                </button>
+                {subs.length > 1 && (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, paddingLeft: 45 }}>
+                    {subs.slice(1).map((s, i) => (
+                      <button
+                        key={s.label}
+                        onClick={() => onSelect(cat.key, i + 1)}
+                        style={{
+                          border: '1px solid rgba(11,31,58,0.12)', background: '#F7F9FC',
+                          borderRadius: 999, padding: isMobile ? '6px 12px' : '7px 14px',
+                          fontSize: isMobile ? 12.5 : 13, fontWeight: 600, color: '#3A4657',
+                          cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap',
+                        }}
+                      >{s.label}</button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+  return host ? ReactDOM.createPortal(node, host) : node;
+}
 
 function ShopCategoryIcons({ isMobile, onSelectCategory }) {
   const iconSize = isMobile ? 48 : 64;
   const [hoverKey, setHoverKey] = React.useState(null);
   const [stuck, setStuck] = React.useState(false);
+  const [sheetOpen, setSheetOpen] = React.useState(false);
   const sentinelRef = React.useRef(null);
+  const sectionRef = React.useRef(null);
 
   // 상단 sticky 상태 감지 — 센티넬이 뷰포트 위로 사라지면 stuck
   React.useEffect(() => {
@@ -2661,7 +3000,7 @@ function ShopCategoryIcons({ isMobile, onSelectCategory }) {
   return (
     <React.Fragment>
       <div ref={sentinelRef} aria-hidden="true" style={{ height: 1 }} />
-    <section style={{
+    <section ref={sectionRef} style={{
       background: '#fff',
       padding: isMobile ? (stuck ? '10px 12px' : '22px 12px 22px') : '32px 36px 30px',
       borderBottom: '1px solid rgba(11,31,58,0.05)',
@@ -2680,6 +3019,28 @@ function ShopCategoryIcons({ isMobile, onSelectCategory }) {
           cursor: isMobile ? 'grab' : 'default',
         }}
       >
+        {/* 전체 카테고리 트리거 — 좌측 */}
+        <button
+          onClick={() => setSheetOpen(true)}
+          style={{
+            flexShrink: 0, width: isMobile ? 70 : 100,
+            display: 'flex', flexDirection: 'column', alignItems: 'center',
+            gap: 8, padding: '6px 4px',
+            background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit',
+          }}
+        >
+          <div style={{
+            width: iconSize + (isMobile ? 8 : 12), height: iconSize + (isMobile ? 8 : 12),
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            borderRadius: '50%', background: '#F0F4FA',
+          }}>
+            <svg width={isMobile ? 24 : 30} height={isMobile ? 24 : 30} viewBox="0 0 24 24" fill="none" stroke="#0B1F3A" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          </div>
+          <span style={{
+            fontSize: isMobile ? 11 : 12.5, fontWeight: 600, color: '#1A1A1A',
+            letterSpacing: '-0.02em', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 2,
+          }}>전체 <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>
+        </button>
         {CATEGORY_ICONS.map((cat) => {
           const active = hoverKey === cat.key;
           return (
@@ -2731,6 +3092,13 @@ function ShopCategoryIcons({ isMobile, onSelectCategory }) {
         })}
       </div>
     </section>
+    <CategorySheet
+      open={sheetOpen}
+      onClose={() => setSheetOpen(false)}
+      isMobile={isMobile}
+      hostEl={sectionRef.current}
+      onSelect={(key, sub) => { window.__shopNavSub = sub || 0; setSheetOpen(false); onSelectCategory && onSelectCategory(key); }}
+    />
     </React.Fragment>
   );
 }
@@ -2762,6 +3130,7 @@ function ShopHero({ isMobile, onSelectProduct }) {
   // Fold7·데스크톱(넓은 화면)은 배너 높이를 절반으로 (2:1), 좁은 모바일은 1:1
   const bannerAspect = (!isMobile || wideMobile) ? '2 / 1' : '1 / 1';
   const [idx, setIdx] = React.useState(0);
+  const [listOpen, setListOpen] = React.useState(false);
   const [animOn, setAnimOn] = React.useState(true);
   const [paused, setPaused] = React.useState(false);
   const [dragPx, setDragPx] = React.useState(0);
@@ -2876,6 +3245,12 @@ function ShopHero({ isMobile, onSelectProduct }) {
     endDrag(x);
   };
 
+  const heroCtrlBtn = {
+    width: 32, height: 32, borderRadius: '50%', flexShrink: 0,
+    background: 'rgba(25,25,35,0.38)', backdropFilter: 'blur(4px)',
+    border: 'none', cursor: 'pointer', color: '#fff',
+    display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
+  };
   const navBtnStyle = (side) => ({
     position: 'absolute', top: '50%', transform: 'translateY(-50%)',
     [side]: isMobile ? 8 : 14, zIndex: 6,
@@ -2961,9 +3336,13 @@ function ShopHero({ isMobile, onSelectProduct }) {
       {gsMode && (
         <div style={{
           position: 'absolute', left: 0, right: 0, bottom: 18, zIndex: 3,
-          display: 'flex', alignItems: 'center', gap: 12,
+          display: 'flex', alignItems: 'center', gap: 10,
           padding: '0 12px 0 16px', boxSizing: 'border-box',
         }}>
+          {/* 이전 배너 */}
+          <button onClick={(e) => { e.stopPropagation(); go(-1); }} aria-label="이전 배너" style={heroCtrlBtn}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
+          </button>
           <div style={{
             flex: 1, height: 2, borderRadius: 10,
             background: 'rgba(255,255,255,0.3)', position: 'relative', overflow: 'hidden',
@@ -2998,6 +3377,64 @@ function ShopHero({ isMobile, onSelectProduct }) {
               ? <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4" /></svg>
               : <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" /><rect x="14" y="5" width="4" height="14" /></svg>}
           </button>
+          {/* 다음 배너 */}
+          <button onClick={(e) => { e.stopPropagation(); go(1); }} aria-label="다음 배너" style={heroCtrlBtn}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
+          </button>
+          {/* 배너 목록 보기 */}
+          <button onClick={(e) => { e.stopPropagation(); setPaused(true); setListOpen(true); }} aria-label="배너 목록 보기" style={heroCtrlBtn}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></svg>
+          </button>
+        </div>
+      )}
+
+      {/* 배너 목록 오버레이 */}
+      {gsMode && listOpen && (
+        <div onClick={(e) => { e.stopPropagation(); setListOpen(false); }} style={{
+          position: 'absolute', inset: 0, zIndex: 8,
+          background: 'rgba(11,31,58,0.6)', backdropFilter: 'blur(3px)',
+          display: 'flex', flexDirection: 'column', animation: 'shortsFadeIn 0.2s ease both',
+        }}>
+          <div onClick={(e) => e.stopPropagation()} style={{
+            margin: 'auto', width: '90%', maxWidth: 560, maxHeight: '86%', overflowY: 'auto',
+            background: '#fff', borderRadius: 16, padding: isMobile ? '14px 14px 16px' : '18px 20px 20px',
+            boxShadow: '0 24px 60px rgba(11,31,58,0.4)',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}>
+              <span style={{ fontSize: isMobile ? 14 : 15, fontWeight: 900, color: '#0B1F3A' }}>진행 중인 배너 <span style={{ color: '#00A3D9' }}>{total}</span></span>
+              <button onClick={() => setListOpen(false)} aria-label="닫기" style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: '#8A97AD', padding: 4, lineHeight: 0 }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+              </button>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 10 }}>
+              {HERO_SLIDES.map((slide, i) => {
+                const prod = SHOP_PRODUCTS.find(p => p.id === slide.id) || {};
+                const isCur = i === displayIdx;
+                return (
+                  <button key={slide.id} onClick={() => { setAnimOn(true); setIdx(i); setListOpen(false); }} style={{
+                    display: 'flex', alignItems: 'center', gap: 12, textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit',
+                    padding: 8, borderRadius: 12, background: isCur ? 'rgba(0,182,240,0.08)' : '#F6F8FB',
+                    border: isCur ? '1.5px solid #00B6F0' : '1.5px solid transparent',
+                  }}>
+                    <span style={{ position: 'relative', flexShrink: 0, width: 74, height: 48, borderRadius: 8, overflow: 'hidden', background: slide.bg }}>
+                      {prod.image && <img src={prod.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
+                      <span style={{ position: 'absolute', top: 3, left: 4, fontSize: 9, fontWeight: 800, color: '#fff', background: 'rgba(0,0,0,0.45)', borderRadius: 3, padding: '1px 5px' }}>{String(i + 1).padStart(2, '0')}</span>
+                    </span>
+                    <span style={{ flex: 1, minWidth: 0 }}>
+                      <span style={{ display: 'flex', gap: 4, marginBottom: 3 }}>
+                        {slide.chips.slice(0, 1).map(c => (
+                          <span key={c} style={{ fontSize: 9.5, fontWeight: 800, color: '#fff', background: slide.chipColor, borderRadius: 4, padding: '1px 6px' }}>{c}</span>
+                        ))}
+                        {isCur && <span style={{ fontSize: 9.5, fontWeight: 800, color: '#00A3D9' }}>현재 보는 중</span>}
+                      </span>
+                      <span style={{ display: 'block', fontSize: 12.5, fontWeight: 800, color: '#0B1F3A', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{slide.title[slide.title.length - 1]}</span>
+                      <span style={{ display: 'block', fontSize: 11, color: '#6B7A90', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{slide.sub}</span>
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         </div>
       )}
 
@@ -3070,8 +3507,129 @@ function ShopSectionTitle({ kicker, title, desc, isMobile }) {
 // =============================================================
 // 푸터
 // =============================================================
+// 최근 본 상품 — 우측 슬라이드 패널 + 트리거
+function RecentViewedPanel({ isMobile }) {
+  const [open, setOpen] = React.useState(false);
+  const [entries, setEntries] = React.useState([]);
+  const [host, setHost] = React.useState(null);
+  const anchorRef = React.useRef(null);
+  React.useEffect(() => {
+    const scroller = anchorRef.current && anchorRef.current.closest && anchorRef.current.closest('.phone-scroll');
+    const h = scroller ? scroller.parentElement : null;
+    if (h && getComputedStyle(h).position === 'static') h.style.position = 'relative';
+    setHost(h || null);
+  }, []);
+  React.useEffect(() => {
+    const read = () => { try {
+      const raw = JSON.parse(localStorage.getItem('atomy_recent_viewed') || '[]');
+      setEntries(raw.map(x => (typeof x === 'object' && x) ? x : { id: x, d: '' }));
+    } catch (e) { setEntries([]); } };
+    read();
+    window.addEventListener('atomy-recent-updated', read);
+    window.addEventListener('storage', read);
+    return () => { window.removeEventListener('atomy-recent-updated', read); window.removeEventListener('storage', read); };
+  }, []);
+  const openProduct = (prod) => { setOpen(false); if (typeof window.__atomyOpenProduct === 'function') window.__atomyOpenProduct(prod); };
+  const removeId = (id) => {
+    try {
+      const raw = JSON.parse(localStorage.getItem('atomy_recent_viewed') || '[]');
+      const next = raw.filter(x => (typeof x === 'object' ? x.id : x) !== id);
+      localStorage.setItem('atomy_recent_viewed', JSON.stringify(next));
+      window.dispatchEvent(new Event('atomy-recent-updated'));
+    } catch (e) {}
+  };
+  const clearAll = () => { try { localStorage.removeItem('atomy_recent_viewed'); window.dispatchEvent(new Event('atomy-recent-updated')); } catch (e) {} };
+
+  const groups = [];
+  entries.forEach(e => {
+    const prod = SHOP_PRODUCTS.find(p => p.id === e.id);
+    if (!prod) return;
+    const key = e.d || '이전';
+    let g = groups.find(x => x.d === key);
+    if (!g) { g = { d: key, items: [] }; groups.push(g); }
+    g.items.push(prod);
+  });
+  const count = groups.reduce((n, g) => n + g.items.length, 0);
+
+  const trigger = (
+    <button onClick={() => setOpen(true)} aria-label="최근 본 상품" style={{
+      position: host ? 'absolute' : 'fixed', right: 0, top: '42%', zIndex: 58,
+      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5,
+      padding: '10px 8px', background: '#fff', cursor: 'pointer', fontFamily: 'inherit',
+      border: '1px solid rgba(11,31,58,0.1)', borderRight: 'none', borderRadius: '12px 0 0 12px',
+      boxShadow: '-5px 4px 16px rgba(11,31,58,0.14)', color: '#0B1F3A',
+    }}>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9" /><polyline points="12 7 12 12 16 14" /></svg>
+      <span style={{ writingMode: 'vertical-rl', fontSize: 11, fontWeight: 800, letterSpacing: '0.06em' }}>최근 본</span>
+      {count > 0 && <span style={{ minWidth: 16, height: 16, padding: '0 4px', borderRadius: 999, background: '#00B6F0', color: '#fff', fontSize: 10, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box' }}>{count}</span>}
+    </button>
+  );
+
+  const panel = (
+    <div onClick={() => setOpen(false)} style={{ position: host ? 'absolute' : 'fixed', inset: 0, zIndex: 90, background: 'rgba(11,31,58,0.45)', display: 'flex', justifyContent: 'flex-end', animation: 'rvFade 0.2s ease' }}>
+      <style>{'@keyframes rvFade{from{opacity:0}to{opacity:1}}@keyframes rvSlide{from{transform:translateX(100%)}to{transform:translateX(0)}}.rv-scroll::-webkit-scrollbar{width:0}'}</style>
+      <div onClick={(e) => e.stopPropagation()} style={{ width: isMobile ? '86%' : 360, maxWidth: 360, height: '100%', background: '#fff', display: 'flex', flexDirection: 'column', animation: 'rvSlide 0.3s cubic-bezier(.2,.7,.3,1)', fontFamily: '"Pretendard","Noto Sans KR",system-ui,sans-serif' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 18px', borderBottom: '1px solid rgba(11,31,58,0.08)' }}>
+          <h3 style={{ margin: 0, fontSize: 17, fontWeight: 900, color: '#0B1F3A', letterSpacing: '-0.02em' }}>최근 본</h3>
+          <button onClick={() => setOpen(false)} aria-label="닫기" style={{ width: 32, height: 32, border: 'none', background: '#F0F4FA', borderRadius: 10, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0B1F3A' }}>
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+          </button>
+        </div>
+        <div className="rv-scroll" style={{ flex: 1, overflowY: 'auto', padding: count ? '6px 0 20px' : 0 }}>
+          {count === 0 && (
+            <div style={{ height: '100%', minHeight: 220, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10, color: '#8A97AD' }}>
+              <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9" /><polyline points="12 7 12 12 16 14" /></svg>
+              <span style={{ fontSize: 13, fontWeight: 600 }}>최근 본 상품이 없습니다.</span>
+            </div>
+          )}
+          {groups.map(g => (
+            <div key={g.d}>
+              <div style={{ padding: '14px 18px 8px', fontSize: 12, fontWeight: 800, color: '#8A97AD' }}>{g.d}</div>
+              {g.items.map(prod => {
+                const img = (prod.images && prod.images[0]) || prod.image;
+                return (
+                  <div key={prod.id} style={{ display: 'flex', gap: 12, alignItems: 'center', padding: '10px 18px' }}>
+                    <button onClick={() => openProduct(prod)} style={{ flex: '0 0 auto', width: 64, height: 64, borderRadius: 10, overflow: 'hidden', border: '1px solid rgba(11,31,58,0.08)', background: '#F4F6FA', padding: 0, cursor: 'pointer' }}>
+                      <img src={img} alt={prod.name} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} onError={(e) => { e.currentTarget.style.opacity = 0; }} />
+                    </button>
+                    <button onClick={() => openProduct(prod)} style={{ flex: 1, minWidth: 0, background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left' }}>
+                      <div style={{ fontSize: 12.5, fontWeight: 600, color: '#2B3A52', lineHeight: 1.35, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{prod.name}</div>
+                      <div style={{ marginTop: 4, display: 'flex', alignItems: 'baseline', gap: 6 }}>
+                        <span style={{ fontSize: 14, fontWeight: 900, color: '#0B1F3A' }}>{prod.price ? prod.price.toLocaleString() : ''}<span style={{ fontSize: 11, fontWeight: 700 }}>원</span></span>
+                        {prod.pv ? <span style={{ fontSize: 11.5, fontWeight: 700, color: '#00A0D2' }}>{prod.pv.toLocaleString()}PV</span> : null}
+                      </div>
+                    </button>
+                    <button onClick={() => removeId(prod.id)} aria-label="삭제" style={{ flex: '0 0 auto', width: 26, height: 26, border: 'none', background: 'none', cursor: 'pointer', color: '#B4BECC', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+        {count > 0 && (
+          <div style={{ padding: '12px 18px', borderTop: '1px solid rgba(11,31,58,0.08)' }}>
+            <button onClick={clearAll} style={{ width: '100%', padding: '11px 0', borderRadius: 10, border: '1px solid rgba(11,31,58,0.15)', background: '#fff', color: '#6B7A90', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>전체 삭제</button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  return (
+    <React.Fragment>
+      <span ref={anchorRef} aria-hidden="true" style={{ display: 'none' }} />
+      {host ? ReactDOM.createPortal(trigger, host) : trigger}
+      {open && (host ? ReactDOM.createPortal(panel, host) : panel)}
+    </React.Fragment>
+  );
+}
+
 function ShopFooter({ isMobile }) {
   return (
+    <React.Fragment>
+    <RecentViewedPanel isMobile={isMobile} />
     <footer style={{
       background: '#0B1F3A', color: '#fff',
       padding: isMobile ? '32px 20px' : '40px 36px',
@@ -3100,6 +3658,7 @@ function ShopFooter({ isMobile }) {
         </div>
       </div>
     </footer>
+    </React.Fragment>
   );
 }
 

@@ -453,7 +453,7 @@ function TimelineRow({ items, isMobile = false }) {
 }
 
 // 풀스크린 영상 모달 — 클릭한 영상 재생
-function AboutVideoModal({ video, onClose }) {
+function AboutVideoModal({ video, onClose, isMobile = false }) {
   React.useEffect(() => {
     const onKey = (e) => { if (e.key === 'Escape') onClose(); };
     window.addEventListener('keydown', onKey);
@@ -467,7 +467,7 @@ function AboutVideoModal({ video, onClose }) {
         position: 'absolute', inset: 0, zIndex: 70,
         background: 'rgba(0,0,0,0.92)', backdropFilter: 'blur(8px)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        padding: 20,
+        padding: isMobile ? 0 : 20,
         animation: 'shortsFadeIn 0.22s ease both',
       }}
     >
@@ -492,7 +492,10 @@ function AboutVideoModal({ video, onClose }) {
       {/* 미디어 — 9:16 stage (영상 또는 이미지) */}
       <div
         onClick={(e) => e.stopPropagation()}
-        style={{
+        style={isMobile ? {
+          position: 'absolute', inset: 0,
+          background: '#000', overflow: 'hidden',
+        } : {
           position: 'relative',
           height: '100%', maxHeight: 720,
           aspectRatio: '9 / 16',

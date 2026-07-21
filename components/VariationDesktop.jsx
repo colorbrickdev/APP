@@ -566,11 +566,11 @@ function DesktopShortsGrid({ onPlay, filteredShorts, tab, setTab, flagFilter, se
   const [hoverId, setHoverId] = React.useState(null);
 
   const tabs = [
-    { key: 'all',      label: '전체' },
-    { key: 'product',  label: '제품' },
-    { key: 'company',  label: '기업' },
-    { key: 'business', label: '비즈니스' },
-    { key: 'life',     label: '라이프' },
+    { key: 'all',      label: t('shorts.tab_all') },
+    { key: 'product',  label: t('shorts.tab_routine') },
+    { key: 'company',  label: t('shorts.tab_review') },
+    { key: 'business', label: t('shorts.tab_business') },
+    { key: 'life',     label: t('shorts.tab_life') },
   ];
 
   return (
@@ -768,11 +768,16 @@ function VariationDesktop() {
     scrollContainerTop();
   };
 
-  // 카테고리 탭 + 플래그 토글 동시 필터
+  // 알림 CTA → 기기별 페이지 이동 (루트에서만 수신)
+  React.useEffect(() => {
+    const el = rootRef.current; if (!el) return;
+    const h = (e) => { const pg = e.detail && e.detail.page; if (pg) goPage(pg); };
+    el.addEventListener('atomy-go-page', h);
+    return () => el.removeEventListener('atomy-go-page', h);
+  }, []);
   const filteredShorts = React.useMemo(() => {
     let r = SHORTS;
-    if (tab === 'company') r = r.filter(s => s.flag === '공식');
-    else if (tab !== 'all') r = r.filter(s => s.category === tab);
+    if (tab !== 'all') r = r.filter(s => s.category === tab);
     if (flagFilter === 'official') r = r.filter(s => s.flag === '공식');
     else if (flagFilter === 'personal') r = r.filter(s => s.flag === '개인');
     const num = (v) => { const s = String(v || '0'); return s.endsWith('K') ? parseFloat(s) * 1000 : parseFloat(s) || 0; };
@@ -808,6 +813,8 @@ function VariationDesktop() {
           />
         ) : null;
       })()}
+
+      {window.ScrollNav && <window.ScrollNav isMobile={false} />}
 
       {/* 알림 드롭다운 */}
       <NotificationPopup
@@ -874,11 +881,11 @@ function VariationDesktop() {
       )}
 
       {currentPage === 'life' && (
-        <AtomyLife isMobile={false} onPlay={() => {}} />
+        <AtomyLife isMobile={false} onPlay={setProductVideo} />
       )}
 
       {currentPage === 'about' && (
-        <AtomyAbout isMobile={false} onPlay={() => {}} />
+        <AtomyAbout isMobile={false} onPlay={setProductVideo} />
       )}
 
       {/* 전체화면 미디어 뷰어 (석세스클립 페이지에서만) */}

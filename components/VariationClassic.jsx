@@ -1219,6 +1219,7 @@ function ClipComments({ clip, count, onClose, onToast }) {
 function MobileShortCard({ s, i, onOpen }) {
   const cellRef = React.useRef(null);
   const [inView, setInView] = React.useState(false);
+  const [hover, setHover] = React.useState(false);
   const [pressing, setPressing] = React.useState(false);
   const pressTimer = React.useRef(null);
   const longPressed = React.useRef(false);
@@ -1227,9 +1228,8 @@ function MobileShortCard({ s, i, onOpen }) {
     const v = String(s.views || '0');
     return v.endsWith('K') ? parseFloat(v) * 1000 : parseFloat(v) || 0;
   })();
-  const isNew = i < 4;
   const isHot = viewsNum >= 40000;
-  const showPreview = (inView || pressing) && !!s.videoUrl;
+  const showPreview = (hover || pressing) && !!s.videoUrl;
 
   React.useEffect(() => {
     const el = cellRef.current;
@@ -1260,6 +1260,8 @@ function MobileShortCard({ s, i, onOpen }) {
     <div
       ref={cellRef}
       onClick={handleClick}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
       onTouchStart={startPress}
       onTouchEnd={endPress}
       onTouchMove={endPress}
@@ -1296,7 +1298,7 @@ function MobileShortCard({ s, i, onOpen }) {
             }}
           />
         )}
-        {/* 뷰포트 자동재생 미리보기 — 영상이 있는 클립만, 무음 루프 */}
+        {/* 호버(데스크톱) / 롱프레스(모바일) 시 미리보기 — 영상이 있는 클립만, 무음 루프 */}
         {showPreview && (
           <video
             src={s.videoUrl}
@@ -1373,23 +1375,24 @@ function MobileShortCard({ s, i, onOpen }) {
             : NavIcon.person(11, '#4A5568', 2.2)}
           {s.flag}
         </div>
+        {/* ⑩⑪ AI 제작 콘텐츠 표기 — 규제 대응 라벨 (좌하단, 재생시간과 겹침 방지) */}
+        {s.aigc && (
+          <div style={{
+            position: 'absolute', bottom: 10, right: 10,
+            padding: '3px 8px', borderRadius: 4,
+            background: 'rgba(11,31,58,0.72)', color: '#fff',
+            fontSize: 9.5, fontWeight: 800, letterSpacing: '0.06em',
+            backdropFilter: 'blur(4px)', zIndex: 2,
+          }}>✦ AI 제작</div>
+        )}
         {/* NEW / 인기 뱃지 — 플래그 아래 */}
-        {(isNew || isHot) && (
+        {isHot && (
           <div style={{ position: 'absolute', top: 40, left: 10, display: 'flex', gap: 4 }}>
-            {isNew && (
-              <span style={{
-                padding: '2px 7px', borderRadius: 4, background: '#FF3B6A',
-                color: '#fff', fontSize: 9, fontWeight: 800, letterSpacing: '0.06em',
-                boxShadow: '0 2px 6px rgba(255,59,106,0.4)',
-              }}>NEW</span>
-            )}
-            {isHot && (
-              <span style={{
-                display: 'inline-flex', alignItems: 'center', gap: 2,
-                padding: '2px 7px', borderRadius: 4, background: 'rgba(0,0,0,0.6)',
-                color: '#FFC53D', fontSize: 9, fontWeight: 800, letterSpacing: '0.04em',
-              }}>🔥 인기</span>
-            )}
+            <span style={{
+              display: 'inline-flex', alignItems: 'center', gap: 2,
+              padding: '2px 7px', borderRadius: 4, background: 'rgba(0,0,0,0.6)',
+              color: '#FFC53D', fontSize: 9, fontWeight: 800, letterSpacing: '0.04em',
+            }}>🔥 인기</span>
           </div>
         )}
         {/* duration */}
@@ -1429,6 +1432,7 @@ function MobileShortCard({ s, i, onOpen }) {
 function ShortsPlayer({ shorts, startIdx, onClose, showSidePanels = false, fixedToScrollContainer = false, onProductClick }) {
   const [idx, setIdx] = React.useState(startIdx);
   const [playing, setPlaying] = React.useState(true);
+  const [assistantOpen, setAssistantOpen] = React.useState(false);
   const [liked, setLiked] = React.useState(false);
   const [saved, setSaved] = React.useState(false);
   const [muted, setMuted] = React.useState(() => {
@@ -1440,6 +1444,7 @@ function ShortsPlayer({ shorts, startIdx, onClose, showSidePanels = false, fixed
   const [captions, setCaptions] = React.useState(false);
   const [commentsOpen, setCommentsOpen] = React.useState(false);
   const [moreOpen, setMoreOpen] = React.useState(false);
+  const [shareMode, setShareMode] = React.useState(null); // null | 'choice' | 'general' | 'ai' — 상품상세 공유와 동일 플로우
   const [authorOpen, setAuthorOpen] = React.useState(false);
   const commentsOpenRef = React.useRef(false);
   commentsOpenRef.current = commentsOpen;
@@ -1452,6 +1457,8 @@ function ShortsPlayer({ shorts, startIdx, onClose, showSidePanels = false, fixed
   const activeVideoRef = React.useRef(null);
   const total = shorts.length;
   const cur = shorts[idx];
+  const parseK = (v) => { const s = String(v || '0'); return s.endsWith('K') ? Math.round(parseFloat(s) * 1000) : (parseInt(s, 10) || 0); };
+  const fmtK = (n) => n >= 1000 ? (n / 1000).toFixed(1).replace(/\.0$/, '') + 'K' : String(n);
 
   const flash = (msg) => { setToast(msg); setTimeout(() => setToast(t => (t === msg ? null : t)), 1400); };
 
@@ -1475,7 +1482,11 @@ function ShortsPlayer({ shorts, startIdx, onClose, showSidePanels = false, fixed
 
   const cycleSpeed = () => setSpeed(s => (s >= 2 ? 0.5 : s === 1 ? 1.5 : s === 1.5 ? 2 : 1));
 
-  const go = (dir) => setIdx(i => (i + dir + total) % total);
+  const go = (dir) => setIdx(i => Math.max(0, Math.min(total - 1, i + dir)));
+  // 현재 클립 저장 여부 동기화
+  React.useEffect(() => {
+    try { const arr = JSON.parse(localStorage.getItem('atomy_saved_clips') || '[]'); setSaved(arr.includes(String(cur && cur.id))); } catch (_) { setSaved(false); }
+  }, [idx]);
 
   // ESC 키로 닫기, 상하 방향키로 이동
   React.useEffect(() => {
@@ -1940,24 +1951,57 @@ function ShortsPlayer({ shorts, startIdx, onClose, showSidePanels = false, fixed
           alignItems: 'center', zIndex: 3,
         }}
       >
+        {/* 애터미 어시스턴트(백조) — 클릭 시 영상 일시정지 + 챗 열기 */}
+        <button
+          onClick={() => {
+            const v = activeVideoRef.current;
+            if (v) { try { v.pause(); } catch (_) {} }
+            setPlaying(false);
+            setAssistantOpen(true);
+          }}
+          aria-label="애터미 어시스턴트"
+          style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'inherit' }}
+        >
+          <span style={{ width: 46, height: 46, borderRadius: '50%', background: 'linear-gradient(135deg,#fff,#E8F8FE)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', boxShadow: '0 6px 18px rgba(0,182,240,0.5)', border: '2px solid rgba(0,182,240,0.4)' }}>
+            <img src={window.ATOMY_SWAN_URL} alt="" style={{ width: '128%', height: '128%', objectFit: 'cover', objectPosition: 'center 30%', mixBlendMode: 'multiply', display: 'block' }} />
+          </span>
+          <span style={{ fontSize: 11, fontWeight: 700, color: '#fff', textShadow: '0 1px 3px rgba(0,0,0,0.5)' }}>궁금할땐?</span>
+        </button>
         <ActionButton
           onClick={() => setLiked(l => !l)}
           color={liked ? '#FF3B6A' : '#fff'}
-          label={liked ? (parseInt(cur.likes) + 1) + 'K' : cur.likes}
+          label={liked ? fmtK(parseK(cur.likes) + 1) : cur.likes}
           filled={liked}
           type="heart"
         />
-        <ActionButton onClick={() => setCommentsOpen(true)} color="#fff" label={Math.round(parseInt(cur.views) * 0.08) + ''} type="comment" />
+        <ActionButton onClick={() => setCommentsOpen(true)} color="#fff" label={fmtK(Math.round(parseK(cur.views) * 0.08))} type="comment" />
         <ActionButton
-          onClick={() => { setSaved(s => !s); flash(saved ? '저장 취소' : '저장됨'); }}
+          onClick={() => { setSaved(s => { const ns = !s; try { const k = 'atomy_saved_clips'; const arr = JSON.parse(localStorage.getItem(k) || '[]'); const id = String(cur.id); const next = ns ? [...new Set([...arr, id])] : arr.filter(x => x !== id); localStorage.setItem(k, JSON.stringify(next)); } catch (_) {} flash(ns ? '저장됨' : '저장 취소'); return ns; }); }}
           color={saved ? '#FFC53D' : '#fff'}
           label={saved ? '저장됨' : '저장'}
           filled={saved}
           type="save"
         />
-        <ActionButton onClick={() => flash('링크가 복사되었어요')} color="#fff" label="공유" type="share" />
+        <ActionButton onClick={() => { const v = activeVideoRef.current; if (v) { try { v.pause(); } catch (_) {} } setPlaying(false); setShareMode('choice'); }} color="#fff" label="공유" type="share" />
         <ActionButton onClick={() => setMoreOpen(true)} color="#fff" label="" type="more" />
       </div>
+
+      {/* 공유 — 상품상세와 동일: 일반 공유(SNS) / 맞춤 Ai 공유 */}
+      {shareMode && shareMode !== 'ai' && (
+        <div onClick={(e) => e.stopPropagation()} style={{ position: 'absolute', left: '50%', top: '34%', transform: 'translateX(-50%)', width: 300, zIndex: 60 }}>
+          {shareMode === 'choice' && window.ShareChoice && (
+            <window.ShareChoice onGeneral={() => setShareMode('general')} onAi={() => setShareMode('ai')} onClose={() => setShareMode(null)} />
+          )}
+          {shareMode === 'general' && window.ShareSheet && (
+            <window.ShareSheet title={cur.title || '애터미 석세스클립'} description={cur.caption || ''} image={cur.image || ''} url={(typeof location !== 'undefined') ? location.href : ''} onClose={() => setShareMode(null)} />
+          )}
+        </div>
+      )}
+      {shareMode === 'ai' && window.AiShareSheet && (
+        <div style={{ position: 'absolute', inset: 0, zIndex: 70 }}>
+          <window.AiShareSheet title={cur.title || '애터미 석세스클립'} image={cur.image || ''} url={(typeof location !== 'undefined') ? location.href : ''} hostEl={null} centered onClose={() => setShareMode(null)} />
+        </div>
+      )}
 
       {/* 하단 캡션 + 메타 */}
       <div
@@ -2060,6 +2104,23 @@ function ShortsPlayer({ shorts, startIdx, onClose, showSidePanels = false, fixed
           count={Math.round(parseInt(cur.views) * 0.08)}
           onClose={() => setCommentsOpen(false)}
           onToast={flash}
+        />
+      )}
+
+      {/* 애터미 어시스턴트 챗 — 플레이어 내부 (열릴 때 영상 일시정지, 닫으면 재개) */}
+      {assistantOpen && window.ChatPanel && (
+        <window.ChatPanel
+          isMobile={!showSidePanels}
+          width={showSidePanels ? 360 : 320}
+          height={520}
+          bottom={20}
+          right={showSidePanels ? 360 : 12}
+          onClose={() => {
+            setAssistantOpen(false);
+            const v = activeVideoRef.current;
+            if (v) { try { v.play(); } catch (_) {} }
+            setPlaying(true);
+          }}
         />
       )}
 
@@ -2579,10 +2640,19 @@ function ActionButton({ type, color = '#fff', label = '', filled = false, onClic
   );
 }
 
+// 검색어 자동완성 키워드 풀
+const SEARCH_KEYWORDS = ['헤모힘', '헤모힘 샷', '유산균', '프로바이오툓', '칫솔', '치약', '화장지', '앱솔루트', '스킨케어', '샴푸', '비타민', '오메가', '콜라겐', '세제', '주방세제', '토너', '에센스', '선크림', '다이어트', '단백질', '건강식품'];
+
 // 글로벌 검색 오버레이 — 제품 + 석세스클립 통합 검색
-function GlobalSearchOverlay({ anchorEl, onClose, onProduct, onClips }) {
+function GlobalSearchOverlay({ anchorEl, onClose, onProduct, onClips, onSearch }) {
   const { t } = (typeof useTranslation === 'function') ? useTranslation() : { t: (k) => k };
   const [q, setQ] = React.useState('');
+  const [recent, setRecent] = React.useState([]);
+  React.useEffect(() => { try { setRecent(JSON.parse(localStorage.getItem('atomy_recent_search') || '[]')); } catch (_) { setRecent([]); } }, []);
+  const saveRecent = (term) => { try { const t2 = (term || '').trim(); if (!t2) return; const arr = [t2, ...JSON.parse(localStorage.getItem('atomy_recent_search') || '[]').filter(x => x !== t2)].slice(0, 10); localStorage.setItem('atomy_recent_search', JSON.stringify(arr)); setRecent(arr); } catch (_) {} };
+  const removeRecent = (term) => { try { const arr = JSON.parse(localStorage.getItem('atomy_recent_search') || '[]').filter(x => x !== term); localStorage.setItem('atomy_recent_search', JSON.stringify(arr)); setRecent(arr); } catch (_) {} };
+  const clearRecent = () => { try { localStorage.removeItem('atomy_recent_search'); setRecent([]); } catch (_) {} };
+  const runSearch = (term) => { const t2 = (term || '').trim(); if (!t2) return; saveRecent(t2); if (onSearch) onSearch(t2); else setQ(t2); };
   const [host, setHost] = React.useState(null);
   React.useEffect(() => {
     if (!anchorEl) return;
@@ -2601,14 +2671,18 @@ function GlobalSearchOverlay({ anchorEl, onClose, onProduct, onClips }) {
   }, [anchorEl]);
 
   const qq = q.trim().toLowerCase();
-  const prods = qq ? (window.SHOP_PRODUCTS || []).filter(p => (p.name || '').toLowerCase().includes(qq)).slice(0, 8) : [];
+  const ALL = window.SHOP_PRODUCTS || [];
+  const isQuestion = qq.length > 6 && /[??]$|추천|좋을까|어떤|뭐가|알려줘|찾아줘/.test(q.trim());
+  const prods = qq ? ALL.filter(p => (p.name || '').toLowerCase().includes(qq)).slice(0, 8) : [];
+  const kwSug = qq ? SEARCH_KEYWORDS.filter(k => k.toLowerCase().includes(qq) && k.toLowerCase() !== qq).filter((k, i, a) => a.indexOf(k) === i).slice(0, 5) : [];
   const clipN = qq ? (window.SHORTS || []).filter(s => ((s.title || '') + ' ' + (s.product || '')).toLowerCase().includes(qq)).length : 0;
   const HOT = ['헤모힘', '유산균', '칫솔', '화장지 4D', '앱솔루트'];
   const krw = n => (n || 0).toLocaleString('ko-KR');
   const isWide = (() => {
     try {
+      if (anchorEl && anchorEl.closest('.iphone-noto')) return false;
       const sc = anchorEl && anchorEl.closest('.phone-scroll');
-      return sc ? sc.clientWidth >= 700 : false;
+      return sc ? sc.clientWidth >= 900 : false;
     } catch (_) { return false; }
   })();
   // 데스크톱: 검색 필드 바로 아래 앵커 위치 계산
@@ -2649,8 +2723,11 @@ function GlobalSearchOverlay({ anchorEl, onClose, onProduct, onClips }) {
             autoFocus
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Escape') onClose(); }}
-            placeholder={t('gs.placeholder')}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') onClose();
+              else if (e.key === 'Enter' && q.trim()) { runSearch(q.trim()); }
+            }}
+            placeholder={t('gs.placeholder') + ' · 무엇이든 물어보세요'}
             style={{ flex: 1, border: 'none', outline: 'none', background: 'transparent', fontFamily: 'inherit', fontSize: 14, fontWeight: 700, color: '#0B1F3A' }}
           />
           <button onClick={onClose} aria-label="닫기" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, lineHeight: 0, color: '#8A97AD' }}>
@@ -2661,19 +2738,65 @@ function GlobalSearchOverlay({ anchorEl, onClose, onProduct, onClips }) {
         <div className="filter-scroll" style={{ flex: 1, overflowY: 'auto', marginTop: 6 }}>
           {!qq ? (
             <div style={{ padding: '10px 2px 2px' }}>
+              {recent.length > 0 && (
+                <div style={{ marginBottom: 16 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                    <div style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: '0.08em', color: '#8A97AD' }}>최근 검색어</div>
+                    <button onClick={clearRecent} style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 11, fontWeight: 600, color: '#B4BECC' }}>전체삭제</button>
+                  </div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                    {recent.map(term => (
+                      <span key={term} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 8px 7px 12px', borderRadius: 999, border: '1px solid rgba(11,31,58,0.12)', background: '#F7F9FC' }}>
+                        <button onClick={() => runSearch(term)} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'inherit', fontSize: 12, fontWeight: 700, color: '#2B3A52' }}>{term}</button>
+                        <button onClick={() => removeRecent(term)} aria-label="삭제" style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', lineHeight: 0, color: '#B4BECC' }}>
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
               <div style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: '0.08em', color: '#8A97AD', marginBottom: 8 }}>{t('gs.hot')}</div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                 {HOT.map(h => (
-                  <button key={h} onClick={() => setQ(h)} style={{
+                  <button key={h} onClick={() => runSearch(h)} style={{
                     padding: '7px 12px', borderRadius: 999, cursor: 'pointer',
                     border: '1px solid rgba(11,31,58,0.12)', background: '#fff',
                     fontSize: 12, fontWeight: 700, color: '#2B3A52', fontFamily: 'inherit',
                   }}>{h}</button>
                 ))}
               </div>
+              {/* ⑤ 이미지로 상품 찾기 */}
+              {window.ImageSearchPanel && (
+                <window.ImageSearchPanel allProducts={ALL} onPick={(p) => onProduct(p)} onClose={onClose} />
+              )}
             </div>
           ) : (
             <div style={{ paddingTop: 4 }}>
+              {/* ⑧ 질문형 입력 → AI 어시스턴트 연결 */}
+              {isQuestion && (
+                <button onClick={() => { try { window.dispatchEvent(new CustomEvent('atomy-assistant-ask', { detail: { question: q.trim() } })); } catch (_) {} onClose(); }} style={{
+                  display: 'flex', alignItems: 'center', gap: 9, width: '100%',
+                  padding: '11px 12px', margin: '2px 0 6px', borderRadius: 12, cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit',
+                  border: '1.5px solid rgba(0,182,240,0.4)', background: 'linear-gradient(135deg, rgba(0,182,240,0.07), rgba(0,182,240,0.02))',
+                }}>
+                  <span style={{ width: 24, height: 24, borderRadius: 8, background: '#00B6F0', color: '#fff', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, flexShrink: 0 }}>✦</span>
+                  <span style={{ flex: 1, minWidth: 0 }}>
+                    <span style={{ display: 'block', fontSize: 12.5, fontWeight: 800, color: '#0B1F3A' }}>애터미 어시스턴트에게 물어보기</span>
+                    <span style={{ display: 'block', fontSize: 11, color: '#6B7A90', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>“{q.trim()}” — AI가 대화로 추천해드려요</span>
+                  </span>
+                </button>
+              )}
+              {kwSug.length > 0 && (
+                <div style={{ marginBottom: 4, borderBottom: '1px solid rgba(11,31,58,0.05)', paddingBottom: 4 }}>
+                  {kwSug.map(k => (
+                    <button key={k} onClick={() => runSearch(k)} style={{ display: 'flex', alignItems: 'center', gap: 9, width: '100%', padding: '9px 4px', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit' }}>
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#B4BECC" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><circle cx="11" cy="11" r="7" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: '#2B3A52' }}>{k}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
               {prods.map(p => (
                 <button key={p.id} onClick={() => onProduct(p)} style={{
                   display: 'flex', alignItems: 'center', gap: 10, width: '100%',
@@ -2714,6 +2837,69 @@ function GlobalSearchOverlay({ anchorEl, onClose, onProduct, onClips }) {
 
 window.GlobalSearchOverlay = GlobalSearchOverlay;
 
+// 스크롤 유틸 — 스크롤 중 우측에서 슬라이드로 나오는 맨위/맨아래 버튼
+function ScrollNav({ isMobile }) {
+  const anchorRef = React.useRef(null);
+  const scrollerRef = React.useRef(null);
+  const hideTimer = React.useRef(null);
+  const [host, setHost] = React.useState(null);
+  const [visible, setVisible] = React.useState(false);
+  const [atTop, setAtTop] = React.useState(true);
+  const [atBottom, setAtBottom] = React.useState(false);
+  React.useEffect(() => {
+    const sc = anchorRef.current && anchorRef.current.closest('.phone-scroll');
+    if (!sc) return;
+    scrollerRef.current = sc;
+    const parent = sc.parentElement;
+    if (parent && getComputedStyle(parent).position === 'static') parent.style.position = 'relative';
+    setHost(parent || null);
+    const onScroll = () => {
+      const st = sc.scrollTop, max = sc.scrollHeight - sc.clientHeight;
+      if (max < 120) { setVisible(false); return; }
+      setVisible(true);
+      setAtTop(st < 40);
+      setAtBottom(st > max - 40);
+      if (hideTimer.current) clearTimeout(hideTimer.current);
+      hideTimer.current = setTimeout(() => setVisible(false), 1500);
+    };
+    sc.addEventListener('scroll', onScroll, { passive: true });
+    return () => { sc.removeEventListener('scroll', onScroll); if (hideTimer.current) clearTimeout(hideTimer.current); };
+  }, []);
+  const toTop = () => scrollerRef.current && scrollerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+  const toBottom = () => scrollerRef.current && scrollerRef.current.scrollTo({ top: scrollerRef.current.scrollHeight, behavior: 'smooth' });
+  const btnStyle = {
+    width: 44, height: 44, borderRadius: '50%',
+    background: 'rgba(255,255,255,0.5)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
+    border: '1px solid rgba(11,31,58,0.12)', boxShadow: '0 4px 14px rgba(11,31,58,0.14)',
+    display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#0B1F3A', padding: 0,
+    transition: 'opacity 0.2s ease',
+  };
+  const nav = (
+    <div style={{
+      position: 'absolute', right: isMobile ? 12 : 28, bottom: isMobile ? 196 : 176, zIndex: 45,
+      display: 'flex', flexDirection: 'column', gap: 10,
+      transform: visible ? 'translateX(0)' : 'translateX(150%)',
+      opacity: visible ? 1 : 0,
+      transition: 'transform 0.34s cubic-bezier(.2,.7,.3,1), opacity 0.25s ease',
+      pointerEvents: visible ? 'auto' : 'none',
+    }}>
+      <button onClick={toTop} aria-label="맨위로 이동" style={{ ...btnStyle, opacity: atTop ? 0.4 : 1 }}>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15" /></svg>
+      </button>
+      <button onClick={toBottom} aria-label="맨아래로 이동" style={{ ...btnStyle, opacity: atBottom ? 0.4 : 1 }}>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9" /></svg>
+      </button>
+    </div>
+  );
+  return (
+    <React.Fragment>
+      <span ref={anchorRef} aria-hidden="true" style={{ display: 'none' }} />
+      {host ? ReactDOM.createPortal(nav, host) : null}
+    </React.Fragment>
+  );
+}
+window.ScrollNav = ScrollNav;
+
 function VariationClassic({ shopVariant = 'default', onPageChange } = {}) {
   const _onPageChangeRef = React.useRef(onPageChange);
   React.useEffect(() => { _onPageChangeRef.current = onPageChange; });
@@ -2721,8 +2907,7 @@ function VariationClassic({ shopVariant = 'default', onPageChange } = {}) {
   // 카테고리 탭 + 플래그 토글에 따라 숏폼 필터링
   const filterShorts = (list, tabKey, flagKey) => {
     let r = list;
-    if (tabKey === 'company') r = r.filter(s => s.flag === '공식');
-    else if (tabKey !== 'all') r = r.filter(s => s.category === tabKey);
+    if (tabKey !== 'all') r = r.filter(s => s.category === tabKey);
     if (flagKey === 'official') r = r.filter(s => s.flag === '공식');
     else if (flagKey === 'personal') r = r.filter(s => s.flag === '개인');
     return r;
@@ -2731,6 +2916,7 @@ function VariationClassic({ shopVariant = 'default', onPageChange } = {}) {
   const [viewerIdx, setViewerIdx] = React.useState(null);
   const [clipTab, setClipTab] = React.useState('all');
   const [clipSearch, setClipSearch] = React.useState('');
+  const [shopSearch, setShopSearch] = React.useState('');
   const [searchOpen, setSearchOpen] = React.useState(null); // 클릭된 앵커 엘리먼트
   const [notifOpen, setNotifOpen] = React.useState(false);
   const [flagFilter, setFlagFilter] = React.useState('all'); // 'all' | 'official' | 'personal'
@@ -2786,9 +2972,12 @@ function VariationClassic({ shopVariant = 'default', onPageChange } = {}) {
     return () => document.body.classList.remove('in-video-playback');
   }, [playerIdx, productVideo]);
 
+  const shellRef = React.useRef(null);
+
   const goPage = (key) => {
     setCurrentPage(key);
     setShopProduct(null);
+    setShopSearch('');
     // 페이지 이동 시 재생 중인 미디어 정리 — 소리 잔류 방지
     setPlayerIdx(null);
     setProductVideo(null);
@@ -2799,12 +2988,19 @@ function VariationClassic({ shopVariant = 'default', onPageChange } = {}) {
     } catch (_) {}
     scrollContentTop();
   };
+  // 알림 CTA → 기기별 페이지 이동 (디바이스 루트에서만 수신)
+  React.useEffect(() => {
+    const el = shellRef.current; if (!el) return;
+    const h = (e) => { const pg = e.detail && e.detail.page; if (pg) goPage(pg); };
+    el.addEventListener('atomy-go-page', h);
+    return () => el.removeEventListener('atomy-go-page', h);
+  }, []);
   const clipTabs = [
     { key: 'all',      label: t('shorts.tab_all') },
     { key: 'product',  label: t('shorts.tab_routine') },
     { key: 'company',  label: t('shorts.tab_review') },
-    { key: 'business', label: '비즈니스' },
-    { key: 'life',     label: '라이프' },
+    { key: 'business', label: t('shorts.tab_business') },
+    { key: 'life',     label: t('shorts.tab_life') },
   ];
   const filteredShorts = React.useMemo(() => {
     let r = filterShorts(SHORTS, clipTab, flagFilter);
@@ -2824,7 +3020,7 @@ function VariationClassic({ shopVariant = 'default', onPageChange } = {}) {
   }, [filteredShorts]);
 
   return (
-    <div style={{
+    <div ref={shellRef} style={{
       fontFamily: '"Pretendard", "Noto Sans KR", system-ui, sans-serif',
       background: '#F7F5F0',
       minHeight: '100%',
@@ -2921,12 +3117,15 @@ function VariationClassic({ shopVariant = 'default', onPageChange } = {}) {
           anchorTop={52}
           isMobile={true}
         />
+        {/* 스크롤 맨위/맨아래 유틸 */}
+        <ScrollNav isMobile={true} />
         {/* 글로벌 검색 오버레이 */}
         {searchOpen && (
           <GlobalSearchOverlay
             anchorEl={searchOpen}
             onClose={() => setSearchOpen(null)}
-            onProduct={(p) => { setSearchOpen(null); setCurrentPage('shop'); setShopProduct(p); }}
+            onSearch={(kw) => { setSearchOpen(null); setShopSearch(kw); setShopProduct(null); setCurrentPage('shop'); }}
+            onProduct={(p) => { setSearchOpen(null); setShopSearch(''); setCurrentPage('shop'); setShopProduct(p); }}
             onClips={(kw) => { setSearchOpen(null); setClipSearch(kw); setCurrentPage('shorts'); }}
           />
         )}
@@ -2963,15 +3162,18 @@ function VariationClassic({ shopVariant = 'default', onPageChange } = {}) {
               <AtomyShop
                 isMobile={true}
                 shopVariant={shopVariant}
+                searchQuery={shopSearch}
+                onClearSearch={() => setShopSearch('')}
+                onClips={(kw) => { setShopSearch(''); setClipSearch(kw); setCurrentPage('shorts'); }}
                 onSelectProduct={(p) => setShopProduct(p)}
               />
             )
           )}
           {currentPage === 'life' && (
-            <AtomyLife isMobile={true} onPlay={() => {}} />
+            <AtomyLife isMobile={true} onPlay={setProductVideo} />
           )}
           {currentPage === 'about' && (
-            <AtomyAbout isMobile={true} onPlay={() => {}} />
+            <AtomyAbout isMobile={true} onPlay={setProductVideo} />
           )}
         </div>
       )}
@@ -3053,7 +3255,7 @@ function VariationClassic({ shopVariant = 'default', onPageChange } = {}) {
 
         {/* 카테고리 탭 — PC와 동일한 라운드 필 컨테이너 */}
         <div
-          className="phone-scroll"
+          className="drag-scroll-x"
           style={{
             display: 'flex', gap: 4, padding: 4,
             background: '#fff',
@@ -3154,31 +3356,14 @@ function VariationClassic({ shopVariant = 'default', onPageChange } = {}) {
 
       {/* 검색 + 이어보기 */}
       <div style={{ padding: '4px 14px 0' }}>
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: 8,
-          padding: '9px 12px', borderRadius: 999,
-          background: '#fff', border: '1px solid rgba(11,31,58,0.1)',
-        }}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8A97AD" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="11" cy="11" r="7" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
-          </svg>
-          <input
-            value={clipSearch}
-            onChange={(e) => setClipSearch(e.target.value)}
-            placeholder="클립 · 상품 검색"
-            style={{
-              flex: 1, border: 'none', outline: 'none', background: 'transparent',
-              fontFamily: 'inherit', fontSize: 13.5, fontWeight: 600, color: '#0B1F3A',
-            }}
-          />
-          {clipSearch && (
-            <button onClick={() => setClipSearch('')} aria-label="지우기" style={{
-              background: 'none', border: 'none', cursor: 'pointer', padding: 2, lineHeight: 0, color: '#8A97AD',
-            }}>
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+        {clipSearch && (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, padding: '8px 12px', borderRadius: 999, background: '#EAF7FE', border: '1px solid rgba(0,182,240,0.35)' }}>
+            <span style={{ fontSize: 12.5, fontWeight: 700, color: '#0B1F3A', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>‘{clipSearch}’ 검색 결과 · {filteredShorts.length}개</span>
+            <button onClick={() => setClipSearch('')} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, flexShrink: 0, background: '#fff', border: '1px solid rgba(11,31,58,0.12)', borderRadius: 999, padding: '4px 10px', cursor: 'pointer', fontFamily: 'inherit', fontSize: 11.5, fontWeight: 700, color: '#4A5568' }}>
+              지우기 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
             </button>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* 이어보기 배너 */}
         {!clipSearch && resumeIdx >= 0 && (
@@ -3268,6 +3453,7 @@ function VariationClassic({ shopVariant = 'default', onPageChange } = {}) {
         <AboutVideoModal
           video={productVideo}
           onClose={() => setProductVideo(null)}
+          isMobile={true}
         />
       )}
     </div>

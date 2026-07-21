@@ -37,12 +37,25 @@ function ChatFloating({
   const [showMessage, setShowMessage] = React.useState(false);
   const [panelOpen, setPanelOpen] = React.useState(false);
   const [unread, setUnread] = React.useState(notificationCount);
+  // ⑧ 검색창 핸드오프 — 패널이 닫혀 있어도 열고 질문 전달
+  const pendingAskRef = React.useRef(null);
+  React.useEffect(() => {
+    const onAsk = (e) => {
+      const q = e.detail && e.detail.question;
+      if (!q) return;
+      pendingAskRef.current = q;
+      setPanelOpen(true);
+      // 이미 열려 있으면 내부 리스너가 바로 소비
+      window.dispatchEvent(new CustomEvent('atomy-assistant-ask-open', { detail: { question: q } }));
+    };
+    window.addEventListener('atomy-assistant-ask', onAsk);
+    return () => window.removeEventListener('atomy-assistant-ask', onAsk);
+  }, []);
   const isMobile = size === 'mobile';
 
-  // 자동 등장
+  // 자동 등장 (메시지 말풍선) — 비활성화: 동그란 버튼만 노출
   React.useEffect(() => {
-    const t = setTimeout(() => setShowMessage(true), autoOpenDelay);
-    return () => clearTimeout(t);
+    return () => {};
   }, [autoOpenDelay]);
 
   // 사이즈 셋 — 원형 컨테이너이므로 정사각형
@@ -160,7 +173,7 @@ function ChatFloating({
               animation: 'shortsFadeIn 0.18s ease both',
               pointerEvents: 'none',
             }}>
-              안녕하세요! 🦢
+              궁금한 점은 저에게 물어보세요! 🦢
               {/* 말풍선 꼬리 */}
               <span style={{
                 position: 'absolute', right: -6, top: '50%', transform: 'translateY(-50%)',
@@ -258,6 +271,8 @@ function ChatFloating({
           height={panelH}
           bottom={bottom != null ? bottom : defaultBottom}
           right={right != null ? right : defaultRight}
+          initialAsk={pendingAskRef.current}
+          onConsumeAsk={() => { pendingAskRef.current = null; }}
           onClose={() => setPanelOpen(false)}
         />
       )}
@@ -866,25 +881,112 @@ function VoiceChatPanel({ onClose, onTranscript }) {
   );
 }
 
-function ChatPanel({ isMobile, width, height, bottom, right, onClose }) {
+function ChatPanel({ isMobile, width, height, bottom, right, onClose, initialAsk = null, onConsumeAsk = () => {} }) {
   const [input, setInput] = React.useState('');
   const [joinFormOpen, setJoinFormOpen] = React.useState(false);
   const [voiceOpen, setVoiceOpen] = React.useState(false);
   const [submitted, setSubmitted] = React.useState(false);
-  const [messages, setMessages] = React.useState([
-    {
+  const [messages, setMessages] = React.useState(() => {
+    // 같은 사용자면 이전 대화 유지 — localStorage 복원
+    try {
+      const saved = localStorage.getItem('atomyChatHistory');
+      if (saved) { const arr = JSON.parse(saved); if (Array.isArray(arr) && arr.length) return arr; }
+    } catch (_) {}
+    return [{
       role: 'bot',
-      text: '안녕하세요! 애터미 어시스턴트입니다 🦢\n애터미 사업 구조(PV·바이너리·수당·직급 등) 무엇이든 물어보세요.',
-    },
-  ]);
+      text: '안녕하세요! 애터미 어시스턴트입니다 🦢\n애터미 사업 구조(PV·바이너리·수당·직급 등)와 제품 추천 무엇이든 물어보세요.',
+    }];
+  });
   const scrollRef = React.useRef(null);
+
+  // 대화 내용 저장 (최근 40개)
+  React.useEffect(() => {
+    try { localStorage.setItem('atomyChatHistory', JSON.stringify(messages.slice(-40))); } catch (_) {}
+  }, [messages]);
 
   React.useEffect(() => {
     const el = scrollRef.current;
     if (el) el.scrollTop = el.scrollHeight;
   }, [messages]);
 
+  // ⑧ 검색창에서 넘어온 질문 처리 — 마운트 시 pending + 열려있는 동안 이벤트 모두 처리
+  React.useEffect(() => {
+    if (initialAsk) {
+      onConsumeAsk();
+      setTimeout(() => send(initialAsk), 400);
+    }
+    const onAsk = (e) => {
+      const q = e.detail && e.detail.question;
+      if (q) setTimeout(() => send(q), 300);
+    };
+    window.addEventListener('atomy-assistant-ask-open', onAsk);
+    return () => window.removeEventListener('atomy-assistant-ask-open', onAsk);
+  }, []);
+
+  // ④ 능동형 제안 — 열린 직후 방문 맥락 기반으로 먼저 말 걸기 (세션당 1회)
+  React.useEffect(() => {
+    if (window.__assistantProactiveDone) return;
+    window.__assistantProactiveDone = true;
+    const h = new Date().getHours();
+    const timeMsg = h < 11 ? '아침에는 활력 챙기기 좋은 헤모힘 샷 찾는 분이 많아요' : h < 18 ? '오후 슬럼프엔 비타민·홍삼류를 많이 찾으세요' : '저녁엔 유산균·수면 관리 제품 문의가 많아요';
+    const t = setTimeout(() => {
+      setMessages(m => [...m, { role: 'bot', text: `👋 맞춤 추천이 필요하세요?\n${timeMsg}. "피로에 좋은 거 추천해줘"처럼 편하게 말씀해 보세요.` }]);
+    }, 1200);
+    return () => clearTimeout(t);
+  }, []);
+
   const [thinking, setThinking] = React.useState(false);
+
+  // ③ 상품 탐색 의도 감지 → 비교표/추천/담기 응답 (데모 규칙 기반)
+  const tryShoppingReply = (text) => {
+    const ALL = window.SHOP_PRODUCTS || [];
+    if (!ALL.length) return false;
+    const t = text.toLowerCase();
+    const giftAsk = /선물|지인|부모님께|생일/.test(t);
+    const compareAsk = /비교|vs|차이|달라/.test(t);
+    const recoAsk = /추천|좋은 ?거|좋을까|골라줘|찾아줘/.test(t);
+    // 비교 요청: '이랑/랑/와/과/vs' 기준으로 토큰 분리 후 각각 매칭
+    if (compareAsk) {
+      const cleaned = t.replace(/비교해 ?줘|비교|차이|알려줘|뭐가|어떻게|달라\??|[?.!]/g, ' ');
+      const tokens = cleaned.split(/이랑|랑|와 |과 |vs|,/).map(s => s.trim()).filter(s => s.length > 1);
+      const found = [];
+      for (const tok of tokens) {
+        const hit = ALL.find(p => p.name.toLowerCase().includes(tok) && !found.some(f => f.id === p.id));
+        if (hit) found.push(hit);
+      }
+      if (found.length >= 2) {
+        setMessages(m => [...m, { role: 'bot', text: '두 제품을 한눈에 비교해 드릴게요', _products: found.slice(0, 2), _compare: true }]);
+        return true;
+      }
+      // 한 제품만 집힐 경우 — 같은 키워드군에서 2개 선별
+      if (found.length === 1) {
+        const base = found[0];
+        const sib = ALL.find(p => p.id !== base.id && p.category === base.category) || ALL.find(p => p.id !== base.id);
+        if (sib) {
+          setMessages(m => [...m, { role: 'bot', text: `'${base.name}'과 같은 카테고리 인기 제품을 비교해 드릴게요`, _products: [base, sib], _compare: true }]);
+          return true;
+        }
+      }
+    }
+    const KEYWORDS = [['피로|활력|지침', /헤모힘|홍삼|비타민/], ['면역', /헤모힘|프로폴리스|비타민/], ['장|유산균|소화', /유산균|프로바이오/], ['눈', /루테인|오메가/], ['피부|뷰티|화장품', /앱솔루트|크림|스킵|세럼/], ['샤푸|헤어', /샤푸|헤어/], ['치약|칫솔|구강', /치약|칫솔/], ['화장지|티슈', /화장지|물티슘/]];
+    let pool = null;
+    for (const [kw, rx] of KEYWORDS) {
+      if (new RegExp(kw).test(t)) { pool = ALL.filter(p => rx.test(p.name)); break; }
+    }
+    if (!pool) {
+      const named = ALL.filter(p => t.length > 1 && p.name.toLowerCase().includes(t.replace(/[을를이가 ?]|추천해줘|찾아줘|비교해줘/g, '').trim())).slice(0, 3);
+      if (named.length) pool = named;
+    }
+    if (!pool || !pool.length) {
+      if (!giftAsk && !recoAsk && !compareAsk) return false;
+      pool = ALL.slice().sort((a, b) => (b.reviews || 0) - (a.reviews || 0));
+    }
+    const picks = pool.slice(0, 3);
+    if (!picks.length) return false;
+    const intro = giftAsk ? '선물로 많이 나가는 제품을 골랐어요 🎁' : '말씀하신 기준으로 골라봤어요 ✦';
+    setMessages(m => [...m, { role: 'bot', text: intro, _products: picks, _compare: false }]);
+    return true;
+  };
 
   const send = async (overrideText) => {
     const text = (overrideText != null ? overrideText : input).trim();
@@ -892,6 +994,9 @@ function ChatPanel({ isMobile, width, height, bottom, right, onClose }) {
     const history = [...messages, { role: 'user', text }];
     setMessages(history);
     setInput('');
+
+    // 쇼핑 의도면 상품 카드/비교표로 응답
+    if (tryShoppingReply(text)) return;
 
     const knowledge = window.ATOMY_GUIDE_KNOWLEDGE || '';
     const canUseClaude = typeof window !== 'undefined' && window.claude && typeof window.claude.complete === 'function';
@@ -1050,7 +1155,8 @@ ${convo}
         }}
       >
         {messages.map((m, i) => (
-          <div key={i} style={{
+          <React.Fragment key={i}>
+          <div style={{
             display: 'flex', justifyContent: m.role === 'user' ? 'flex-end' : 'flex-start',
           }}>
             <div style={{
@@ -1066,13 +1172,69 @@ ${convo}
               border: m.role === 'user' ? 'none' : '1px solid rgba(11,31,58,0.04)',
             }}>{m.text}</div>
           </div>
+          {m._products && (
+          <div style={{ marginTop: -4 }}>
+            {m._compare ? (
+              <div style={{ borderRadius: 12, overflow: 'hidden', border: '1px solid rgba(11,31,58,0.1)', background: '#fff', fontSize: 11.5 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '64px 1fr 1fr' }}>
+                  <div style={{ padding: 8, background: '#F4F6FA' }}></div>
+                  {m._products.slice(0, 2).map(p => (
+                    <div key={p.id} style={{ padding: 8, textAlign: 'center', borderLeft: '1px solid rgba(11,31,58,0.06)' }}>
+                      <img src={p.image} alt="" style={{ width: 44, height: 44, objectFit: 'contain', borderRadius: 8, background: '#F4F6FA' }} />
+                      <div style={{ fontWeight: 800, color: '#0B1F3A', marginTop: 4, fontSize: 11, lineHeight: 1.3 }}>{p.name}</div>
+                    </div>
+                  ))}
+                  {[['가격', p => p.price.toLocaleString() + '원'], ['PV', p => (p.pv || 0).toLocaleString()], ['리뷰', p => (p.reviews || 0).toLocaleString() + '건']].map(([label, fn]) => (
+                    <React.Fragment key={label}>
+                      <div style={{ padding: '7px 8px', background: '#F4F6FA', fontWeight: 800, color: '#6B7A90', borderTop: '1px solid rgba(11,31,58,0.06)' }}>{label}</div>
+                      {m._products.slice(0, 2).map(p => (
+                        <div key={p.id} style={{ padding: '7px 8px', textAlign: 'center', fontWeight: 700, color: '#0B1F3A', borderTop: '1px solid rgba(11,31,58,0.06)', borderLeft: '1px solid rgba(11,31,58,0.06)' }}>{fn(p)}</div>
+                      ))}
+                    </React.Fragment>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {m._products.map(p => (
+                  <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '8px 10px', borderRadius: 12, background: '#fff', border: '1px solid rgba(11,31,58,0.08)' }}>
+                    <img src={p.image} alt="" style={{ width: 40, height: 40, objectFit: 'contain', borderRadius: 8, background: '#F4F6FA', flexShrink: 0 }} />
+                    <span style={{ flex: 1, minWidth: 0 }}>
+                      <span style={{ display: 'block', fontSize: 11.5, fontWeight: 700, color: '#0B1F3A', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</span>
+                      <span style={{ fontSize: 11, fontWeight: 800, color: '#00A3D9' }}>{p.price.toLocaleString()}원 · PV {(p.pv || 0).toLocaleString()}</span>
+                    </span>
+                    <button onClick={() => {
+                      // 헤더 장바구니 카운트 +1 + 플라이 효과
+                      try {
+                        document.querySelectorAll('[data-cart-count]').forEach(el => { el.textContent = String((parseInt(el.textContent) || 0) + 1); });
+                        if (window.flyToCart && p.image) {
+                          const icon = document.querySelector('[data-cart-icon]');
+                          if (icon) window.flyToCart(p.image, icon.getBoundingClientRect());
+                        }
+                      } catch (_) {}
+                      setMessages(mm => [...mm, { role: 'bot', text: `'${p.name}' 장바구니에 담았어요 🛒` }]);
+                    }} style={{
+                      flexShrink: 0, padding: '7px 11px', borderRadius: 999, border: 'none', cursor: 'pointer', fontFamily: 'inherit',
+                      background: '#0B1F3A', color: '#5CD3F7', fontSize: 11, fontWeight: 800,
+                    }}>담기</button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          )}
+          </React.Fragment>
         ))}
 
         {/* AI 제안 — 버튼 클릭만으로 질문 (입력 불필요) */}
         {!thinking && (() => {
           const asked = new Set(messages.filter(m => m.role === 'user').map(m => m.text));
-          const pool = (window.ATOMY_SUGGESTED_QUESTIONS || []).filter(q => !asked.has(q));
-          const chips = pool.slice(0, 4);
+          // 마지막 사용자 질문 기준으로 연관 질문 우선 노출
+          const lastUser = [...messages].reverse().find(m => m.role === 'user');
+          if (!lastUser) return null; // 질문을 던진 뒤에만 노출
+          const chips = (typeof window.getRelatedQuestions === 'function')
+            ? window.getRelatedQuestions(lastUser ? lastUser.text : '', asked)
+            : (window.ATOMY_SUGGESTED_QUESTIONS || []).filter(q => !asked.has(q)).slice(0, 4);
           if (!chips.length) return null;
           return (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 2 }}>
@@ -1096,58 +1258,13 @@ ${convo}
         })()}
       </div>
 
-      {/* 애터미 가입문의 CTA — 강조 버튼 */}
-      <div style={{
-        padding: '10px 14px 6px', background: '#F5F7FA',
-        borderTop: '1px solid rgba(11,31,58,0.05)',
-      }}>
-        <button
-          onClick={() => setJoinFormOpen(true)}
-          style={{
-            width: '100%', padding: '12px 14px', borderRadius: 12, border: 'none',
-            background: 'linear-gradient(135deg, #0B1F3A 0%, #0B2D58 60%, #00B6F0 130%)',
-            color: '#fff', fontSize: 13.5, fontWeight: 900, letterSpacing: '-0.01em',
-            cursor: 'pointer',
-            display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-            boxShadow: '0 8px 22px rgba(0,182,240,0.32)',
-            fontFamily: 'inherit',
-            transition: 'transform 0.18s, box-shadow 0.18s',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = 'translateY(-1px)';
-            e.currentTarget.style.boxShadow = '0 12px 28px rgba(0,182,240,0.45)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = 'translateY(0)';
-            e.currentTarget.style.boxShadow = '0 8px 22px rgba(0,182,240,0.32)';
-          }}
-        >
-          <span style={{
-            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-            width: 24, height: 24, borderRadius: 999,
-            background: 'linear-gradient(135deg, #00B6F0, #5CD3F7)',
-            color: '#0B1F3A', fontSize: 13, fontWeight: 900,
-          }}>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#0B1F3A"
-                 strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M5 12h14M12 5l7 7-7 7" />
-            </svg>
-          </span>
-          애터미 가입문의
-          <span style={{
-            fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.7)',
-            marginLeft: 2,
-          }}>1분이면 끝!</span>
-        </button>
-      </div>
-
       {/* 빠른 질문 칩 */}
       <div style={{
         padding: '6px 14px 10px', background: '#F5F7FA',
         display: 'flex', gap: 6, flexWrap: 'wrap',
       }}>
         {['제품 추천', '회원가입', '배송 문의', '반품/교환'].map(q => (
-          <button key={q} onClick={() => { setInput(q); }} style={{
+          <button key={q} onClick={() => send(q)} style={{
             padding: '5px 10px', borderRadius: 999,
             border: '1px solid rgba(0,182,240,0.3)',
             background: '#fff',
